@@ -1,11 +1,27 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import "../styles/global.css";
 ---
 
-<Layout>
-	<Welcome />
-</Layout>
+<div id="loading">Cargando datos desde AWS S3...</div>
+<div id="contenido"></div>
+
+<script>
+	import { fetchSportmindData } from "../services/sportmindService";
+
+	async function cargarDatosS3() {
+		try {
+			const datos = await fetchSportmindData();
+			const contenedor = document.getElementById("contenido");
+			const loader = document.getElementById("loading");
+
+			if (loader) loader.style.display = "none";
+			if (contenedor) {
+				contenedor.innerHTML = `<pre>${JSON.stringify(datos, null, 2)}</pre>`;
+			}
+		} catch (error) {
+			console.error("Error cargando los datos desde S3:", error);
+		}
+	}
+
+	cargarDatosS3();
+</script>

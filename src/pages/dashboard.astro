@@ -1,0 +1,957 @@
+---
+// src/pages/dashboard.astro
+import "../styles/global.css";
+---
+
+<html lang="es" class="dark">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Sportmind — Visualizador de Rendimiento & Sesiones</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            body {
+                font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            }
+        </style>
+    </head>
+    <body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-indigo-500 selection:text-white antialiased">
+        <!-- Fondo ambiental sutil -->
+        <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+            <div class="absolute -top-40 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl"></div>
+            <div class="absolute top-1/3 right-10 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-10 left-10 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl"></div>
+        </div>
+
+        <!-- Barra Superior / Header -->
+        <header class="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <!-- Marca / Título -->
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                            <span class="text-2xl">🧠</span>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent">
+                                    Sportmind Visualizer
+                                </h1>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                                    S3 Live
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-400">
+                                Evaluaciones psicomotrices y métricas de rendimiento deportivo
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Acciones Rápidas -->
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs text-slate-300">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span id="sources-count">S3 Conectado</span>
+                        </div>
+
+                        <button
+                            id="btn-refresh"
+                            class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/30 transition-all active:scale-95 cursor-pointer"
+                            title="Recargar datos desde S3"
+                        >
+                            <svg id="refresh-icon" class="w-3.5 h-3.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <span>Actualizar</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+            <!-- Banner de Resumen / KPIs -->
+            <section id="kpis-section" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- KPI 1: Total Sesiones -->
+                <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 shadow-sm backdrop-blur-sm relative overflow-hidden group hover:border-slate-700 transition">
+                    <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
+                        <span>Total Sesiones</span>
+                        <span class="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400">📋</span>
+                    </div>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span id="kpi-total-sessions" class="text-2xl font-bold text-white">—</span>
+                        <span class="text-xs text-slate-400">registros</span>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-600 opacity-60"></div>
+                </div>
+
+                <!-- KPI 2: Atletas Únicos -->
+                <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 shadow-sm backdrop-blur-sm relative overflow-hidden group hover:border-slate-700 transition">
+                    <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
+                        <span>Atletas Evaluados</span>
+                        <span class="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400">👥</span>
+                    </div>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span id="kpi-unique-athletes" class="text-2xl font-bold text-white">—</span>
+                        <span class="text-xs text-slate-400">únicos</span>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 to-cyan-600 opacity-60"></div>
+                </div>
+
+                <!-- KPI 3: Promedio Tiro -->
+                <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 shadow-sm backdrop-blur-sm relative overflow-hidden group hover:border-slate-700 transition">
+                    <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
+                        <span>Puntaje Medio Tiro</span>
+                        <span class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">🎯</span>
+                    </div>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span id="kpi-avg-shooting" class="text-2xl font-bold text-emerald-400">—</span>
+                        <span class="text-xs text-slate-400">pts</span>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-600 opacity-60"></div>
+                </div>
+
+                <!-- KPI 4: Tiempo Medio Escalada -->
+                <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 shadow-sm backdrop-blur-sm relative overflow-hidden group hover:border-slate-700 transition">
+                    <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
+                        <span>Tiempo Medio Escalada</span>
+                        <span class="p-1.5 rounded-lg bg-amber-500/10 text-amber-400">🧗</span>
+                    </div>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span id="kpi-avg-climbing" class="text-2xl font-bold text-amber-400">—</span>
+                        <span class="text-xs text-slate-400">seg</span>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-amber-600 opacity-60"></div>
+                </div>
+            </section>
+
+            <!-- Barra de Herramientas, Filtros y Vistas -->
+            <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg space-y-4">
+                <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+                    <!-- Buscador en Vivo -->
+                    <div class="relative flex-1">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-sm">
+                            🔍
+                        </span>
+                        <input
+                            type="text"
+                            id="search-input"
+                            placeholder="Buscar por atleta, deporte, emoción o ID de sesión..."
+                            class="w-full pl-10 pr-10 py-2.5 bg-slate-950/70 border border-slate-700/80 rounded-xl text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition"
+                        />
+                        <button
+                            id="btn-clear-search"
+                            class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white"
+                            title="Limpiar búsqueda"
+                        >
+                            ✕
+                        </button>
+                    </div>
+
+                    <!-- Filtros Dropdown -->
+                    <div class="flex flex-wrap sm:flex-nowrap gap-2 items-center">
+                        <!-- Filtro Deporte -->
+                        <select
+                            id="filter-sport"
+                            class="bg-slate-950/70 border border-slate-700/80 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-indigo-500 transition cursor-pointer"
+                        >
+                            <option value="all">🏆 Todos los deportes</option>
+                        </select>
+
+                        <!-- Filtro Emoción -->
+                        <select
+                            id="filter-emotion"
+                            class="bg-slate-950/70 border border-slate-700/80 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-indigo-500 transition cursor-pointer"
+                        >
+                            <option value="all">😊 Todas las emociones</option>
+                            <option value="calma">😌 Calma</option>
+                            <option value="feliz">😊 Feliz</option>
+                            <option value="ansioso">⚡ Ansioso</option>
+                            <option value="triste">🌧️ Triste</option>
+                        </select>
+
+                        <!-- Ordenamiento -->
+                        <select
+                            id="sort-by"
+                            class="bg-slate-950/70 border border-slate-700/80 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-indigo-500 transition cursor-pointer"
+                        >
+                            <option value="date-desc">📅 Más reciente</option>
+                            <option value="date-asc">📅 Más antiguo</option>
+                            <option value="name-asc">🔤 Atleta (A - Z)</option>
+                            <option value="shooting-desc">🎯 Mayor puntaje tiro</option>
+                            <option value="climbing-asc">🧗 Menor tiempo escalada</option>
+                        </select>
+
+                        <!-- Selector de Vista (Tarjetas / Tabla / Gráficos) -->
+                        <div class="flex items-center bg-slate-950/80 p-1 border border-slate-800 rounded-xl">
+                            <button
+                                id="view-cards-btn"
+                                class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-sm transition"
+                                title="Vista de tarjetas"
+                            >
+                                🗂️ Tarjetas
+                            </button>
+                            <button
+                                id="view-table-btn"
+                                class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition"
+                                title="Vista de tabla"
+                            >
+                                📊 Tabla
+                            </button>
+                            <button
+                                id="view-charts-btn"
+                                class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition"
+                                title="Gráficos comparativos"
+                            >
+                                📈 Gráficos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contador de resultados activos -->
+                <div class="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-800/60">
+                    <span id="results-count">Cargando registros...</span>
+                    <span id="active-filter-label" class="hidden text-indigo-400">Filtro aplicado</span>
+                </div>
+            </section>
+
+            <!-- Estado de Carga (Skeletons) -->
+            <div id="loading-state" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Skeleton 1 -->
+                <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 space-y-4 animate-pulse">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-full bg-slate-800"></div>
+                            <div class="space-y-2">
+                                <div class="w-32 h-4 bg-slate-800 rounded"></div>
+                                <div class="w-20 h-3 bg-slate-800 rounded"></div>
+                            </div>
+                        </div>
+                        <div class="w-24 h-6 bg-slate-800 rounded-full"></div>
+                    </div>
+                    <div class="h-28 bg-slate-800/50 rounded-xl"></div>
+                    <div class="h-28 bg-slate-800/50 rounded-xl"></div>
+                </div>
+                <!-- Skeleton 2 -->
+                <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 space-y-4 animate-pulse">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-full bg-slate-800"></div>
+                            <div class="space-y-2">
+                                <div class="w-32 h-4 bg-slate-800 rounded"></div>
+                                <div class="w-20 h-3 bg-slate-800 rounded"></div>
+                            </div>
+                        </div>
+                        <div class="w-24 h-6 bg-slate-800 rounded-full"></div>
+                    </div>
+                    <div class="h-28 bg-slate-800/50 rounded-xl"></div>
+                    <div class="h-28 bg-slate-800/50 rounded-xl"></div>
+                </div>
+            </div>
+
+            <!-- VISTA 1: Contenedor de Tarjetas (Grid) -->
+            <div id="cards-view" class="grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
+                <!-- Las tarjetas se inyectan dinámicamente con JavaScript -->
+            </div>
+
+            <!-- VISTA 2: Contenedor de Tabla -->
+            <div id="table-view" class="hidden bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="bg-slate-950/80 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                            <tr>
+                                <th class="px-5 py-4">Atleta</th>
+                                <th class="px-5 py-4">Deporte</th>
+                                <th class="px-5 py-4">Estado Inicial</th>
+                                <th class="px-5 py-4">🎯 Tiro (Fácil / Difícil)</th>
+                                <th class="px-5 py-4">🧗 Escalada (Fácil / Difícil)</th>
+                                <th class="px-5 py-4">Post Emociones</th>
+                                <th class="px-5 py-4">Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="divide-y divide-slate-800/60">
+                            <!-- Filas inyectadas dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VISTA 3: Gráficos de Comparación -->
+            <div id="charts-view" class="hidden space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Gráfico 1: Rendimiento y Confianza -->
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                <span>🎯</span> Rendimiento y Confianza en Tiro vs Escalada
+                            </h3>
+                            <span class="text-xs text-slate-400">Escala 1 a 5</span>
+                        </div>
+                        <div class="relative h-72">
+                            <canvas id="chart-performance"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Gráfico 2: Tiempos de Escalada -->
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                <span>🧗</span> Comparativa de Tiempos de Escalada
+                            </h3>
+                            <span class="text-xs text-slate-400">Segundos (menor es mejor)</span>
+                        </div>
+                        <div class="relative h-72">
+                            <canvas id="chart-climbing"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estado Vacío (Sin resultados) -->
+            <div id="empty-state" class="hidden text-center py-16 bg-slate-900/40 border border-slate-800/80 rounded-2xl">
+                <span class="text-5xl block mb-3">🔍</span>
+                <h3 class="text-lg font-bold text-white">No se encontraron sesiones coincidentes</h3>
+                <p class="text-sm text-slate-400 max-w-md mx-auto mt-1">
+                    Prueba modificando los filtros de deporte, emoción o limpiando el texto del buscador.
+                </p>
+                <button
+                    id="btn-reset-filters"
+                    class="mt-4 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition"
+                >
+                    Restablecer filtros
+                </button>
+            </div>
+        </main>
+
+        <!-- Modal para ver el JSON crudo -->
+        <dialog id="json-modal" class="bg-transparent backdrop:bg-black/70 p-4 max-w-2xl w-full">
+            <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl text-slate-100 max-h-[85vh] flex flex-col">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                    <h3 class="text-base font-bold text-indigo-400 flex items-center gap-2">
+                        <span>📄</span> Estructura JSON Cruda
+                    </h3>
+                    <button id="btn-close-modal" class="text-slate-400 hover:text-white text-lg">✕</button>
+                </div>
+                <div class="overflow-y-auto mt-4 flex-1">
+                    <pre id="json-modal-content" class="bg-slate-950 p-4 rounded-xl text-xs font-mono text-indigo-200 overflow-x-auto"></pre>
+                </div>
+            </div>
+        </dialog>
+
+        <!-- Toast de Notificación -->
+        <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+            <div class="bg-indigo-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2">
+                <span>✓</span>
+                <span id="toast-message">Copiado al portapapeles</span>
+            </div>
+        </div>
+
+        <script>
+            import {
+                fetchSportmindData,
+                filterSportmindRecords,
+                getEmotionConfig,
+                formatDateTime,
+                type SportmindSession,
+            } from "../services/sportmindService";
+            import Chart from "chart.js/auto";
+
+            let allSessions: SportmindSession[] = [];
+            let currentFiltered: SportmindSession[] = [];
+            let currentView: "cards" | "table" | "charts" = "cards";
+
+            let chartPerformanceInstance: Chart | null = null;
+            let chartClimbingInstance: Chart | null = null;
+
+            // Elementos del DOM
+            const loadingState = document.getElementById("loading-state");
+            const cardsView = document.getElementById("cards-view");
+            const tableView = document.getElementById("table-view");
+            const chartsView = document.getElementById("charts-view");
+            const tableBody = document.getElementById("table-body");
+            const emptyState = document.getElementById("empty-state");
+            const resultsCount = document.getElementById("results-count");
+            const sourcesCount = document.getElementById("sources-count");
+
+            const searchInput = document.getElementById("search-input") as HTMLInputElement;
+            const btnClearSearch = document.getElementById("btn-clear-search");
+            const filterSport = document.getElementById("filter-sport") as HTMLSelectElement;
+            const filterEmotion = document.getElementById("filter-emotion") as HTMLSelectElement;
+            const sortBy = document.getElementById("sort-by") as HTMLSelectElement;
+
+            const viewCardsBtn = document.getElementById("view-cards-btn");
+            const viewTableBtn = document.getElementById("view-table-btn");
+            const viewChartsBtn = document.getElementById("view-charts-btn");
+            const btnRefresh = document.getElementById("btn-refresh");
+            const refreshIcon = document.getElementById("refresh-icon");
+
+            const jsonModal = document.getElementById("json-modal") as HTMLDialogElement;
+            const jsonModalContent = document.getElementById("json-modal-content");
+            const btnCloseModal = document.getElementById("btn-close-modal");
+
+            // Función para renderizar medidores visuales (barras o puntos del 1 al 5)
+            function renderMetricMeter(label: string, value: number | undefined, max = 5): string {
+                const val = Number(value) || 0;
+                const percent = Math.min(Math.max((val / max) * 100, 0), 100);
+
+                let color = "bg-indigo-500";
+                if (val >= 4) color = "bg-emerald-400";
+                else if (val <= 2) color = "bg-amber-400";
+
+                return `
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-center text-[11px]">
+                            <span class="text-slate-400 font-medium">${label}</span>
+                            <span class="font-bold text-slate-200">${val}/${max}</span>
+                        </div>
+                        <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
+                            <div class="${color} h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Generar Iniciales para el Avatar
+            function getInitials(name?: string): string {
+                if (!name) return "??";
+                const parts = name.trim().split(/\s+/);
+                if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+                return (parts[0][0] + parts[1][0]).toUpperCase();
+            }
+
+            // Capitalizar nombres
+            function formatName(name?: string): string {
+                if (!name) return "Atleta sin nombre";
+                return name
+                    .toLowerCase()
+                    .split(" ")
+                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(" ");
+            }
+
+            // Toast helper
+            function showToast(msg: string) {
+                const toast = document.getElementById("toast");
+                const toastMsg = document.getElementById("toast-message");
+                if (toast && toastMsg) {
+                    toastMsg.textContent = msg;
+                    toast.classList.remove("translate-y-20", "opacity-0");
+                    setTimeout(() => {
+                        toast.classList.add("translate-y-20", "opacity-0");
+                    }, 2500);
+                }
+            }
+
+            // Cargar datos
+            async function loadData() {
+                if (loadingState) loadingState.classList.remove("hidden");
+                if (cardsView) cardsView.classList.add("hidden");
+                if (tableView) tableView.classList.add("hidden");
+                if (chartsView) chartsView.classList.add("hidden");
+                if (emptyState) emptyState.classList.add("hidden");
+                if (refreshIcon) refreshIcon.classList.add("animate-spin");
+
+                try {
+                    allSessions = await fetchSportmindData();
+                    populateSportFilter(allSessions);
+                    updateKPIs(allSessions);
+                    applyFilters();
+
+                    if (sourcesCount) {
+                        sourcesCount.textContent = `${allSessions.length} registros S3`;
+                    }
+                } catch (err) {
+                    console.error("Error al cargar datos:", err);
+                    if (resultsCount) {
+                        resultsCount.innerHTML = `<span class="text-red-400">❌ Error al cargar los archivos desde S3</span>`;
+                    }
+                } finally {
+                    if (loadingState) loadingState.classList.add("hidden");
+                    if (refreshIcon) refreshIcon.classList.remove("animate-spin");
+                }
+            }
+
+            // Llenar el filtro de deportes dinámicamente
+            function populateSportFilter(sessions: SportmindSession[]) {
+                const sports = new Set<string>();
+                sessions.forEach((s) => {
+                    if (s.data.selectedSport) sports.add(s.data.selectedSport);
+                });
+
+                filterSport.innerHTML = `<option value="all">🏆 Todos los deportes</option>`;
+                sports.forEach((sport) => {
+                    const opt = document.createElement("option");
+                    opt.value = sport;
+                    opt.textContent = `🏊 ${sport}`;
+                    filterSport.appendChild(opt);
+                });
+            }
+
+            // Actualizar KPIs de cabecera
+            function updateKPIs(sessions: SportmindSession[]) {
+                const kpiTotal = document.getElementById("kpi-total-sessions");
+                const kpiAthletes = document.getElementById("kpi-unique-athletes");
+                const kpiAvgShooting = document.getElementById("kpi-avg-shooting");
+                const kpiAvgClimbing = document.getElementById("kpi-avg-climbing");
+
+                if (kpiTotal) kpiTotal.textContent = String(sessions.length);
+
+                const athletes = new Set(sessions.map((s) => (s.data.playerName || "").toLowerCase().trim()));
+                if (kpiAthletes) kpiAthletes.textContent = String(athletes.size);
+
+                // Promedio Tiro
+                const scores = sessions.flatMap((s) => [s.data.shootingScoreEasy, s.data.shootingScoreHard]).filter((n): n is number => typeof n === "number");
+                const avgShooting = scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : "—";
+                if (kpiAvgShooting) kpiAvgShooting.textContent = avgShooting;
+
+                // Promedio Escalada
+                const times = sessions.flatMap((s) => [s.data.climbingTimeEasy, s.data.climbingTimeHard]).filter((n): n is number => typeof n === "number");
+                const avgClimbing = times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—";
+                if (kpiAvgClimbing) kpiAvgClimbing.textContent = avgClimbing;
+            }
+
+            // Aplicar filtros
+            function applyFilters() {
+                const query = searchInput.value;
+                const sport = filterSport.value;
+                const emotion = filterEmotion.value;
+                const sort = sortBy.value as any;
+
+                if (btnClearSearch) {
+                    btnClearSearch.classList.toggle("hidden", query.length === 0);
+                }
+
+                currentFiltered = filterSportmindRecords(allSessions, {
+                    query,
+                    sport,
+                    emotion,
+                    sortBy: sort,
+                });
+
+                if (resultsCount) {
+                    resultsCount.textContent = `Mostrando ${currentFiltered.length} de ${allSessions.length} evaluaciones`;
+                }
+
+                renderCurrentView();
+            }
+
+            // Renderizar la vista activa
+            function renderCurrentView() {
+                if (currentFiltered.length === 0) {
+                    if (cardsView) cardsView.classList.add("hidden");
+                    if (tableView) tableView.classList.add("hidden");
+                    if (chartsView) chartsView.classList.add("hidden");
+                    if (emptyState) emptyState.classList.remove("hidden");
+                    return;
+                }
+
+                if (emptyState) emptyState.classList.add("hidden");
+
+                if (currentView === "cards") {
+                    if (cardsView) cardsView.classList.remove("hidden");
+                    if (tableView) tableView.classList.add("hidden");
+                    if (chartsView) chartsView.classList.add("hidden");
+                    renderCards(currentFiltered);
+                } else if (currentView === "table") {
+                    if (cardsView) cardsView.classList.add("hidden");
+                    if (tableView) tableView.classList.remove("hidden");
+                    if (chartsView) chartsView.classList.add("hidden");
+                    renderTable(currentFiltered);
+                } else if (currentView === "charts") {
+                    if (cardsView) cardsView.classList.add("hidden");
+                    if (tableView) tableView.classList.add("hidden");
+                    if (chartsView) chartsView.classList.remove("hidden");
+                    renderCharts(currentFiltered);
+                }
+            }
+
+            // RENDERIZAR TARJETAS
+            function renderCards(sessions: SportmindSession[]) {
+                if (!cardsView) return;
+
+                cardsView.innerHTML = sessions
+                    .map((session, index) => {
+                        const d = session.data;
+                        const initialEmotion = getEmotionConfig(d.emotionalState);
+                        const shootingPostEmotion = getEmotionConfig(d.shootingPostEmotion);
+                        const climbingPostEmotion = getEmotionConfig(d.climbingPostEmotion);
+                        const initials = getInitials(d.playerName);
+                        const formattedName = formatName(d.playerName);
+                        const dateFormatted = formatDateTime(session.timestamp);
+
+                        const climbingEasy = typeof d.climbingTimeEasy === "number" ? d.climbingTimeEasy.toFixed(2) : "—";
+                        const climbingHard = typeof d.climbingTimeHard === "number" ? d.climbingTimeHard.toFixed(2) : "—";
+
+                        return `
+                        <article class="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-xl hover:border-slate-700/80 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
+                            <!-- Brillo sutil de fondo según emoción inicial -->
+                            <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl ${initialEmotion.bgGlow} rounded-full blur-3xl pointer-events-none -z-0"></div>
+
+                            <div class="relative z-10 space-y-5">
+                                <!-- Cabecera de la Tarjeta -->
+                                <div class="flex items-start justify-between gap-3 border-b border-slate-800/80 pb-4">
+                                    <div class="flex items-center gap-3.5">
+                                        <!-- Avatar con iniciales -->
+                                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-extrabold text-base shadow-md shadow-indigo-600/30">
+                                            ${initials}
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <h2 class="text-base sm:text-lg font-bold text-white group-hover:text-indigo-300 transition">
+                                                    ${formattedName}
+                                                </h2>
+                                                <span class="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                                                    ${d.gender || "N/A"}
+                                                </span>
+                                            </div>
+                                            <div class="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
+                                                <span>🏊 ${d.selectedSport || "Deporte"}</span>
+                                                <span>•</span>
+                                                <span>📅 ${dateFormatted}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Badge de Estado Emocional Inicial -->
+                                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold border ${initialEmotion.badgeClass}">
+                                        <span class="w-2 h-2 rounded-full ${initialEmotion.dotClass}"></span>
+                                        <span>${initialEmotion.icon} ${initialEmotion.label}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Grid de las 2 Actividades: Tiro & Escalada -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <!-- ACTIVIDAD 1: TIRO -->
+                                    <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs font-bold text-indigo-400 flex items-center gap-1.5">
+                                                <span>🎯</span> Evaluación Tiro
+                                            </span>
+                                            <span class="text-[11px] px-2 py-0.5 rounded-lg border ${shootingPostEmotion.badgeClass}">
+                                                Post: ${shootingPostEmotion.icon} ${shootingPostEmotion.label}
+                                            </span>
+                                        </div>
+
+                                        <!-- Puntajes Tiro Fácil / Difícil -->
+                                        <div class="grid grid-cols-2 gap-2 text-center">
+                                            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2">
+                                                <span class="text-[10px] text-slate-400 uppercase font-semibold block">Fácil</span>
+                                                <span class="text-lg font-extrabold text-emerald-400">${d.shootingScoreEasy ?? "—"} <span class="text-xs font-normal text-slate-400">pts</span></span>
+                                            </div>
+                                            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2">
+                                                <span class="text-[10px] text-slate-400 uppercase font-semibold block">Difícil</span>
+                                                <span class="text-lg font-extrabold text-indigo-400">${d.shootingScoreHard ?? "—"} <span class="text-xs font-normal text-slate-400">pts</span></span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Medidores de Tiro -->
+                                        <div class="space-y-2 pt-1 border-t border-slate-800/60">
+                                            ${renderMetricMeter("Rendimiento", d.shootingRendimiento)}
+                                            ${renderMetricMeter("Ritmo", d.shootingRitmo)}
+                                            ${renderMetricMeter("Confianza", d.shootingConfianza)}
+                                        </div>
+                                    </div>
+
+                                    <!-- ACTIVIDAD 2: ESCALADA (MURO) -->
+                                    <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                                                <span>🧗</span> Muro / Escalada
+                                            </span>
+                                            <span class="text-[11px] px-2 py-0.5 rounded-lg border ${climbingPostEmotion.badgeClass}">
+                                                Post: ${climbingPostEmotion.icon} ${climbingPostEmotion.label}
+                                            </span>
+                                        </div>
+
+                                        <!-- Tiempos Escalada Fácil / Difícil -->
+                                        <div class="grid grid-cols-2 gap-2 text-center">
+                                            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2">
+                                                <span class="text-[10px] text-slate-400 uppercase font-semibold block">T. Fácil</span>
+                                                <span class="text-lg font-extrabold text-amber-400">${climbingEasy} <span class="text-xs font-normal text-slate-400">s</span></span>
+                                            </div>
+                                            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2">
+                                                <span class="text-[10px] text-slate-400 uppercase font-semibold block">T. Difícil</span>
+                                                <span class="text-lg font-extrabold text-amber-300">${climbingHard} <span class="text-xs font-normal text-slate-400">s</span></span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Medidores de Escalada -->
+                                        <div class="space-y-2 pt-1 border-t border-slate-800/60">
+                                            ${renderMetricMeter("Rendimiento", d.climbingRendimiento)}
+                                            ${renderMetricMeter("Ritmo", d.climbingRitmo)}
+                                            ${renderMetricMeter("Confianza", d.climbingConfianza)}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pie de Tarjeta / Acciones -->
+                            <div class="relative z-10 mt-5 pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex items-center gap-1.5 text-slate-300 font-semibold bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-700/60">
+                                        <span>⭐ Recomendación:</span>
+                                        <span class="text-indigo-400 font-extrabold">${d.recomendacionFinal ?? "—"}/10</span>
+                                    </div>
+
+                                    <button
+                                        class="btn-view-raw text-indigo-400 hover:text-indigo-300 underline underline-offset-2 cursor-pointer transition"
+                                        data-session-index="${index}"
+                                    >
+                                        Ver JSON
+                                    </button>
+                                </div>
+
+                                <button
+                                    class="btn-copy-id inline-flex items-center gap-1.5 bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-slate-200 px-2.5 py-1 rounded-lg border border-slate-800 transition active:scale-95 cursor-pointer"
+                                    data-id="${session.session_id}"
+                                    title="Copiar Session ID"
+                                >
+                                    <span>ID: ${session.session_id.substring(0, 8)}...</span>
+                                    <span>📋</span>
+                                </button>
+                            </div>
+                        </article>
+                        `;
+                    })
+                    .join("");
+
+                attachCardListeners();
+            }
+
+            // RENDERIZAR TABLA
+            function renderTable(sessions: SportmindSession[]) {
+                if (!tableBody) return;
+
+                tableBody.innerHTML = sessions
+                    .map((s, idx) => {
+                        const d = s.data;
+                        const initialEmotion = getEmotionConfig(d.emotionalState);
+                        const shootingPost = getEmotionConfig(d.shootingPostEmotion);
+                        const climbingPost = getEmotionConfig(d.climbingPostEmotion);
+                        const formattedName = formatName(d.playerName);
+                        const dateFormatted = formatDateTime(s.timestamp);
+
+                        return `
+                        <tr class="hover:bg-slate-800/40 transition">
+                            <td class="px-5 py-4 font-semibold text-white flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-600/30 text-indigo-300 flex items-center justify-center text-xs font-bold">
+                                    ${getInitials(d.playerName)}
+                                </div>
+                                <span>${formattedName}</span>
+                            </td>
+                            <td class="px-5 py-4">${d.selectedSport || "—"}</td>
+                            <td class="px-5 py-4">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-xs ${initialEmotion.badgeClass}">
+                                    ${initialEmotion.icon} ${initialEmotion.label}
+                                </span>
+                            </td>
+                            <td class="px-5 py-4 font-mono text-xs">
+                                <span class="text-emerald-400 font-bold">${d.shootingScoreEasy ?? "—"} pts</span> / 
+                                <span class="text-indigo-400">${d.shootingScoreHard ?? "—"} pts</span>
+                            </td>
+                            <td class="px-5 py-4 font-mono text-xs">
+                                <span class="text-amber-400 font-bold">${d.climbingTimeEasy ? d.climbingTimeEasy.toFixed(1) + "s" : "—"}</span> / 
+                                <span class="text-amber-300">${d.climbingTimeHard ? d.climbingTimeHard.toFixed(1) + "s" : "—"}</span>
+                            </td>
+                            <td class="px-5 py-4 text-xs space-x-1">
+                                <span>🎯 ${shootingPost.icon}</span>
+                                <span>🧗 ${climbingPost.icon}</span>
+                            </td>
+                            <td class="px-5 py-4 text-xs text-slate-400">${dateFormatted}</td>
+                        </tr>
+                        `;
+                    })
+                    .join("");
+            }
+
+            // RENDERIZAR GRÁFICOS (Chart.js)
+            function renderCharts(sessions: SportmindSession[]) {
+                const labels = sessions.map((s) => formatName(s.data.playerName));
+
+                // 1. Rendimiento y Confianza
+                const canvasPerf = document.getElementById("chart-performance") as HTMLCanvasElement;
+                if (canvasPerf) {
+                    if (chartPerformanceInstance) chartPerformanceInstance.destroy();
+
+                    chartPerformanceInstance = new Chart(canvasPerf, {
+                        type: "bar",
+                        data: {
+                            labels,
+                            datasets: [
+                                {
+                                    label: "Rendimiento Tiro",
+                                    data: sessions.map((s) => s.data.shootingRendimiento ?? 0),
+                                    backgroundColor: "rgba(99, 102, 241, 0.7)",
+                                    borderRadius: 6,
+                                },
+                                {
+                                    label: "Confianza Tiro",
+                                    data: sessions.map((s) => s.data.shootingConfianza ?? 0),
+                                    backgroundColor: "rgba(168, 85, 247, 0.7)",
+                                    borderRadius: 6,
+                                },
+                                {
+                                    label: "Rendimiento Escalada",
+                                    data: sessions.map((s) => s.data.climbingRendimiento ?? 0),
+                                    backgroundColor: "rgba(245, 158, 11, 0.7)",
+                                    borderRadius: 6,
+                                },
+                                {
+                                    label: "Confianza Escalada",
+                                    data: sessions.map((s) => s.data.climbingConfianza ?? 0),
+                                    backgroundColor: "rgba(16, 185, 129, 0.7)",
+                                    borderRadius: 6,
+                                },
+                            ],
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    min: 0,
+                                    max: 5,
+                                    ticks: { stepSize: 1, color: "#94a3b8" },
+                                    grid: { color: "rgba(255,255,255,0.05)" },
+                                },
+                                x: {
+                                    ticks: { color: "#94a3b8" },
+                                    grid: { display: false },
+                                },
+                            },
+                            plugins: {
+                                legend: {
+                                    labels: { color: "#e2e8f0", boxWidth: 12, font: { size: 11 } },
+                                },
+                            },
+                        },
+                    });
+                }
+
+                // 2. Tiempos de Escalada
+                const canvasClimbing = document.getElementById("chart-climbing") as HTMLCanvasElement;
+                if (canvasClimbing) {
+                    if (chartClimbingInstance) chartClimbingInstance.destroy();
+
+                    chartClimbingInstance = new Chart(canvasClimbing, {
+                        type: "bar",
+                        data: {
+                            labels,
+                            datasets: [
+                                {
+                                    label: "Tiempo Fácil (seg)",
+                                    data: sessions.map((s) => s.data.climbingTimeEasy ?? 0),
+                                    backgroundColor: "rgba(56, 189, 248, 0.7)",
+                                    borderRadius: 6,
+                                },
+                                {
+                                    label: "Tiempo Difícil (seg)",
+                                    data: sessions.map((s) => s.data.climbingTimeHard ?? 0),
+                                    backgroundColor: "rgba(251, 146, 60, 0.7)",
+                                    borderRadius: 6,
+                                },
+                            ],
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    ticks: { color: "#94a3b8" },
+                                    grid: { color: "rgba(255,255,255,0.05)" },
+                                },
+                                x: {
+                                    ticks: { color: "#94a3b8" },
+                                    grid: { display: false },
+                                },
+                            },
+                            plugins: {
+                                legend: {
+                                    labels: { color: "#e2e8f0", boxWidth: 12, font: { size: 11 } },
+                                },
+                            },
+                        },
+                    });
+                }
+            }
+
+            // Event Listeners de Tarjetas (Copiar ID y Modal)
+            function attachCardListeners() {
+                document.querySelectorAll(".btn-copy-id").forEach((btn) => {
+                    btn.addEventListener("click", (e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        const id = target.dataset.id || "";
+                        navigator.clipboard.writeText(id).then(() => {
+                            showToast(`ID copiado: ${id.substring(0, 8)}...`);
+                        });
+                    });
+                });
+
+                document.querySelectorAll(".btn-view-raw").forEach((btn) => {
+                    btn.addEventListener("click", (e) => {
+                        const target = e.currentTarget as HTMLElement;
+                        const idx = Number(target.dataset.sessionIndex);
+                        const session = currentFiltered[idx];
+                        if (session && jsonModalContent && jsonModal) {
+                            jsonModalContent.textContent = JSON.stringify(session, null, 2);
+                            jsonModal.showModal();
+                        }
+                    });
+                });
+            }
+
+            // Eventos de Filtros y Búsqueda
+            searchInput?.addEventListener("input", applyFilters);
+            filterSport?.addEventListener("change", applyFilters);
+            filterEmotion?.addEventListener("change", applyFilters);
+            sortBy?.addEventListener("change", applyFilters);
+
+            btnClearSearch?.addEventListener("click", () => {
+                searchInput.value = "";
+                applyFilters();
+            });
+
+            document.getElementById("btn-reset-filters")?.addEventListener("click", () => {
+                searchInput.value = "";
+                filterSport.value = "all";
+                filterEmotion.value = "all";
+                sortBy.value = "date-desc";
+                applyFilters();
+            });
+
+            // Conmutación de Vistas
+            function setView(view: "cards" | "table" | "charts") {
+                currentView = view;
+                viewCardsBtn?.classList.toggle("bg-indigo-600", view === "cards");
+                viewCardsBtn?.classList.toggle("text-white", view === "cards");
+                viewCardsBtn?.classList.toggle("text-slate-400", view !== "cards");
+
+                viewTableBtn?.classList.toggle("bg-indigo-600", view === "table");
+                viewTableBtn?.classList.toggle("text-white", view === "table");
+                viewTableBtn?.classList.toggle("text-slate-400", view !== "table");
+
+                viewChartsBtn?.classList.toggle("bg-indigo-600", view === "charts");
+                viewChartsBtn?.classList.toggle("text-white", view === "charts");
+                viewChartsBtn?.classList.toggle("text-slate-400", view !== "charts");
+
+                renderCurrentView();
+            }
+
+            viewCardsBtn?.addEventListener("click", () => setView("cards"));
+            viewTableBtn?.addEventListener("click", () => setView("table"));
+            viewChartsBtn?.addEventListener("click", () => setView("charts"));
+
+            btnRefresh?.addEventListener("click", loadData);
+            btnCloseModal?.addEventListener("click", () => jsonModal?.close());
+
+            // Iniciar carga
+            loadData();
+        </script>
+    </body>
+</html>
