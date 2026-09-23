@@ -5,19 +5,35 @@
   "engines": {
     "node": ">=22.12.0"
   },
+  "description": "SportMind Native Application",
+  "author": "SportMind",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "electron:dev": "concurrently -k -s first \"astro dev\" \"wait-on http-get://localhost:4321 && cross-env ELECTRON_DEV=1 ELECTRON_START_URL=http://localhost:4321/dashboard electron .\"",
+    "electron:preview": "astro build && electron .",
+    "electron:dir": "astro build && electron-builder --dir",
+    "electron:build": "astro build && electron-builder",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
   },
-  "dependencies": {
+  "dependencies": {},
+  "allowScripts": {
+    "esbuild": true
+  },
+  "devDependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.1138.0",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.2",
     "chart.js": "^4.5.1",
-    "tailwindcss": "^4.3.3"
-  },
-  "allowScripts": {
-    "esbuild": true
+    "concurrently": "^10.0.5",
+    "cross-env": "^10.1.0",
+    "electron": "^44.4.4",
+    "electron-builder": "^26.15.3",
+    "tailwindcss": "^4.3.3",
+    "wait-on": "^9.1.0"
   }
 }

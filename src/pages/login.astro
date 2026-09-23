@@ -1,0 +1,198 @@
+---
+// src/pages/login.astro
+---
+
+<html lang="es">
+    <head>
+        <meta charset="utf-8" />
+        <title>Login | SportMind</title>
+    </head>
+    <body class="bg-slate-100 flex items-center justify-center h-screen">
+        <div class="bg-white p-8 rounded-lg shadow-md w-96">
+            <h2 class="text-2xl font-bold mb-6 text-center text-slate-800">
+                Acceso SportMind
+            </h2>
+
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700"
+                        >Correo Electrónico</label
+                    >
+                    <input
+                        type="email"
+                        id="email"
+                        class="mt-1 block w-full border border-slate-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                    />
+                </div>
+
+                <div id="divPasswordActual">
+                    <label class="block text-sm font-medium text-slate-700"
+                        >Contraseña</label
+                    >
+                    <input
+                        type="password"
+                        id="password"
+                        class="mt-1 block w-full border border-slate-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                    />
+                </div>
+
+                <div id="divNuevaPassword" class="hidden">
+                    <label class="block text-sm font-medium text-blue-600"
+                        >Nueva Contraseña Definitiva</label
+                    >
+                    <input
+                        type="password"
+                        id="newPassword"
+                        class="mt-1 block w-full border border-blue-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <p class="text-xs text-slate-500 mt-1">
+                        Tu cuenta es nueva, debes establecer una contraseña
+                        segura.
+                    </p>
+                </div>
+
+                <button
+                    type="submit"
+                    id="btnSubmit"
+                    class="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors"
+                >
+                    Iniciar Sesión
+                </button>
+            </form>
+
+            <p id="mensaje" class="mt-4 text-sm text-center font-medium"></p>
+        </div>
+
+        <script>
+            import {
+                CognitoIdentityProviderClient,
+                InitiateAuthCommand,
+                RespondToAuthChallengeCommand,
+            } from "@aws-sdk/client-cognito-identity-provider";
+
+            const REGION = "us-east-1";
+            const CLIENT_ID = "4ul825nprfht1evlpqmf5v5jd3";
+
+            const client = new CognitoIdentityProviderClient({
+                region: REGION,
+            });
+
+            let cognitoSession = null;
+            let currentEmail = null;
+
+            document
+                .getElementById("loginForm")
+                .addEventListener("submit", async (e) => {
+                    e.preventDefault();
+                    const email = (
+                        document.getElementById("email") as HTMLInputElement
+                    ).value;
+                    const password = (
+                        document.getElementById("password") as HTMLInputElement
+                    ).value;
+                    const newPassword = (
+                        document.getElementById(
+                            "newPassword",
+                        ) as HTMLInputElement
+                    ).value;
+                    const msgEl = document.getElementById("mensaje");
+                    const btnSubmit = document.getElementById("btnSubmit");
+
+                    msgEl.textContent = "Procesando...";
+                    msgEl.className = "mt-4 text-sm text-center text-slate-500";
+                    btnSubmit.disabled = true;
+
+                    try {
+                        if (!cognitoSession) {
+                            currentEmail = email;
+                            const command = new InitiateAuthCommand({
+                                AuthFlow: "USER_PASSWORD_AUTH",
+                                ClientId: CLIENT_ID,
+                                AuthParameters: {
+                                    USERNAME: email,
+                                    PASSWORD: password,
+                                },
+                            });
+
+                            const response = await client.send(command);
+
+                            if (
+                                response.ChallengeName ===
+                                "NEW_PASSWORD_REQUIRED"
+                            ) {
+                                cognitoSession = response.Session;
+                                document
+                                    .getElementById("divPasswordActual")
+                                    .classList.add("hidden");
+                                document
+                                    .getElementById("divNuevaPassword")
+                                    .classList.remove("hidden");
+                                (
+                                    document.getElementById(
+                                        "newPassword",
+                                    ) as HTMLInputElement
+                                ).required = true;
+                                btnSubmit.textContent = "Establecer y Entrar";
+                                btnSubmit.disabled = false;
+
+                                msgEl.textContent =
+                                    "Se requiere cambio de contraseña.";
+                                msgEl.className =
+                                    "mt-4 text-sm text-center text-orange-600";
+                                return;
+                            }
+
+                            procesarLoginExitoso(
+                                response.AuthenticationResult.IdToken,
+                                msgEl,
+                            );
+                        } else {
+                            const command = new RespondToAuthChallengeCommand({
+                                ChallengeName: "NEW_PASSWORD_REQUIRED",
+                                ClientId: CLIENT_ID,
+                                Session: cognitoSession,
+                                ChallengeResponses: {
+                                    USERNAME: currentEmail,
+                                    NEW_PASSWORD: newPassword,
+                                },
+                            });
+
+                            const response = await client.send(command);
+                            procesarLoginExitoso(
+                                response.AuthenticationResult.IdToken,
+                                msgEl,
+                            );
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        msgEl.textContent =
+                            "Error: " +
+                            (error.message || "Credenciales inválidas");
+                        msgEl.className =
+                            "mt-4 text-sm text-center text-red-600";
+                        cognitoSession = null;
+                        btnSubmit.disabled = false;
+                    }
+                });
+
+            function procesarLoginExitoso(idToken, msgEl) {
+                // Almacenar el token localmente para usarlo en futuras peticiones a API Gateway
+                localStorage.setItem("sportmind_token", idToken);
+
+                const payload = JSON.parse(atob(idToken.split(".")[1]));
+                const grupos = payload["cognito:groups"] || ["sin grupo"];
+
+                msgEl.textContent = `¡Bienvenido! Rol: ${grupos.join(", ")}`;
+                msgEl.className = "mt-4 text-sm text-center text-green-600";
+                document.getElementById("btnSubmit").disabled = false;
+
+                console.log(
+                    "Token guardado en localStorage:",
+                    localStorage.getItem("sportmind_token"),
+                );
+            }
+        </script>
+    </body>
+</html>
