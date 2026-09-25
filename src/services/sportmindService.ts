@@ -1,12 +1,5 @@
-/**
- * Lista de URLs de archivos JSON alojados en AWS S3.
- * Puedes agregar o quitar URLs en este arreglo según lo necesites.
- */
-export const S3_JSON_URLS: string[] = [
-  "https://sportmind-datos.s3.us-east-1.amazonaws.com/JSON_SM/sportmind_data_20251126_162422_0f7973c3-fc53-405b-93b8-0f2e1766e0f3.json",
-  "https://sportmind-datos.s3.us-east-1.amazonaws.com/JSON_SM/sportmind_data_20251126_163407_841e6432-d226-4d72-9dce-79c54aa4bdda.json",
-  "https://sportmind-datos.s3.us-east-1.amazonaws.com/JSON_SM/sportmind_data_20251126_164357_e7c52dc1-7cf2-4ba0-89e1-301b8cd6b31b.json"
-];
+const BUCKET_URL = "https://sportmind-datos.s3.us-east-1.amazonaws.com";
+const PREFIX = "JSON_SM/";
 
 export interface SportmindSessionData {
   playerName?: string;
@@ -40,8 +33,28 @@ export interface SportmindSession {
   raw?: unknown;
 }
 
-// Compatibilidad de tipos hacia atrás
 export type SportmindRecord = SportmindSession;
+
+/**
+ * Consulta S3 para obtener todas las URLs de los JSON dinámicamente leyendo el XML.
+ */
+export async function getDynamicS3Urls(): Promise<string[]> {
+  const response = await fetch(`${BUCKET_URL}?prefix=${PREFIX}`);
+
+  if (!response.ok) {
+    throw new Error("No se pudo obtener la lista de archivos de S3. Verifica CORS y permisos de la Política.");
+  }
+
+  const xmlText = await response.text();
+  const parser = new DOMParser();
+  const xmlDoc = parser.parseFromString(xmlText, "application/xml");
+
+  const keys = Array.from(xmlDoc.getElementsByTagName("Key"))
+    .map(node => node.textContent)
+    .filter(key => key && key.endsWith(".json"));
+
+  return keys.map(key => `${BUCKET_URL}/${key}`);
+}
 
 /**
  * Normaliza cualquier estructura recibida al formato estándar SportmindSession
@@ -58,7 +71,6 @@ export function normalizeSession(raw: unknown): SportmindSession {
 
   const obj = raw as Record<string, unknown>;
 
-  // Si ya viene con la estructura { timestamp, session_id, data }
   if (obj.data && typeof obj.data === "object") {
     return {
       timestamp: String(obj.timestamp || new Date().toISOString()),
@@ -68,7 +80,6 @@ export function normalizeSession(raw: unknown): SportmindSession {
     };
   }
 
-  // Si los datos vienen en la raíz del objeto
   return {
     timestamp: String(obj.timestamp || new Date().toISOString()),
     session_id: String(obj.session_id || "sin-id"),
@@ -80,9 +91,7 @@ export function normalizeSession(raw: unknown): SportmindSession {
 /**
  * Consulta un único archivo JSON en AWS S3 y normaliza los datos.
  */
-export async function fetchSingleSportmindData(
-  url: string,
-): Promise<SportmindSession[]> {
+export async function fetchSingleSportmindData(url: string): Promise<SportmindSession[]> {
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${res.statusText} en ${url}`);
@@ -94,12 +103,12 @@ export async function fetchSingleSportmindData(
 }
 
 /**
- * Consulta y combina datos de una o múltiples URLs de AWS S3 en paralelo.
+ * Consulta y combina datos de AWS S3 en paralelo.
  */
-export async function fetchSportmindData(
-  sources: string | string[] = S3_JSON_URLS,
-): Promise<SportmindSession[]> {
-  const urls = Array.isArray(sources) ? sources : [sources];
+export async function fetchSportmindData(sources?: string | string[]): Promise<SportmindSession[]> {
+  const urls = sources
+    ? (Array.isArray(sources) ? sources : [sources])
+    : await getDynamicS3Urls();
 
   if (urls.length === 0) {
     return [];
@@ -125,7 +134,6 @@ export async function fetchSportmindData(
     throw new Error("No se pudo cargar ningún archivo JSON desde S3.");
   }
 
-  // Ordenar por fecha descendente
   return combinedRecords.sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
   );
@@ -162,28 +170,24 @@ export function filterSportmindRecords(
   let filtered = records.filter((session) => {
     const s = session.data;
 
-    // Filtro por deporte
     if (sport && sport !== "all") {
       if ((s.selectedSport || "").toLowerCase() !== sport.toLowerCase()) {
         return false;
       }
     }
 
-    // Filtro por género
     if (gender && gender !== "all") {
       if ((s.gender || "").toLowerCase() !== gender.toLowerCase()) {
         return false;
       }
     }
 
-    // Filtro por emoción
     if (emotion && emotion !== "all") {
       if ((s.emotionalState || "").toLowerCase() !== emotion.toLowerCase()) {
         return false;
       }
     }
 
-    // Búsqueda general de texto
     if (cleanQuery) {
       const matchName = (s.playerName || "").toLowerCase().includes(cleanQuery);
       const matchSport = (s.selectedSport || "").toLowerCase().includes(cleanQuery);
@@ -199,7 +203,6 @@ export function filterSportmindRecords(
     return true;
   });
 
-  // Ordenamiento
   filtered = [...filtered].sort((a, b) => {
     switch (sortBy) {
       case "date-asc":
@@ -304,9 +307,6 @@ export function getEmotionConfig(emotion?: string): {
   }
 }
 
-/**
- * Formatea fechas a formato legible en español
- */
 export function formatDateTime(isoString?: string): string {
   if (!isoString) return "Fecha no disponible";
   try {
