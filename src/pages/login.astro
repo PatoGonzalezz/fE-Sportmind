@@ -5,7 +5,22 @@ import "../styles/global.css";
 <html lang="es">
     <head>
         <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Login | SportMind</title>
+        <!-- Si ya hay sesión activa y válida, redirigir al dashboard -->
+        <script is:inline>
+            (function () {
+                const token = localStorage.getItem("sportmind_token");
+                if (token) {
+                    try {
+                        const payload = JSON.parse(atob(token.split(".")[1]));
+                        if (!payload.exp || payload.exp * 1000 > Date.now()) {
+                            window.location.replace("/dashboard");
+                        }
+                    } catch {}
+                }
+            })();
+        </script>
     </head>
     <body class="bg-slate-100 flex items-center justify-center h-screen">
         <div class="bg-white p-8 rounded-lg shadow-md w-96">
@@ -199,25 +214,25 @@ import "../styles/global.css";
                     const grupos = (payload["cognito:groups"] as string[] | undefined) || ["sin grupo"];
 
                     if (msgEl) {
-                        msgEl.textContent = `¡Bienvenido! Rol: ${grupos.join(", ")}`;
+                        msgEl.textContent = `¡Bienvenido! Rol: ${grupos.join(", ")}. Redirigiendo al dashboard...`;
                         msgEl.className = "mt-4 text-sm text-center text-green-600";
                     }
                 } catch {
                     if (msgEl) {
-                        msgEl.textContent = "¡Bienvenido!";
+                        msgEl.textContent = "¡Bienvenido! Redirigiendo al dashboard...";
                         msgEl.className = "mt-4 text-sm text-center text-green-600";
                     }
                 }
 
                 const btnSubmit = document.getElementById("btnSubmit") as HTMLButtonElement | null;
                 if (btnSubmit) {
-                    btnSubmit.disabled = false;
+                    btnSubmit.disabled = true;
                 }
 
-                console.log(
-                    "Token guardado en localStorage:",
-                    localStorage.getItem("sportmind_token"),
-                );
+                // Redirigir directamente al dashboard
+                setTimeout(() => {
+                    window.location.replace("/dashboard");
+                }, 600);
             }
         </script>
     </body>
