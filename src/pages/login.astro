@@ -5,7 +5,22 @@ import "../styles/global.css";
 <html lang="es">
     <head>
         <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Login | SportMind</title>
+        <!-- Si ya hay sesión activa y válida, redirigir al dashboard -->
+        <script is:inline>
+            (function () {
+                const token = localStorage.getItem("sportmind_token");
+                if (token) {
+                    try {
+                        const payload = JSON.parse(atob(token.split(".")[1]));
+                        if (!payload.exp || payload.exp * 1000 > Date.now()) {
+                            window.location.replace("/dashboard");
+                        }
+                    } catch {}
+                }
+            })();
+        </script>
     </head>
     <body class="bg-slate-100 flex items-center justify-center h-screen">
         <div class="bg-white p-8 rounded-lg shadow-md w-96">
@@ -79,119 +94,145 @@ import "../styles/global.css";
                 region: REGION,
             });
 
-            let cognitoSession = null;
-            let currentEmail = null;
+            let cognitoSession: string | undefined = undefined;
+            let currentEmail: string | undefined = undefined;
 
-            document
-                .getElementById("loginForm")
-                .addEventListener("submit", async (e) => {
-                    e.preventDefault();
-                    const email = (
-                        document.getElementById("email") as HTMLInputElement
-                    ).value;
-                    const password = (
-                        document.getElementById("password") as HTMLInputElement
-                    ).value;
-                    const newPassword = (
-                        document.getElementById(
-                            "newPassword",
-                        ) as HTMLInputElement
-                    ).value;
-                    const msgEl = document.getElementById("mensaje");
-                    const btnSubmit = document.getElementById("btnSubmit");
+            const loginForm = document.getElementById("loginForm");
+            const emailInput = document.getElementById("email") as HTMLInputElement | null;
+            const passwordInput = document.getElementById("password") as HTMLInputElement | null;
+            const newPasswordInput = document.getElementById("newPassword") as HTMLInputElement | null;
+            const divPasswordActual = document.getElementById("divPasswordActual");
+            const divNuevaPassword = document.getElementById("divNuevaPassword");
+            const msgEl = document.getElementById("mensaje");
+            const btnSubmit = document.getElementById("btnSubmit") as HTMLButtonElement | null;
 
+            loginForm?.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const email = emailInput?.value || "";
+                const password = passwordInput?.value || "";
+                const newPassword = newPasswordInput?.value || "";
+
+                if (msgEl) {
                     msgEl.textContent = "Procesando...";
                     msgEl.className = "mt-4 text-sm text-center text-slate-500";
+                }
+                if (btnSubmit) {
                     btnSubmit.disabled = true;
+                }
 
-                    try {
-                        if (!cognitoSession) {
-                            currentEmail = email;
-                            const command = new InitiateAuthCommand({
-                                AuthFlow: "USER_PASSWORD_AUTH",
-                                ClientId: CLIENT_ID,
-                                AuthParameters: {
-                                    USERNAME: email,
-                                    PASSWORD: password,
-                                },
-                            });
+                try {
+                    if (!cognitoSession) {
+                        currentEmail = email;
+                        const command = new InitiateAuthCommand({
+                            AuthFlow: "USER_PASSWORD_AUTH",
+                            ClientId: CLIENT_ID,
+                            AuthParameters: {
+                                USERNAME: email,
+                                PASSWORD: password,
+                            },
+                        });
 
-                            const response = await client.send(command);
+                        const response = await client.send(command);
 
-                            if (
-                                response.ChallengeName ===
-                                "NEW_PASSWORD_REQUIRED"
-                            ) {
-                                cognitoSession = response.Session;
-                                document
-                                    .getElementById("divPasswordActual")
-                                    .classList.add("hidden");
-                                document
-                                    .getElementById("divNuevaPassword")
-                                    .classList.remove("hidden");
-                                (
-                                    document.getElementById(
-                                        "newPassword",
-                                    ) as HTMLInputElement
-                                ).required = true;
+                        if (
+                            response.ChallengeName ===
+                            "NEW_PASSWORD_REQUIRED"
+                        ) {
+                            cognitoSession = response.Session;
+                            divPasswordActual?.classList.add("hidden");
+                            divNuevaPassword?.classList.remove("hidden");
+                            if (newPasswordInput) {
+                                newPasswordInput.required = true;
+                            }
+                            if (btnSubmit) {
                                 btnSubmit.textContent = "Establecer y Entrar";
                                 btnSubmit.disabled = false;
+                            }
 
+                            if (msgEl) {
                                 msgEl.textContent =
                                     "Se requiere cambio de contraseña.";
                                 msgEl.className =
                                     "mt-4 text-sm text-center text-orange-600";
-                                return;
                             }
+                            return;
+                        }
 
+                        if (response.AuthenticationResult?.IdToken) {
                             procesarLoginExitoso(
                                 response.AuthenticationResult.IdToken,
                                 msgEl,
                             );
                         } else {
-                            const command = new RespondToAuthChallengeCommand({
-                                ChallengeName: "NEW_PASSWORD_REQUIRED",
-                                ClientId: CLIENT_ID,
-                                Session: cognitoSession,
-                                ChallengeResponses: {
-                                    USERNAME: currentEmail,
-                                    NEW_PASSWORD: newPassword,
-                                },
-                            });
+                            throw new Error("No se recibió el token de autenticación.");
+                        }
+                    } else {
+                        const command = new RespondToAuthChallengeCommand({
+                            ChallengeName: "NEW_PASSWORD_REQUIRED",
+                            ClientId: CLIENT_ID,
+                            Session: cognitoSession,
+                            ChallengeResponses: {
+                                USERNAME: currentEmail || "",
+                                NEW_PASSWORD: newPassword,
+                            },
+                        });
 
-                            const response = await client.send(command);
+                        const response = await client.send(command);
+                        if (response.AuthenticationResult?.IdToken) {
                             procesarLoginExitoso(
                                 response.AuthenticationResult.IdToken,
                                 msgEl,
                             );
+                        } else {
+                            throw new Error("No se recibió el token de autenticación.");
                         }
-                    } catch (error) {
-                        console.error(error);
-                        msgEl.textContent =
-                            "Error: " +
-                            (error.message || "Credenciales inválidas");
+                    }
+                } catch (error) {
+                    console.error(error);
+                    const errorMessage =
+                        error instanceof Error
+                            ? error.message
+                            : "Credenciales inválidas";
+                    if (msgEl) {
+                        msgEl.textContent = "Error: " + errorMessage;
                         msgEl.className =
                             "mt-4 text-sm text-center text-red-600";
-                        cognitoSession = null;
+                    }
+                    cognitoSession = undefined;
+                    if (btnSubmit) {
                         btnSubmit.disabled = false;
                     }
-                });
+                }
+            });
 
-            function procesarLoginExitoso(idToken, msgEl) {
+            function procesarLoginExitoso(idToken: string, msgEl: HTMLElement | null) {
                 // Almacenar el token localmente para usarlo en futuras peticiones a API Gateway
                 localStorage.setItem("sportmind_token", idToken);
 
-                const payload = JSON.parse(atob(idToken.split(".")[1]));
-                const grupos = payload["cognito:groups"] || ["sin grupo"];
+                try {
+                    const payload = JSON.parse(atob(idToken.split(".")[1]));
+                    const grupos = (payload["cognito:groups"] as string[] | undefined) || ["sin grupo"];
 
-                msgEl.textContent = `¡Bienvenido! Rol: ${grupos.join(", ")}`;
-                msgEl.className = "mt-4 text-sm text-center text-green-600";
-                document.getElementById("btnSubmit").disabled = false;
+                    if (msgEl) {
+                        msgEl.textContent = `¡Bienvenido! Rol: ${grupos.join(", ")}. Redirigiendo al dashboard...`;
+                        msgEl.className = "mt-4 text-sm text-center text-green-600";
+                    }
+                } catch {
+                    if (msgEl) {
+                        msgEl.textContent = "¡Bienvenido! Redirigiendo al dashboard...";
+                        msgEl.className = "mt-4 text-sm text-center text-green-600";
+                    }
+                }
 
-                console.log(
-                    "Token guardado en localStorage:",
-                    localStorage.getItem("sportmind_token"),
-                );
+                const btnSubmit = document.getElementById("btnSubmit") as HTMLButtonElement | null;
+                if (btnSubmit) {
+                    btnSubmit.disabled = true;
+                }
+
+                // Redirigir directamente al dashboard
+                setTimeout(() => {
+                    window.location.replace("/dashboard");
+                }, 600);
             }
         </script>
     </body>

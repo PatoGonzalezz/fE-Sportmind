@@ -18,7 +18,33 @@ import "../styles/global.css";
             body {
                 font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
             }
+            /* Ocultar contenido antes de validar autenticación para evitar parpadeo */
+            html:not(.auth-ok) body {
+                display: none !important;
+            }
         </style>
+        <!-- Protección de Ruta: Acceso restringido a usuarios autenticados -->
+        <script is:inline>
+            (function () {
+                const token = localStorage.getItem("sportmind_token");
+                if (!token) {
+                    window.location.replace("/login");
+                    return;
+                }
+                try {
+                    const payload = JSON.parse(atob(token.split(".")[1]));
+                    if (payload.exp && payload.exp * 1000 <= Date.now()) {
+                        localStorage.removeItem("sportmind_token");
+                        window.location.replace("/login");
+                        return;
+                    }
+                    document.documentElement.classList.add("auth-ok");
+                } catch {
+                    localStorage.removeItem("sportmind_token");
+                    window.location.replace("/login");
+                }
+            })();
+        </script>
     </head>
     <body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-indigo-500 selection:text-white antialiased">
         <!-- Fondo ambiental sutil -->
@@ -68,6 +94,17 @@ import "../styles/global.css";
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
                             <span>Actualizar</span>
+                        </button>
+
+                        <button
+                            id="btn-logout"
+                            class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border border-slate-700/60 hover:border-rose-500/40 text-xs font-semibold shadow-sm transition-all active:scale-95 cursor-pointer"
+                            title="Cerrar sesión"
+                        >
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            <span>Salir</span>
                         </button>
                     </div>
                 </div>
@@ -949,6 +986,12 @@ import "../styles/global.css";
 
             btnRefresh?.addEventListener("click", loadData);
             btnCloseModal?.addEventListener("click", () => jsonModal?.close());
+
+            // Cerrar sesión
+            document.getElementById("btn-logout")?.addEventListener("click", () => {
+                localStorage.removeItem("sportmind_token");
+                window.location.replace("/login");
+            });
 
             // Iniciar carga
             loadData();
