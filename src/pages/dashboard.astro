@@ -221,7 +221,15 @@ import Layout from '../layouts/Layout.astro';
             fetchSportmindData, filterSportmindRecords, getEmotionConfig, formatDateTime, type SportmindSession,
         } from "../services/sportmindService";
         import Chart from "chart.js/auto";
+        function registrarEventoLog(accion: string) {
+    const usuario = localStorage.getItem("sportmind_user") || "Usuario_Admin";
+    const fechaHora = new Date().toLocaleString('es-CL');
+    const textoLog = `[${fechaHora}] [INFO] [${usuario}]: ${accion}`;
 
+    const historialLogs = JSON.parse(localStorage.getItem('sportmind_logs') || '[]');
+    historialLogs.push(textoLog);
+    localStorage.setItem('sportmind_logs', JSON.stringify(historialLogs));
+}
         let allSessions: SportmindSession[] = [];
         let currentFiltered: SportmindSession[] = [];
         let currentView: "cards" | "table" | "charts" = "cards";
@@ -620,13 +628,30 @@ import Layout from '../layouts/Layout.astro';
             renderCurrentView();
         }
 
-        viewCardsBtn?.addEventListener("click", () => setView("cards"));
-        viewTableBtn?.addEventListener("click", () => setView("table"));
-        viewChartsBtn?.addEventListener("click", () => setView("charts"));
-
-        btnRefresh?.addEventListener("click", loadData);
+       viewCardsBtn?.addEventListener("click", () => {
+    registrarEventoLog("Cambió a la vista de Tarjetas");
+    setView("cards");
+});
+viewTableBtn?.addEventListener("click", () => {
+    registrarEventoLog("Cambió a la vista de Tabla");
+    setView("table");
+});
+viewChartsBtn?.addEventListener("click", () => {
+    registrarEventoLog("Cambió a la vista de Gráficos");
+    setView("charts");
+});
+        btnRefresh?.addEventListener("click", () => {
+    registrarEventoLog("Hizo clic en el botón Actualizar S3");
+    loadData();
+});
         btnCloseModal?.addEventListener("click", () => jsonModal?.close());
-
+        document.addEventListener("click", (e) => {
+    const elemento = e.target as HTMLElement;
+    // Verifica si lo que el usuario apretó contiene la palabra "JSON"
+    if (elemento && elemento.textContent && elemento.textContent.includes("JSON")) {
+        registrarEventoLog("Hizo clic en el botón Ver JSON");
+    }
+});
         btnLogout?.addEventListener("click", () => {
             localStorage.removeItem("sportmind_token");
             window.location.replace("/login");
