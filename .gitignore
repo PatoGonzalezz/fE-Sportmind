@@ -24,3 +24,9 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
