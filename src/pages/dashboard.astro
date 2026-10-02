@@ -37,11 +37,10 @@ import Layout from "../layouts/Layout.astro";
     /* ── KPI Cards ── */
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
       margin-bottom: 28px;
     }
-    @media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 500px) { .kpi-grid { grid-template-columns: 1fr; } }
 
     .kpi-card {
@@ -79,6 +78,13 @@ import Layout from "../layouts/Layout.astro";
       display: flex; gap: 12px; align-items: center;
       flex-wrap: wrap; margin-bottom: 14px;
     }
+    .toolbar-top-primary { margin-bottom: 0; }
+    .advanced-filters { margin-top: 14px; }
+    .advanced-filters summary {
+      width: fit-content; color: #4a5568; cursor: pointer;
+      font-size: 13px; font-weight: 600; padding: 6px 0;
+    }
+    .advanced-filters[open] .toolbar-top { margin-top: 10px; }
     .search-wrapper {
       flex: 1; min-width: 220px;
       position: relative;
@@ -308,7 +314,7 @@ import Layout from "../layouts/Layout.astro";
 
     /* Panel resultado IA */
     :global(.ia-result-panel) {
-      display: none; margin-top: 12px;
+      display: block; margin-top: 12px;
       background: #f0fdf4; border: 1.5px solid #a7f3d0;
       border-radius: 14px; padding: 16px;
       animation: fadeInUp 0.3s ease;
@@ -322,6 +328,44 @@ import Layout from "../layouts/Layout.astro";
     :global(.ia-diagnosis-title.risk) { color: #d97706; }
     :global(.ia-confidence) { font-size: 13px; color: #718096; margin-top: 6px; font-weight: 500; }
     :global(.ia-confidence strong) { color: #4a5568; }
+
+    :global(.session-highlights) {
+      display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px;
+    }
+    :global(.session-highlight) {
+      display: inline-flex; align-items: baseline; gap: 6px;
+      padding: 8px 11px; border: 1px solid #e2e8f0; border-radius: 10px;
+      background: #f8fafc; color: #475569; font-size: 12px;
+    }
+    :global(.session-highlight strong) { color: #1e293b; font-size: 13px; }
+    :global(.card-details) { border-top: 1px solid #f0f4f8; padding-top: 12px; }
+    :global(.card-details summary) {
+      width: fit-content; color: #2563eb; cursor: pointer;
+      font-size: 13px; font-weight: 700; padding: 4px 0;
+    }
+    :global(.card-details summary:hover) { color: #1d4ed8; }
+    :global(.card-details-content) { padding-top: 14px; }
+    :global(.card-details .metrics-grid) { margin-bottom: 14px; }
+    :global(.details-no-data) { margin: 0; color: #718096; font-size: 13px; }
+    :global(.detail-layout) {
+      display: grid; grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.7fr);
+      align-items: start; gap: 20px;
+    }
+    :global(.analysis-column) {
+      display: flex; flex-direction: column; gap: 14px;
+      padding: 18px; background: #f8fafc; border: 1px solid #e2e8f0;
+      border-radius: 16px; min-width: 0;
+    }
+    :global(.analysis-heading) { margin: 0; color: #1e293b; font-size: 15px; font-weight: 800; }
+    :global(.analysis-hint) { margin: -8px 0 0; color: #64748b; font-size: 12px; line-height: 1.5; }
+    :global(.analysis-column .ia-result-panel) { margin-top: 0; min-height: 130px; }
+    :global(.detail-column) { min-width: 0; }
+    :global(.detail-column .metrics-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    :global(.detail-column .metric-section) { padding: 13px; }
+    :global(.detail-actions) {
+      display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px;
+      padding-top: 14px; border-top: 1px solid #f0f4f8;
+    }
 
     /* ── Vista Tabla ── */
     .table-container {
@@ -371,17 +415,19 @@ import Layout from "../layouts/Layout.astro";
     }
     .btn-reset:hover { background: #e2e8f0; }
 
-    /* ── Modal JSON ── */
+    /* ── Modal detalle de sesión ── */
     dialog {
-      border: none; background: transparent;
-      max-width: 680px; width: 100%; padding: 20px;
+      position: fixed; inset: 0; margin: auto; border: none; background: transparent;
+      width: min(96vw, 1280px); max-width: none;
+      height: min(860px, calc(100dvh - 32px)); max-height: calc(100dvh - 32px);
+      padding: 0; overflow: visible;
     }
     dialog::backdrop { background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); }
     .modal-inner {
       background: #fff; border-radius: 20px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.15);
       overflow: hidden; display: flex; flex-direction: column;
-      max-height: 80vh;
+      height: 100%; max-height: none;
     }
     .modal-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -395,7 +441,24 @@ import Layout from "../layouts/Layout.astro";
       display: flex; align-items: center; justify-content: center;
     }
     .modal-close:hover { background: #e2e8f0; color: #1a202c; }
-    .modal-body { overflow-y: auto; flex: 1; padding: 20px 24px; }
+    .modal-body { overflow-y: auto; min-height: 0; flex: 1; padding: 20px 24px; }
+    :global(.btn-view-details) {
+      align-self: flex-start; background: #eff6ff; color: #1d4ed8;
+      border: 1px solid #bfdbfe; border-radius: 10px;
+      padding: 9px 14px; font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+    :global(.btn-view-details:hover) { background: #dbeafe; }
+    .modal-actions { display: flex; justify-content: flex-end; margin-top: 16px; }
+    .json-toggle { margin-top: 14px; }
+    @media (max-width: 860px) {
+      :global(.detail-layout) { grid-template-columns: 1fr; }
+      :global(.analysis-column) { order: 0; }
+    }
+    @media (max-width: 600px) {
+      dialog { width: calc(100vw - 16px); height: calc(100dvh - 16px); max-height: calc(100dvh - 16px); }
+      .modal-header, .modal-body { padding: 16px; }
+      :global(.detail-column .metrics-grid) { grid-template-columns: 1fr; }
+    }
     .json-pre {
       background: #1e293b; color: #7dd3fc;
       border-radius: 12px; padding: 20px;
@@ -435,48 +498,30 @@ import Layout from "../layouts/Layout.astro";
   </div>
 
   <!-- ── KPIs ── -->
-  <section class="kpi-grid" id="kpis-section">
+  <section class="kpi-grid" id="kpis-section" aria-label="Resumen de evaluaciones filtradas">
     <div class="kpi-card">
       <div class="kpi-header">
-        <span class="kpi-label">Total de Sesiones</span>
+        <span class="kpi-label">Sesiones</span>
         <div class="kpi-icon" style="background:#eff6ff;">📋</div>
       </div>
       <div class="kpi-value" id="kpi-total-sessions">—</div>
-      <div class="kpi-unit">evaluaciones registradas</div>
+      <div class="kpi-unit">en la selección actual</div>
       <div class="kpi-accent" style="background:linear-gradient(90deg,#3b82f6,#60a5fa);"></div>
     </div>
     <div class="kpi-card">
       <div class="kpi-header">
-        <span class="kpi-label">Atletas Evaluados</span>
+        <span class="kpi-label">Atletas</span>
         <div class="kpi-icon" style="background:#ecfdf5;">👥</div>
       </div>
       <div class="kpi-value" id="kpi-unique-athletes">—</div>
-      <div class="kpi-unit">atletas únicos</div>
+      <div class="kpi-unit">personas en la selección actual</div>
       <div class="kpi-accent" style="background:linear-gradient(90deg,#10b981,#34d399);"></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span class="kpi-label">Promedio Puntaje Tiro</span>
-        <div class="kpi-icon" style="background:#fff7ed;">🎯</div>
-      </div>
-      <div class="kpi-value" style="color:#f59e0b;" id="kpi-avg-shooting">—</div>
-      <div class="kpi-unit">puntos promedio</div>
-      <div class="kpi-accent" style="background:linear-gradient(90deg,#f59e0b,#fbbf24);"></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span class="kpi-label">Tiempo Medio Escalada</span>
-        <div class="kpi-icon" style="background:#fdf4ff;">🧗</div>
-      </div>
-      <div class="kpi-value" style="color:#8b5cf6;" id="kpi-avg-climbing">—</div>
-      <div class="kpi-unit">segundos promedio</div>
-      <div class="kpi-accent" style="background:linear-gradient(90deg,#8b5cf6,#a78bfa);"></div>
     </div>
   </section>
 
   <!-- ── BARRA DE HERRAMIENTAS ── -->
   <div class="toolbar">
-    <div class="toolbar-top">
+    <div class="toolbar-top toolbar-top-primary">
       <div class="search-wrapper">
         <span class="search-icon">🔍</span>
         <input
@@ -491,6 +536,12 @@ import Layout from "../layouts/Layout.astro";
       <select id="filter-sport" class="filter-select">
         <option value="all">🏆 Todos los deportes</option>
       </select>
+
+    </div>
+
+    <details class="advanced-filters">
+      <summary>Más filtros</summary>
+      <div class="toolbar-top">
 
       <select id="filter-emotion" class="filter-select">
         <option value="all">😊 Todas las emociones</option>
@@ -508,7 +559,8 @@ import Layout from "../layouts/Layout.astro";
         <option value="shooting-desc">🎯 Mayor puntaje de tiro</option>
         <option value="climbing-asc">🧗 Menor tiempo de escalada</option>
       </select>
-    </div>
+      </div>
+    </details>
 
     <div class="toolbar-bottom">
       <p class="results-count" id="results-count">Cargando evaluaciones...</p>
@@ -582,15 +634,16 @@ import Layout from "../layouts/Layout.astro";
     <button id="btn-reset-filters" class="btn-reset">Limpiar filtros</button>
   </div>
 
-  <!-- ── MODAL JSON ── -->
-  <dialog id="json-modal">
+  <!-- ── MODAL DETALLE DE SESIÓN ── -->
+  <dialog id="session-modal" aria-labelledby="detail-modal-title">
     <div class="modal-inner">
       <div class="modal-header">
-        <span class="modal-title">📄 Datos completos de la sesión</span>
-        <button id="btn-close-modal" class="modal-close">✕</button>
+        <span id="detail-modal-title" class="modal-title">Detalle de la sesión</span>
+        <button id="btn-close-modal" class="modal-close" aria-label="Cerrar detalle">✕</button>
       </div>
       <div class="modal-body">
-        <pre id="json-modal-content" class="json-pre"></pre>
+        <div id="detail-modal-content"></div>
+        <pre id="json-modal-content" class="json-pre" hidden></pre>
       </div>
     </div>
   </dialog>
@@ -662,7 +715,9 @@ import Layout from "../layouts/Layout.astro";
     const viewTableBtn  = document.getElementById("view-table-btn");
     const viewChartsBtn = document.getElementById("view-charts-btn");
     const btnRefresh    = document.getElementById("btn-refresh-s3");
-    const jsonModal     = document.getElementById("json-modal") as HTMLDialogElement;
+    const jsonModal     = document.getElementById("session-modal") as HTMLDialogElement;
+    const detailModalTitle = document.getElementById("detail-modal-title");
+    const detailModalContent = document.getElementById("detail-modal-content");
     const jsonModalContent = document.getElementById("json-modal-content");
     const btnCloseModal = document.getElementById("btn-close-modal");
 
@@ -690,7 +745,8 @@ import Layout from "../layouts/Layout.astro";
     }
 
     function renderMeter(label: string, val: number | undefined, max = 5): string {
-      const v = Number(val) || 0;
+      if (typeof val !== "number" || !Number.isFinite(val)) return "";
+      const v = val;
       const pct = Math.min(Math.max((v / max) * 100, 0), 100);
       const color = v >= 4 ? "#10b981" : v >= 3 ? "#3b82f6" : v >= 2 ? "#f59e0b" : "#ef4444";
       return `
@@ -745,18 +801,10 @@ import Layout from "../layouts/Layout.astro";
     function updateKPIs(sessions: SportmindSession[]) {
       const total   = document.getElementById("kpi-total-sessions");
       const athletes= document.getElementById("kpi-unique-athletes");
-      const avgShoot= document.getElementById("kpi-avg-shooting");
-      const avgClimb= document.getElementById("kpi-avg-climbing");
 
       if (total) total.textContent = String(sessions.length);
-      const uniqueAthletes = new Set(sessions.map(s => (s.data.playerName || "").toLowerCase().trim()));
+      const uniqueAthletes = new Set(sessions.map(s => (s.data.playerName || "").toLowerCase().trim()).filter(Boolean));
       if (athletes) athletes.textContent = String(uniqueAthletes.size);
-
-      const scores = sessions.flatMap(s => [s.data.shootingScoreEasy, s.data.shootingScoreHard]).filter((n): n is number => typeof n === "number");
-      if (avgShoot) avgShoot.textContent = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : "—";
-
-      const times = sessions.flatMap(s => [s.data.climbingTimeEasy, s.data.climbingTimeHard]).filter((n): n is number => typeof n === "number");
-      if (avgClimb) avgClimb.textContent = times.length ? (times.reduce((a,b)=>a+b,0)/times.length).toFixed(1) : "—";
     }
 
     function applyFilters() {
@@ -767,6 +815,7 @@ import Layout from "../layouts/Layout.astro";
 
       btnClearSearch.style.display = query.length > 0 ? "block" : "none";
       currentFiltered = filterSportmindRecords(allSessions, { query, sport, emotion, sortBy: sort });
+      updateKPIs(currentFiltered);
       if (resultsCount) resultsCount.textContent = `Mostrando ${currentFiltered.length} de ${allSessions.length} evaluaciones`;
       renderCurrentView();
     }
@@ -812,6 +861,12 @@ import Layout from "../layouts/Layout.astro";
         const date = formatDateTime(session.timestamp);
         const climbEasy = typeof d.climbingTimeEasy === "number" ? d.climbingTimeEasy.toFixed(1) : "—";
         const climbHard = typeof d.climbingTimeHard === "number" ? d.climbingTimeHard.toFixed(1) : "—";
+        const shootingSummary = typeof d.shootingScoreEasy === "number" || typeof d.shootingScoreHard === "number"
+          ? `<div class="session-highlight">🎯 Tiro <strong>${d.shootingScoreEasy ?? "—"} / ${d.shootingScoreHard ?? "—"} pts</strong></div>` : "";
+        const climbingSummary = typeof d.climbingTimeEasy === "number" || typeof d.climbingTimeHard === "number"
+          ? `<div class="session-highlight">🧗 Escalada <strong>${climbEasy} / ${climbHard} s</strong></div>` : "";
+        const hasShootingData = [d.shootingScoreEasy, d.shootingScoreHard, d.shootingRendimiento, d.shootingRitmo, d.shootingConfianza].some(value => typeof value === "number") || Boolean(d.shootingPostEmotion);
+        const hasClimbingData = [d.climbingTimeEasy, d.climbingTimeHard, d.climbingRendimiento, d.climbingRitmo, d.climbingConfianza].some(value => typeof value === "number") || Boolean(d.climbingPostEmotion);
 
         return `
           <article class="eval-card" style="animation-delay:${index * 40}ms;">
@@ -834,8 +889,35 @@ import Layout from "../layouts/Layout.astro";
               </div>
             </div>
 
-            <!-- Métricas: Tiro + Escalada -->
+            <div class="session-highlights" aria-label="Resultados registrados">
+              ${shootingSummary}${climbingSummary}
+              ${!shootingSummary && !climbingSummary ? '<span class="session-highlight">Sin resultados cuantitativos registrados</span>' : ""}
+            </div>
+
+            <button class="btn-view-details" data-session-index="${index}" aria-haspopup="dialog">
+              Ver informe detallado
+            </button>
+            <template id="session-detail-${index}">
+              <div class="card-details-content">
+                <div class="detail-layout">
+                  <aside class="analysis-column" aria-label="Análisis automatizado">
+                    <h3 class="analysis-heading">Análisis de apoyo</h3>
+                    <p class="analysis-hint">La predicción complementa la lectura profesional y no constituye un diagnóstico.</p>
+                    <div class="recommendation-chip">
+                      ⭐ Recomendación registrada: <strong>${d.recomendacionFinal ?? "—"}/10</strong>
+                    </div>
+                    <button class="btn-ai btn-predict-ia" data-session-index="${index}">
+                      🧠 Analizar sesión
+                    </button>
+                    <div id="ia-result-${index}" class="ia-result-panel">
+                      <div class="ia-diagnosis-label">Resultado del análisis</div>
+                      <div class="ia-confidence">Pulsa “Analizar sesión” para consultar la predicción y su certeza.</div>
+                    </div>
+                  </aside>
+                  <section class="detail-column" aria-label="Resultados de la sesión">
+            <!-- Métricas detalladas: tiro + escalada -->
             <div class="metrics-grid">
+              ${hasShootingData ? `
               <!-- Tiro -->
               <div class="metric-section">
                 <div class="metric-section-header">
@@ -858,7 +940,9 @@ import Layout from "../layouts/Layout.astro";
                 ${renderMeter("Ritmo", d.shootingRitmo)}
                 ${renderMeter("Confianza", d.shootingConfianza)}
               </div>
+              ` : ""}
 
+              ${hasClimbingData ? `
               <!-- Escalada -->
               <div class="metric-section">
                 <div class="metric-section-header">
@@ -881,30 +965,20 @@ import Layout from "../layouts/Layout.astro";
                 ${renderMeter("Ritmo", d.climbingRitmo)}
                 ${renderMeter("Confianza", d.climbingConfianza)}
               </div>
+              ` : ""}
+              ${!hasShootingData && !hasClimbingData ? '<p class="details-no-data">No hay métricas adicionales registradas para esta sesión.</p>' : ""}
             </div>
 
-            <!-- Footer: Recomendación + IA + Acciones -->
-            <div class="card-footer">
-              <div class="card-footer-row">
-                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                  <div class="recommendation-chip">
-                    ⭐ Recomendación: <strong>${d.recomendacionFinal ?? "—"}/10</strong>
-                  </div>
-                  <button class="btn-ai btn-predict-ia" data-session-index="${index}">
-                    🧠 Analizar con IA
-                  </button>
-                </div>
-                <div style="display:flex;align-items:center;gap:8px;">
-                  <button class="btn-json btn-view-raw" data-session-index="${index}">Ver datos</button>
-                  <button class="btn-copy-id" data-id="${session.session_id}" title="Copiar ID de sesión">
-                    📋 ID: ${session.session_id.substring(0, 6)}…
-                  </button>
+            <div class="detail-actions">
+              <button class="btn-json btn-view-raw" data-session-index="${index}">Ver datos completos</button>
+              <button class="btn-copy-id" data-id="${session.session_id}" title="Copiar ID de sesión">
+                📋 Copiar ID
+              </button>
+            </div>
+                  </section>
                 </div>
               </div>
-
-              <!-- Resultado de la IA -->
-              <div id="ia-result-${index}" class="ia-result-panel"></div>
-            </div>
+            </template>
           </article>`;
       }).join("");
       attachCardListeners();
@@ -1002,65 +1076,77 @@ import Layout from "../layouts/Layout.astro";
 
     // ── Listeners de tarjetas ──
     function attachCardListeners() {
-      // Copiar ID
-      document.querySelectorAll(".btn-copy-id").forEach(btn => {
+      document.querySelectorAll(".btn-view-details").forEach(btn => {
         btn.addEventListener("click", e => {
-          const id = (e.currentTarget as HTMLElement).dataset.id || "";
-          navigator.clipboard.writeText(id).then(() => showToast(`ID copiado: ${id.substring(0,8)}…`));
-        });
-      });
-
-      // Ver JSON
-      document.querySelectorAll(".btn-view-raw").forEach(btn => {
-        btn.addEventListener("click", e => {
-          const idx = Number((e.currentTarget as HTMLElement).dataset.sessionIndex);
-          const session = currentFiltered[idx];
-          if (session && jsonModalContent && jsonModal) {
-            jsonModalContent.textContent = JSON.stringify(session, null, 2);
-            jsonModal.showModal();
-            registrarEventoLog("Consultó el JSON de la sesión");
+          const index = Number((e.currentTarget as HTMLElement).dataset.sessionIndex);
+          const template = document.getElementById(`session-detail-${index}`) as HTMLTemplateElement | null;
+          if (!template || !detailModalContent || !jsonModal || !jsonModalContent) return;
+          detailModalContent.replaceChildren(template.content.cloneNode(true));
+          jsonModalContent.hidden = true;
+          jsonModalContent.textContent = "";
+          const session = currentFiltered[index];
+          if (detailModalTitle && session) {
+            detailModalTitle.textContent = `Informe de ${formatName(session.data.playerName)} · ${session.data.selectedSport || "Sesión"}`;
           }
-        });
-      });
-
-      // Analizar con IA
-      document.querySelectorAll(".btn-predict-ia").forEach(btn => {
-        btn.addEventListener("click", async e => {
-          const target = e.currentTarget as HTMLButtonElement;
-          const idx = Number(target.dataset.sessionIndex);
-          const session = currentFiltered[idx];
-          const resultPanel = document.getElementById(`ia-result-${idx}`);
-          if (!resultPanel || !session) return;
-
-          const original = target.innerHTML;
-          target.innerHTML = "⏳ Analizando...";
-          target.disabled = true;
-
-          const iaResponse = await predecirAutorregulacion({ ...session.data });
-
-          target.innerHTML = original;
-          target.disabled = false;
-
-          if (iaResponse) {
-            const isOk = iaResponse.prediccion === 1;
-            resultPanel.className = `ia-result-panel ${isOk ? '' : 'danger'}`;
-            resultPanel.style.display = "block";
-            const prob = iaResponse.probabilidades
-              ? (Math.max(...iaResponse.probabilidades) * 100).toFixed(1) + "%"
-              : "No disponible";
-
-            resultPanel.innerHTML = `
-              <div class="ia-diagnosis-label">🧠 Resultado del Análisis de Inteligencia Artificial</div>
-              <div class="ia-diagnosis-title ${isOk ? 'ok' : 'risk'}">${isOk ? '✅' : '⚠️'} ${iaResponse.etiqueta}</div>
-              <div class="ia-confidence">Nivel de certeza del modelo: <strong>${prob}</strong></div>
-            `;
-            registrarEventoLog(`Análisis de IA ejecutado para sesión ${session.session_id.substring(0,8)}`);
-          } else {
-            showToast("❌ No se pudo conectar con la API de IA. Verifica que uvicorn esté activo.");
-          }
+          jsonModal.showModal();
+          registrarEventoLog("Abrió el detalle de una sesión");
         });
       });
     }
+
+    detailModalContent?.addEventListener("click", async e => {
+      const target = (e.target as HTMLElement).closest("button") as HTMLButtonElement | null;
+      if (!target) return;
+
+      if (target.classList.contains("btn-copy-id")) {
+        const id = target.dataset.id || "";
+        await navigator.clipboard.writeText(id);
+        showToast(`ID copiado: ${id.substring(0, 8)}…`);
+        return;
+      }
+
+      const index = Number(target.dataset.sessionIndex);
+      const session = currentFiltered[index];
+      if (target.classList.contains("btn-view-raw") && session && jsonModalContent) {
+        jsonModalContent.textContent = JSON.stringify(session, null, 2);
+        jsonModalContent.hidden = !jsonModalContent.hidden;
+        target.textContent = jsonModalContent.hidden ? "Ver datos completos" : "Ocultar datos";
+        if (!jsonModalContent.hidden) jsonModalContent.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        registrarEventoLog("Consultó el JSON de la sesión");
+        return;
+      }
+
+      if (target.classList.contains("btn-predict-ia") && session) {
+        const resultPanel = detailModalContent.querySelector(`#ia-result-${index}`);
+        if (!resultPanel) return;
+        const original = target.innerHTML;
+        target.innerHTML = "⏳ Analizando...";
+        target.disabled = true;
+        resultPanel.innerHTML = '<div class="ia-diagnosis-label">Análisis en curso</div><div class="ia-confidence">Estamos procesando los datos de esta sesión…</div>';
+        const iaResponse = await predecirAutorregulacion({ ...session.data });
+        target.innerHTML = original;
+        target.disabled = false;
+
+        if (iaResponse) {
+          const isOk = iaResponse.prediccion === 1;
+          const prob = iaResponse.probabilidades
+            ? (Math.max(...iaResponse.probabilidades) * 100).toFixed(1) + "%"
+            : "No disponible";
+          resultPanel.className = `ia-result-panel ${isOk ? "" : "danger"}`;
+          (resultPanel as HTMLElement).style.display = "block";
+          resultPanel.innerHTML = `
+            <div class="ia-diagnosis-label">🧠 Resultado del análisis automatizado</div>
+            <div class="ia-diagnosis-title ${isOk ? "ok" : "risk"}">${isOk ? "✅" : "⚠️"} ${iaResponse.etiqueta}</div>
+            <div class="ia-confidence">Certeza informada por el modelo: <strong>${prob}</strong></div>
+            <div class="ia-confidence">Resultado de apoyo; no reemplaza la evaluación profesional.</div>
+          `;
+          registrarEventoLog(`Análisis de IA ejecutado para sesión ${session.session_id.substring(0, 8)}`);
+        } else {
+          resultPanel.innerHTML = '<div class="ia-diagnosis-label">Análisis no disponible</div><div class="ia-confidence">No se pudo obtener una respuesta. Inténtalo nuevamente más tarde.</div>';
+          showToast("❌ No se pudo conectar con la API de IA. Verifica que uvicorn esté activo.");
+        }
+      }
+    });
 
     // ── Cambio de vista ──
     function setView(view: "cards" | "table" | "charts") {
@@ -1089,6 +1175,9 @@ import Layout from "../layouts/Layout.astro";
     viewChartsBtn?.addEventListener("click", () => { registrarEventoLog("Vista: Gráficos"); setView("charts"); });
     btnRefresh?.addEventListener("click", () => { registrarEventoLog("Actualizó datos de S3"); loadData(); });
     btnCloseModal?.addEventListener("click", () => jsonModal?.close());
+    jsonModal?.addEventListener("click", e => {
+      if (e.target === jsonModal) jsonModal.close();
+    });
 
     // ── Inicio ──
     loadData();

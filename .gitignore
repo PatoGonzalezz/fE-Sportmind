@@ -30,3 +30,4 @@ venv/
 .venv/
 __pycache__/
 *.pyc
+INFORME-CAMBIOS-UX.md
