@@ -38,6 +38,7 @@
     "wait-on": "^9.1.0"
   },
   "dependencies": {
+    "html2pdf.js": "^0.14.0",
     "onnxruntime-web": "^1.30.0"
   }
 }
