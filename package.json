@@ -19,9 +19,9 @@
     "electron:dir": "astro build && electron-builder --dir",
     "electron:build": "astro build && electron-builder",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "dev:all": "concurrently \"npm run api\" \"npm run dev\""
   },
-  "dependencies": {},
   "allowScripts": {
     "esbuild": true
   },
@@ -36,5 +36,8 @@
     "electron-builder": "^26.15.3",
     "tailwindcss": "^4.3.3",
     "wait-on": "^9.1.0"
+  },
+  "dependencies": {
+    "onnxruntime-web": "^1.30.0"
   }
 }
