@@ -1688,6 +1688,9 @@ import Layout from "../layouts/Layout.astro";
               <button class="btn-copy-id" data-id="${session.session_id}" title="Copiar ID de sesión">
                 📋 Copiar ID
               </button>
+              <button type="button" class="btn-pdf-atleta btn-copy-id" style="margin-left: 8px;" title="Descargar PDF">
+    🖨️ PDF
+  </button>
             </div>
                   </section>
                 </div>
@@ -2013,4 +2016,138 @@ import Layout from "../layouts/Layout.astro";
     // ── Inicio ──
     loadData();
   </script>
+  <script>
+  import html2pdf from 'html2pdf.js';
+
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const boton = target && target.closest ? target.closest('.btn-pdf-atleta') as HTMLButtonElement : null;
+    
+    if (boton) {
+      e.preventDefault();
+      const textoOriginal = boton.innerHTML;
+      boton.innerHTML = "⏳ Generando Informe...";
+      boton.disabled = true;
+
+      const dialog = boton.closest('dialog');
+      const elementoBase = dialog ? dialog.firstElementChild as HTMLElement : boton.closest('article');
+      
+      if (!elementoBase) return;
+
+      const clone = elementoBase.cloneNode(true) as HTMLElement;
+      clone.id = 'informe-tecnico-pdf';
+
+      clone.querySelectorAll('button').forEach(btn => btn.remove());
+      const barraBotones = clone.querySelector('.detail-actions');
+      if (barraBotones) barraBotones.remove();
+
+      let tituloReporte = "Estadísticas del Atleta";
+      const posiblesTitulos = clone.querySelectorAll('h1, h2, h3, .text-xl, .font-bold');
+      if (posiblesTitulos.length > 0) {
+         tituloReporte = posiblesTitulos[0].textContent || "Informe";
+         (posiblesTitulos[0] as HTMLElement).style.display = 'none';
+      }
+
+      const estilos = document.createElement('style');
+      estilos.innerHTML = `
+        #informe-tecnico-pdf {
+          background-color: #ffffff !important;
+          padding: 50px 60px !important;
+          width: 800px !important;
+          font-family: 'Georgia', 'Times New Roman', serif !important;
+          color: #000000 !important;
+        }
+
+        .cabecera-tecnica {
+          text-align: center;
+          border-bottom: 3px double #000;
+          padding-bottom: 20px;
+          margin-bottom: 40px;
+        }
+        .cabecera-tecnica h1 { font-size: 24px; text-transform: uppercase; letter-spacing: 2px; margin: 0; color: #000 !important; }
+        .cabecera-tecnica h2 { font-size: 18px; margin: 10px 0 0 0; color: #333 !important; font-weight: normal; }
+        .cabecera-tecnica p { font-size: 12px; margin: 15px 0 0 0; font-family: Arial, sans-serif; color: #666 !important; }
+
+        #informe-tecnico-pdf * {
+          box-shadow: none !important;
+          border-radius: 0 !important;
+        }
+        #informe-tecnico-pdf [class*="bg-"] { background: transparent !important; }
+        #informe-tecnico-pdf [class*="border"] { border: none !important; }
+
+        #informe-tecnico-pdf .grid {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 30px !important;
+        }
+
+        #informe-tecnico-pdf .flex.justify-between,
+        #informe-tecnico-pdf [class*="justify-between"] {
+          display: flex !important;
+          flex-direction: row !important;
+          justify-content: space-between !important;
+          border-bottom: 1px dotted #888 !important;
+          padding: 6px 0 !important;
+          margin: 0 !important;
+        }
+
+        #informe-tecnico-pdf h3, #informe-tecnico-pdf .font-bold.text-lg {
+          font-size: 16px !important;
+          text-transform: uppercase !important;
+          border-bottom: 2px solid #000 !important;
+          padding-bottom: 5px !important;
+          margin-bottom: 15px !important;
+          color: #000 !important;
+        }
+
+        #informe-tecnico-pdf p, #informe-tecnico-pdf span { color: #000 !important; }
+
+        #informe-tecnico-pdf [style*="width"] {
+          background-color: #333 !important;
+          height: 12px !important;
+          border: 1px solid #000 !important;
+        }
+      `;
+      clone.insertBefore(estilos, clone.firstChild);
+
+      const fecha = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+      const cabecera = document.createElement('div');
+      cabecera.className = 'cabecera-tecnica';
+      cabecera.innerHTML = `
+        <h1>Laboratorio de Rendimiento SportMind</h1>
+        <h2>Informe de Estadísticas Avanzadas</h2>
+        <h2><strong>${tituloReporte}</strong></h2>
+        <p>FECHA DE EMISIÓN: ${fecha.toUpperCase()}</p>
+      `;
+      clone.insertBefore(cabecera, estilos.nextSibling);
+
+      const contenedorOculto = document.createElement('div');
+      contenedorOculto.style.position = 'absolute';
+      contenedorOculto.style.left = '-9999px';
+      contenedorOculto.appendChild(clone);
+      document.body.appendChild(contenedorOculto);
+
+      const opciones = {
+        margin:       0.5,
+        filename:     'Informe_Estadistico_Atleta.pdf',
+        image:        { type: 'jpeg', quality: 1 },
+        html2canvas:  { scale: 2, useCORS: true, windowWidth: 800 },
+        jsPDF:        { unit: 'cm', format: 'letter', orientation: 'portrait' }
+      };
+      
+      try {
+        html2pdf().set(opciones).from(clone).save().then(() => {
+          boton.innerHTML = textoOriginal;
+          boton.disabled = false;
+          contenedorOculto.remove();
+        });
+      } catch (error) {
+        alert("Error: " + error);
+        boton.innerHTML = textoOriginal;
+        boton.disabled = false;
+        contenedorOculto.remove();
+      }
+    }
+  });
+</script>
 </Layout>
