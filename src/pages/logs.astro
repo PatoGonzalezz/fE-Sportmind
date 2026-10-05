@@ -3,42 +3,155 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout>
-    <div class="max-w-6xl mx-auto space-y-6">
-        
-        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-            <div>
-                <h1 class="text-xl font-bold text-white">Visor de Logs</h1>
-                <p class="text-xs text-slate-400 mt-0.5">Registro de auditoría y eventos del sistema (Solo lectura).</p>
-            </div>
-            <div class="text-xs font-mono text-slate-400 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg">
-                Estado: <span class="text-emerald-400">● Conectado</span>
-            </div>
-        </div>
+  <style>
+    h1, h2, h3 { letter-spacing: -0.3px; }
 
-        <!-- Consola / Visor de Texto (Solo Ver) -->
-        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 font-mono text-xs text-slate-300 shadow-xl overflow-hidden">
-            <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800/80 text-slate-500 text-[11px]">
-                <span>[SYSTEM_LOG_STREAM_ACTIVE]</span>
-                <span>Encoding: UTF-8</span>
-            </div>
+    .page-header {
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    }
+    .page-title  { font-size: 24px; font-weight: 800; color: #1a202c; }
+    .page-subtitle { font-size: 14px; color: #718096; margin-top: 4px; }
 
-            <!-- Contenedor del texto de los logs -->
-            <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-2 select-text">
-                <div class="text-slate-500">[2026-09-25 18:30:12] [INFO] AuthService: Token JWT validado correctamente para usuario Cognito.</div>
-                <div class="text-amber-400/90">[2026-09-25 18:28:45] [WARN] S3Sync: Retraso en la respuesta del bucket (latencia > 800ms).</div>
-                <div class="text-slate-500">[2026-09-25 18:15:00] [INFO] Dashboard: 11 registros cargados exitosamente desde caché local.</div>
-                <div class="text-rose-400">[2026-09-25 17:50:22] [ERROR] Database: Excepción capturada en sp_guardar_error: conexión rechazada temporalmente.</div>
-                <div class="text-slate-500">[2026-09-25 17:10:05] [INFO] Router: Redirección automática aplicada por falta de sesión activa.</div>
-                <div class="text-slate-500">[2026-09-25 16:45:30] [INFO] Vite: Compilación de módulos completada sin errores.</div>
-            </div>
-        </div>
+    .btn-danger {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #fff0f0; color: #dc2626;
+      border: 1.5px solid #fecaca; border-radius: 10px;
+      padding: 9px 16px; font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-danger:hover { background: #fee2e2; }
+
+    /* Terminal de logs */
+    .log-terminal {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 18px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      overflow: hidden;
+    }
+    .log-terminal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+    }
+    .terminal-dots {
+      display: flex; gap: 6px;
+    }
+    .terminal-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+    }
+    .log-terminal-title {
+      font-size: 12px; font-weight: 700; color: #64748b;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .log-body {
+      padding: 20px;
+      max-height: 65vh; overflow-y: auto;
+      font-family: 'Fira Code', 'JetBrains Mono', 'Courier New', monospace;
+      font-size: 12.5px; line-height: 1.9;
+    }
+    :global(.log-empty) {
+      color: #475569; font-style: italic;
+      text-align: center; padding: 40px 0;
+    }
+    :global(.log-entry) { color: #cbd5e1; }
+    :global(.log-entry:hover) { color: #f1f5f9; }
+    :global(.log-entry .log-ts) { color: #93c5fd; }
+    :global(.log-entry .log-level) { color: #6ee7b7; }
+    :global(.log-entry .log-user) { color: #fcd34d; }
+    :global(.log-entry .log-action) { color: #f1f5f9; }
+
+    .status-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #ecfdf5; color: #059669;
+      border: 1px solid #a7f3d0; border-radius: 8px;
+      padding: 5px 12px; font-size: 12px; font-weight: 700;
+    }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: #10b981;
+      animation: blink 2s infinite;
+    }
+    @keyframes blink {
+      0%,100% { opacity: 1; } 50% { opacity: 0.3; }
+    }
+  </style>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">📋 Historial de acciones</h1>
+      <p class="page-subtitle">Registro de las acciones realizadas en la plataforma.</p>
     </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="status-chip">
+        <div class="status-dot"></div>
+        Sistema Activo
+      </div>
+      <button id="btn-limpiar-logs" class="btn-danger">
+        🗑️ Limpiar historial
+      </button>
+    </div>
+  </div>
 
-    <script>
-        // Visor estático de solo lectura
-        document.getElementById("logout-btn")?.addEventListener("click", () => {
-            localStorage.removeItem("sportmind_token");
-            window.location.replace("/login");
-        });
-    </script>
+  <!-- Terminal de logs -->
+  <div class="log-terminal">
+    <div class="log-terminal-header">
+      <div class="terminal-dots">
+        <div class="terminal-dot" style="background:#ef4444;"></div>
+        <div class="terminal-dot" style="background:#f59e0b;"></div>
+        <div class="terminal-dot" style="background:#10b981;"></div>
+      </div>
+      <span class="log-terminal-title">SYSTEM_LOG_STREAM — SportMind v1.0 — UTF-8</span>
+      <span style="font-size:11px;color:#475569;" id="log-count">0 eventos</span>
+    </div>
+    <div class="log-body" id="contenedor-logs">
+      <div class="log-empty">No hay acciones registradas todavía.</div>
+    </div>
+  </div>
+
+  <script>
+    const container = document.getElementById('contenedor-logs');
+    const btnLimpiar = document.getElementById('btn-limpiar-logs');
+    const logCount = document.getElementById('log-count');
+
+    function parseLogEntry(log: string): string {
+      // Intenta colorear partes del log: [fecha] [nivel] [usuario]: acción
+      const match = log.match(/^\[(.+?)\]\s*\[(.+?)\]\s*\[(.+?)\]:\s*(.+)$/);
+      if (match) {
+        const [, ts, level, user, action] = match;
+        return `<div class="log-entry"><span class="log-ts">[${ts}]</span> <span class="log-level">[${level}]</span> <span class="log-user">[${user}]</span>: <span class="log-action">${action}</span></div>`;
+      }
+      return `<div class="log-entry">${log}</div>`;
+    }
+
+    function cargarLogs() {
+      if (!container) return;
+      const historial: string[] = JSON.parse(localStorage.getItem('sportmind_logs') || '[]');
+
+      if (historial.length === 0) {
+        container.innerHTML = '<div class="log-empty">No hay acciones registradas todavía.</div>';
+        if (logCount) logCount.textContent = '0 eventos';
+        return;
+      }
+
+      if (logCount) logCount.textContent = `${historial.length} evento${historial.length > 1 ? 's' : ''}`;
+      // Mantener el orden cronológico: las acciones nuevas quedan al final.
+      container.innerHTML = historial.map(parseLogEntry).join('');
+      // Al abrir o refrescar, mostrar de inmediato las acciones más recientes.
+      container.scrollTop = container.scrollHeight;
+    }
+
+    btnLimpiar?.addEventListener('click', () => {
+      if (confirm('¿Estás seguro de que quieres borrar todo el historial de acciones?')) {
+        localStorage.removeItem('sportmind_logs');
+        cargarLogs();
+      }
+    });
+
+    cargarLogs();
+  </script>
 </Layout>

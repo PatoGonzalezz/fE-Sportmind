@@ -4,13 +4,204 @@ import '../styles/global.css';
 <html lang="es">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>Sportmind Visualizer</title>
-    
-    <style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SportMind – Plataforma de Análisis Deportivo</title>
+
+    <style is:global>
+      /* Ocultar hasta verificar sesión */
       html:not(.auth-ok) body { display: none !important; }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+
+      body {
+        background-color: #f0f4f8;
+        color: #1a202c;
+        min-height: 100vh;
+        display: flex !important;
+        flex-direction: row !important;
+        overflow: hidden;
+      }
+
+      /* ── Sidebar ── */
+      .sidebar {
+        width: 260px;
+        min-width: 260px;
+        height: 100vh;
+        background: #1e293b !important;
+        display: flex !important;
+        flex-direction: column !important;
+        border-right: 1px solid #334155;
+        padding: 24px 16px;
+        position: relative;
+        overflow-y: auto;
+        flex-shrink: 0;
+        box-sizing: border-box;
+        z-index: 50;
+      }
+      .sidebar::before {
+        content: '';
+        position: absolute;
+        top: -60px; left: -40px;
+        width: 200px; height: 200px;
+        background: radial-gradient(circle, rgba(96,165,250,0.15) 0%, transparent 70%);
+        pointer-events: none;
+      }
+
+      /* Logo / Brand */
+      .sidebar-brand {
+        display: flex; align-items: center; gap: 12px;
+        padding: 0 8px 24px;
+        border-bottom: 1px solid #334155;
+        margin-bottom: 24px;
+      }
+      .sidebar-brand-icon {
+        width: 44px; height: 44px;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px;
+        box-shadow: 0 4px 16px rgba(59,130,246,0.35);
+        flex-shrink: 0;
+      }
+      .sidebar-brand-text h1 {
+        font-size: 18px; font-weight: 800;
+        color: #f1f5f9;
+        letter-spacing: -0.3px;
+        line-height: 1.1;
+      }
+      .sidebar-brand-text p {
+        font-size: 11px; color: #64748b;
+        font-weight: 500; margin-top: 2px;
+      }
+      .badge-live {
+        display: inline-block;
+        background: rgba(16,185,129,0.2);
+        color: #34d399;
+        border: 1px solid rgba(52,211,153,0.3);
+        font-size: 9px; font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 99px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+      }
+
+      /* Navegación */
+      .nav-section-label {
+        font-size: 10px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 1px;
+        color: #475569;
+        padding: 0 8px;
+        margin-bottom: 6px;
+      }
+      .nav-link {
+        display: flex; align-items: center; gap: 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-size: 14px; font-weight: 500;
+        color: #94a3b8;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border-left: 3px solid transparent;
+        margin-bottom: 2px;
+      }
+      .nav-link:hover {
+        background: rgba(255,255,255,0.06);
+        color: #e2e8f0;
+      }
+      .nav-link.active {
+        background: rgba(96,165,250,0.12);
+        color: #60a5fa;
+        border-left-color: #3b82f6;
+      }
+      .nav-link-icon {
+        width: 34px; height: 34px;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 8px;
+        font-size: 16px;
+        flex-shrink: 0;
+        background: rgba(255,255,255,0.05);
+        transition: background 0.2s;
+      }
+      .nav-link:hover .nav-link-icon,
+      .nav-link.active .nav-link-icon {
+        background: rgba(255,255,255,0.1);
+      }
+
+      /* Perfil usuario */
+      .sidebar-user {
+        margin-top: auto;
+        padding-top: 16px;
+        border-top: 1px solid #334155;
+      }
+      .user-card {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.04);
+        margin-bottom: 8px;
+      }
+      .user-avatar {
+        width: 36px; height: 36px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        color: #fff;
+        font-size: 13px; font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+      }
+      .user-info-name { font-size: 13px; font-weight: 600; color: #e2e8f0; }
+      .user-info-role { font-size: 11px; color: #64748b; margin-top: 1px; }
+
+      /* Botones de acción */
+      .btn-sidebar-action {
+        width: 100%;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 9px 16px;
+        border-radius: 10px;
+        font-size: 13px; font-weight: 600;
+        cursor: pointer; border: none;
+        transition: all 0.2s ease;
+        margin-bottom: 6px;
+      }
+      .btn-refresh-s3 {
+        background: rgba(59,130,246,0.15);
+        color: #60a5fa;
+        border: 1px solid rgba(59,130,246,0.25);
+      }
+      .btn-refresh-s3:hover { background: rgba(59,130,246,0.25); }
+      .btn-logout {
+        background: transparent;
+        color: #94a3b8;
+        border: 1px solid transparent;
+      }
+      .btn-logout:hover { background: rgba(239,68,68,0.1); color: #f87171; }
+
+      /* Main content */
+      main {
+        flex: 1;
+        height: 100vh;
+        overflow-y: auto;
+        background: #f0f4f8;
+        padding: 32px 36px;
+        box-sizing: border-box;
+      }
+
+      /* Responsive: ocultar sidebar en pantallas pequeñas */
+      @media (max-width: 768px) {
+        .sidebar { width: 72px; min-width: 72px; }
+        .sidebar-brand-text,
+        .nav-section-label,
+        .nav-link-label,
+        .sidebar-user-info,
+        .btn-sidebar-label { display: none; }
+        main { padding: 20px 16px; }
+      }
     </style>
-    
+
     <script is:inline>
       const token = localStorage.getItem('sportmind_token');
       if (token) {
@@ -21,64 +212,96 @@ import '../styles/global.css';
     </script>
   </head>
 
-  <body class="flex h-screen bg-[#0b1120] text-slate-200 overflow-hidden font-sans">
-    
-    <!-- Sidebar -->
-    <aside class="w-[280px] h-full bg-[#111827] flex flex-col border-r border-slate-800 p-4 relative overflow-hidden">
-      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-16 bg-indigo-500/20 blur-3xl rounded-full pointer-events-none"></div>
-
-      <div class="mb-8 px-2 relative z-10">
-        <div class="flex items-center gap-3 mb-1">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex-shrink-0 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-            <span class="text-white text-xl">🧠</span>
-          </div>
-          <h1 class="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 tracking-wide">Sportmind</h1>
+  <body>
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <!-- Brand -->
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">🧠</div>
+        <div class="sidebar-brand-text">
+          <h1>SportMind</h1>
+          <p>Plataforma de Análisis <span class="badge-live">En vivo</span></p>
         </div>
-        <p class="text-xs text-slate-400 font-medium">Visualizer <span class="bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-1.5 py-0.5 rounded ml-1 text-[10px] uppercase tracking-wider">S3 Live</span></p>
       </div>
 
-      <!-- Nav -->
-      <nav class="flex flex-col gap-2.5 flex-1 relative z-10">
-        <a href="/dashboard" class="group flex items-center gap-3 px-3 py-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 font-medium border border-indigo-500/20 transition-all shadow-[0_0_15px_rgba(99,102,241,0.05)]">
-          <div class="bg-indigo-500/20 p-1.5 rounded-lg group-hover:scale-110 transition-transform">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-          </div>
-          Evaluaciones
+      <!-- Navegación -->
+      <p class="nav-section-label">Secciones</p>
+      <nav style="flex:1;">
+        <a href="/dashboard" class="nav-link" id="nav-dashboard">
+          <div class="nav-link-icon">📊</div>
+          <span class="nav-link-label">Evaluaciones</span>
         </a>
-
-        <a href="/logs" class="group flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-800/50 text-slate-400 hover:text-slate-200 transition-all border border-transparent hover:border-slate-700/50">
-          <div class="bg-slate-800/50 p-1.5 rounded-lg group-hover:scale-110 group-hover:bg-slate-700 transition-all">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-          </div>
-          Logs
+        <a href="/logs" class="nav-link" id="nav-logs">
+          <div class="nav-link-icon">📋</div>
+          <span class="nav-link-label">Historial de Acciones</span>
         </a>
-
-        <a href="/especialista/crear" class="group flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-emerald-500/10 text-slate-400 hover:text-emerald-400 transition-all border border-transparent hover:border-emerald-500/20">
-          <div class="flex items-center gap-3">
-            <div class="bg-slate-800/50 group-hover:bg-emerald-500/20 p-1.5 rounded-lg group-hover:scale-110 transition-all text-slate-400 group-hover:text-emerald-400">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
-            </div>
-            <span>Crear Especialista</span>
-          </div>
-          <span class="opacity-0 group-hover:opacity-100 transition-opacity text-emerald-400 font-bold bg-emerald-500/20 px-1.5 rounded text-[10px] tracking-widest">+ NUEVO</span>
+        <a href="/especialista/crear" class="nav-link" id="nav-crear">
+          <div class="nav-link-icon">👤</div>
+          <span class="nav-link-label">Crear entrenador/profesional</span>
         </a>
       </nav>
 
-      <!-- Actions -->
-      <div class="mt-auto flex flex-col gap-2 pt-4 border-t border-slate-800 relative z-10">
-        <button id="btn-refresh-s3" class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all shadow-lg shadow-indigo-600/20 active:scale-95 text-sm font-medium">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-          Actualizar S3
+      <!-- Usuario y Acciones -->
+      <div class="sidebar-user">
+        <div class="user-card sidebar-user-info">
+          <div class="user-avatar" id="sidebar-avatar">AD</div>
+          <div>
+            <div class="user-info-name" id="sidebar-username">Administrador</div>
+            <div class="user-info-role">Sesión activa</div>
+          </div>
+        </div>
+        <button id="btn-refresh-s3" class="btn-sidebar-action btn-refresh-s3">
+          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          <span class="btn-sidebar-label">Actualizar datos</span>
         </button>
-        <button id="logout-btn" class="w-full flex items-center justify-center gap-2 px-4 py-2 hover:bg-rose-500/10 text-rose-400 hover:text-rose-300 rounded-lg transition-colors text-sm font-medium">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-          Salir
+        <button id="logout-btn" class="btn-sidebar-action btn-logout">
+          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+          <span class="btn-sidebar-label">Cerrar sesión</span>
         </button>
       </div>
     </aside>
 
-    <main class="flex-1 overflow-y-auto p-6 md:p-8 relative">
+    <!-- ── Contenido principal ── -->
+    <main>
       <slot />
     </main>
   </body>
+
+  <script>
+    // Marcar enlace activo
+    const path = window.location.pathname;
+    document.querySelectorAll('.nav-link').forEach(link => {
+      const href = link.getAttribute('href') || '';
+      if (path.startsWith(href) && href !== '/') {
+        link.classList.add('active');
+      }
+    });
+
+    // Mostrar nombre/avatar desde token Cognito
+    try {
+      const token = localStorage.getItem('sportmind_token');
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const email: string = payload.email || payload['cognito:username'] || '';
+        if (email) {
+          const name = email.split('@')[0];
+          const initials = name.substring(0, 2).toUpperCase();
+          const avatarEl = document.getElementById('sidebar-avatar');
+          const usernameEl = document.getElementById('sidebar-username');
+          if (avatarEl) avatarEl.textContent = initials;
+          if (usernameEl) usernameEl.textContent = name;
+        }
+      }
+    } catch {}
+
+    // Logout
+    document.getElementById('logout-btn')?.addEventListener('click', () => {
+      localStorage.removeItem('sportmind_token');
+      window.location.replace('/login');
+    });
+  </script>
 </html>

@@ -1,88 +1,223 @@
 ---
-import '../../layouts/Layout.astro';
 import Layout from '../../layouts/Layout.astro';
 ---
 
 <Layout>
-    <div class="max-w-4xl mx-auto space-y-6">
-        
-        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-            <div>
-                <h1 class="text-xl font-bold text-white">Crear Nuevo Especialista</h1>
-                <p class="text-xs text-slate-400 mt-0.5">Asigna credenciales y registra un nuevo profesional en el sistema.</p>
-            </div>
-            <a href="/dashboard" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition">
-                Volver
-            </a>
+  <style>
+    h1, h2, h3 { letter-spacing: -0.3px; }
+
+    .page-header {
+      margin-bottom: 32px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    }
+    .page-title { font-size: 24px; font-weight: 800; color: #1a202c; }
+    .page-subtitle { font-size: 14px; color: #718096; margin-top: 4px; }
+
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #fff; color: #4a5568;
+      border: 1.5px solid #e2e8f0; border-radius: 10px;
+      padding: 9px 16px; font-size: 13px; font-weight: 600;
+      text-decoration: none; transition: all 0.2s;
+    }
+    .btn-back:hover { border-color: #cbd5e0; color: #1a202c; }
+
+    /* Formulario */
+    .form-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 22px; padding: 36px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      max-width: 640px;
+    }
+    .form-card-title {
+      font-size: 17px; font-weight: 700; color: #1a202c;
+      margin-bottom: 6px;
+    }
+    .form-card-desc {
+      font-size: 14px; color: #718096; margin-bottom: 28px;
+      line-height: 1.55;
+    }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    @media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
+    .form-group { margin-bottom: 18px; }
+    .form-group-full { grid-column: span 2; }
+    @media (max-width: 560px) { .form-group-full { grid-column: span 1; } }
+
+    .form-label {
+      display: block; font-size: 13px; font-weight: 600;
+      color: #4a5568; margin-bottom: 7px;
+    }
+    .form-input, .form-select {
+      width: 100%;
+      padding: 12px 14px;
+      background: #f7fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px; font-size: 14px; color: #1a202c;
+      outline: none; transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .form-input:focus, .form-select:focus {
+      border-color: #3b82f6;
+      background: #eff6ff;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.10);
+    }
+    .form-input::placeholder { color: #a0aec0; }
+
+    .form-divider {
+      border: none; border-top: 1px solid #f0f4f8;
+      margin: 28px 0;
+    }
+
+    .form-actions {
+      display: flex; justify-content: flex-end; gap: 10px;
+    }
+    .btn-cancel {
+      background: #f7fafc; color: #718096;
+      border: 1.5px solid #e2e8f0; border-radius: 12px;
+      padding: 12px 22px; font-size: 14px; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center;
+      transition: all 0.2s;
+    }
+    .btn-cancel:hover { background: #e2e8f0; color: #1a202c; }
+    .btn-submit {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #fff; border: none; border-radius: 12px;
+      padding: 12px 28px; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: all 0.25s ease;
+      box-shadow: 0 3px 12px rgba(59,130,246,0.3);
+    }
+    .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 5px 18px rgba(59,130,246,0.4); }
+    .btn-submit:active { transform: translateY(0); }
+
+    /* Toast */
+    .toast-success {
+      position: fixed; bottom: 28px; right: 28px;
+      z-index: 9999;
+      background: #ecfdf5; color: #059669;
+      border: 1.5px solid #a7f3d0; border-radius: 12px;
+      padding: 14px 20px; font-size: 14px; font-weight: 700;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+      display: flex; align-items: center; gap: 8px;
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events: none;
+    }
+    .toast-success.visible { transform: translateY(0); opacity: 1; }
+
+    /* Info lateral */
+    .info-cards { margin-top: 32px; }
+    .info-card {
+      background: #eff6ff; border: 1px solid #bfdbfe;
+      border-radius: 14px; padding: 16px 20px;
+      font-size: 13px; color: #1d4ed8; margin-bottom: 12px;
+      line-height: 1.55;
+    }
+    .info-card strong { display: block; font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .info-card.warning { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+  </style>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">👤 Crear entrenador/profesional</h1>
+      <p class="page-subtitle">Registra las credenciales de un nuevo profesional en el sistema.</p>
+    </div>
+    <a href="/dashboard" class="btn-back">← Volver al Dashboard</a>
+  </div>
+
+  <div style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;">
+    <!-- Formulario principal -->
+    <div class="form-card" style="flex:1;min-width:320px;">
+        <h2 class="form-card-title">Información del entrenador/profesional</h2>
+      <p class="form-card-desc">
+        Completa todos los campos requeridos. El entrenador/profesional recibirá sus credenciales de acceso al sistema.
+      </p>
+
+      <form id="form-especialista" novalidate>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="nombre">Nombre completo *</label>
+            <input type="text" id="nombre" class="form-input" placeholder="Ej: María González" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="email">Correo electrónico *</label>
+            <input type="email" id="email" class="form-input" placeholder="correo@sportmind.com" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="rol">Especialidad *</label>
+            <select id="rol" class="form-select">
+              <option value="">Selecciona una especialidad</option>
+              <option value="psicologo">🧠 Psicólogo Deportivo</option>
+              <option value="preparador">💪 Preparador Físico</option>
+              <option value="kinesiologo">⚕️ Kinesiólogo</option>
+              <option value="nutricionista">🥗 Nutricionista</option>
+              <option value="entrenador">🏆 Entrenador</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="telefono">Teléfono (opcional)</label>
+            <input type="tel" id="telefono" class="form-input" placeholder="+56 9 1234 5678" />
+          </div>
+
+          <div class="form-group form-group-full">
+            <label class="form-label" for="password">Contraseña temporal *</label>
+            <input type="password" id="password" class="form-input" placeholder="Mínimo 8 caracteres" required />
+          </div>
         </div>
 
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg">
-            <form id="form-especialista" class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Nombre</label>
-                        <input type="text" id="nombre" required class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="Nombre completo">
-                    </div>
+        <hr class="form-divider" />
 
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Correo electrónico</label>
-                        <input type="email" id="email" required class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="correo@sportmind.com">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Especialidad</label>
-                        <select id="rol" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-indigo-500">
-                            <option value="psicologo">Psicólogo Deportivo</option>
-                            <option value="preparador">Preparador Físico</option>
-                            <option value="kinesiologo">Kinesiólogo</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Teléfono</label>
-                        <input type="text" id="telefono" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="+569...">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Contraseña temporal</label>
-                    <input type="password" id="password" required class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="••••••••">
-                </div>
-
-                <div class="flex justify-end gap-2 pt-4 border-t border-slate-800">
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium transition">
-                        Guardar especialista
-                    </button>
-                </div>
-            </form>
+        <div class="form-actions">
+          <a href="/dashboard" class="btn-cancel">Cancelar</a>
+          <button type="submit" class="btn-submit">✓ Guardar entrenador/profesional</button>
         </div>
+      </form>
     </div>
 
-    <div id="toast" class="fixed bottom-4 right-4 bg-emerald-600 text-white text-xs px-3 py-2 rounded-lg shadow-lg opacity-0 transition-opacity pointer-events-none">
-        Especialista creado correctamente
+    <!-- Panel de ayuda -->
+    <div style="width:280px;flex-shrink:0;">
+      <div class="info-cards">
+        <div class="info-card">
+          <strong>ℹ️ ¿Cómo funciona?</strong>
+          Al crear un entrenador/profesional, se generarán sus credenciales en Amazon Cognito. Recibirá un correo con instrucciones de primer acceso.
+        </div>
+        <div class="info-card warning">
+          <strong>⚠️ Contraseña temporal</strong>
+          La primera vez que el entrenador/profesional inicie sesión, deberá cambiar esta contraseña por una personal y segura.
+        </div>
+        <div class="info-card">
+          <strong>🔒 Roles de acceso</strong>
+          Cada especialidad tiene acceso a distintas secciones del sistema. Los psicólogos tienen acceso completo, el resto solo a su área.
+        </div>
+      </div>
     </div>
+  </div>
 
-    <script>
-        // TODO: conectar con la API de Cognito cuando esté lista la ruta backend
-        const form = document.getElementById('form-especialista') as HTMLFormElement;
-        const toast = document.getElementById('toast');
+  <!-- Toast -->
+  <div id="toast" class="toast-success">✅ Entrenador/profesional registrado correctamente</div>
 
-        form?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            console.log("Enviando formulario de especialista..."); // Debug temporal
+  <script>
+    const form = document.getElementById('form-especialista') as HTMLFormElement;
+    const toast = document.getElementById('toast');
 
-            if (toast) {
-                toast.classList.remove('opacity-0');
-                setTimeout(() => {
-                    toast.classList.add('opacity-0');
-                }, 2500);
-            }
-            form.reset();
-        });
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      // TODO: conectar con API de Cognito cuando esté disponible
+      console.log('Enviando formulario de especialista...');
 
-        document.getElementById("logout-btn")?.addEventListener("click", () => {
-            localStorage.removeItem("sportmind_token");
-            window.location.replace("/login");
-        });
-    </script>
+      if (toast) {
+        toast.classList.add('visible');
+        setTimeout(() => toast.classList.remove('visible'), 3000);
+      }
+      form.reset();
+    });
+  </script>
 </Layout>

@@ -1,637 +1,2016 @@
 ---
 // src/pages/dashboard.astro
-import Layout from '../layouts/Layout.astro';
+import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout>
-    <!-- Fondo ambiental sutil -->
-    <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div class="absolute -top-40 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl"></div>
-        <div class="absolute top-1/3 right-10 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl"></div>
-        <div class="absolute bottom-10 left-10 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl"></div>
+  <style>
+    /* ── Tipografía y espaciado base ── */
+    h1,
+    h2,
+    h3 {
+      letter-spacing: -0.3px;
+    }
+
+    /* ── Header de página ── */
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .page-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: #1a202c;
+    }
+    .page-subtitle {
+      font-size: 14px;
+      color: #718096;
+      margin-top: 4px;
+      font-weight: 400;
+    }
+
+    .s3-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 13px;
+      color: #4a5568;
+      font-weight: 500;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+      white-space: nowrap;
+    }
+    .s3-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+      }
+      50% {
+        box-shadow: 0 0 0 5px rgba(16, 185, 129, 0);
+      }
+    }
+
+    /* ── KPI Cards ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 500px) {
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .kpi-card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    }
+    .kpi-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .kpi-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #718096;
+    }
+    .kpi-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .kpi-value {
+      font-size: 32px;
+      font-weight: 900;
+      color: #1a202c;
+      line-height: 1;
+    }
+    .kpi-unit {
+      font-size: 13px;
+      font-weight: 500;
+      color: #a0aec0;
+      margin-top: 4px;
+    }
+    .kpi-accent {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      border-radius: 0 0 18px 18px;
+    }
+
+    /* ── Barra de herramientas / Filtros ── */
+    .toolbar {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 18px 22px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    }
+    .toolbar-top {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .toolbar-top-primary {
+      margin-bottom: 0;
+    }
+    .advanced-filters {
+      margin-top: 14px;
+    }
+    .advanced-filters summary {
+      width: fit-content;
+      color: #4a5568;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 0;
+    }
+    .advanced-filters[open] .toolbar-top {
+      margin-top: 10px;
+    }
+    .search-wrapper {
+      flex: 1;
+      min-width: 220px;
+      position: relative;
+    }
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #a0aec0;
+      font-size: 16px;
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      padding: 11px 14px 11px 42px;
+      background: #f7fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 14px;
+      color: #1a202c;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .search-input:focus {
+      border-color: #3b82f6;
+      background: #eff6ff;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .search-input::placeholder {
+      color: #a0aec0;
+    }
+    .btn-clear-search {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #a0aec0;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+      border-radius: 4px;
+      transition: color 0.15s;
+    }
+    .btn-clear-search:hover {
+      color: #4a5568;
+    }
+
+    .filter-select {
+      padding: 10px 12px;
+      background: #f7fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 13px;
+      color: #4a5568;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+      min-width: 150px;
+    }
+    .filter-select:focus {
+      border-color: #3b82f6;
+    }
+
+    .toolbar-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 14px;
+      border-top: 1px solid #f0f4f8;
+      flex-wrap: wrap;
+    }
+    .results-count {
+      font-size: 13px;
+      color: #718096;
+      font-weight: 500;
+    }
+
+    /* Selector de vista */
+    .view-switcher {
+      display: flex;
+      align-items: center;
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .view-btn {
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #718096;
+      transition: all 0.2s ease;
+    }
+    .view-btn.active {
+      background: #fff;
+      color: #3b82f6;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+    .view-btn:hover:not(.active) {
+      color: #4a5568;
+      background: rgba(0, 0, 0, 0.03);
+    }
+
+    /* ── Loading skeleton ── */
+    .loading-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    @media (max-width: 700px) {
+      .loading-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .skeleton-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    }
+    .skeleton-line {
+      border-radius: 8px;
+    }
+    .sk-anim {
+      background: linear-gradient(90deg, #e2e8f0 25%, #f7fafc 50%, #e2e8f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+
+    /* ── Cards de evaluación ── */
+    :global(.cards-grid) {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+      min-width: 0;
+    }
+    @media (max-width: 1100px) {
+      :global(.cards-grid) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    :global(.eval-card) {
+      background: #fff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      animation: fadeInUp 0.35s ease both;
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    :global(.eval-card:hover) {
+      border-color: #bfdbfe;
+      box-shadow: 0 6px 24px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Header de la card */
+    :global(.card-header) {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #f0f4f8;
+    }
+    :global(.athlete-info) {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    :global(.athlete-avatar) {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    :global(.athlete-name) {
+      font-size: 17px;
+      font-weight: 800;
+      color: #1a202c;
+    }
+    :global(.athlete-meta) {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #718096;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+    :global(.athlete-meta span) {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    :global(.badge-gender) {
+      background: #f0f4f8;
+      color: #4a5568;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* Badge emoción */
+    :global(.emotion-badge) {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1.5px solid;
+      white-space: nowrap;
+    }
+    :global(.emotion-dot) {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+
+    /* Secciones de métricas (tiro / escalada) */
+    :global(.metrics-grid) {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    @media (max-width: 700px) {
+      :global(.metrics-grid) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    :global(.metric-section) {
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 16px;
+    }
+    :global(.metric-section-header) {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    :global(.metric-section-title) {
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    :global(.metric-post-badge) {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 99px;
+      border: 1px solid;
+    }
+    :global(.scores-row) {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    :global(.score-box) {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+    }
+    :global(.score-label) {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #a0aec0;
+      letter-spacing: 0.5px;
+    }
+    :global(.score-value) {
+      font-size: 22px;
+      font-weight: 900;
+      margin-top: 4px;
+    }
+    :global(.score-unit) {
+      font-size: 11px;
+      color: #a0aec0;
+      font-weight: 500;
+    }
+
+    /* Barras de métricas */
+    :global(.meter-label) {
+      font-size: 12px;
+      font-weight: 600;
+      color: #4a5568;
+    }
+    :global(.meter-val) {
+      font-size: 12px;
+      font-weight: 700;
+      color: #1a202c;
+    }
+    :global(.meter-track) {
+      height: 7px;
+      background: #e2e8f0;
+      border-radius: 99px;
+      margin-top: 5px;
+      overflow: hidden;
+    }
+    :global(.meter-fill) {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Footer de la card */
+    :global(.card-footer) {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid #f0f4f8;
+    }
+    :global(.card-footer-row) {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    :global(.recommendation-chip) {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #eff6ff;
+      color: #2563eb;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    :global(.btn-ai) {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+    }
+    :global(.btn-ai:hover) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+    }
+    :global(.btn-ai:disabled) {
+      opacity: 0.7;
+      transform: none;
+      cursor: not-allowed;
+    }
+    :global(.btn-json) {
+      background: none;
+      border: 1.5px solid #e2e8f0;
+      color: #718096;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    :global(.btn-json:hover) {
+      border-color: #3b82f6;
+      color: #3b82f6;
+      background: #eff6ff;
+    }
+    :global(.btn-copy-id) {
+      background: none;
+      border: 1.5px solid #e2e8f0;
+      color: #a0aec0;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    :global(.btn-copy-id:hover) {
+      border-color: #cbd5e0;
+      color: #4a5568;
+    }
+
+    /* Panel resultado IA */
+    :global(.ia-result-panel) {
+      display: block;
+      margin-top: 12px;
+      background: #f0fdf4;
+      border: 1.5px solid #a7f3d0;
+      border-radius: 14px;
+      padding: 16px;
+      animation: fadeInUp 0.3s ease;
+    }
+    :global(.ia-result-panel.danger) {
+      background: #fffbeb;
+      border-color: #fde68a;
+    }
+    :global(.ia-diagnosis-label) {
+      font-size: 11px;
+      font-weight: 700;
+      color: #718096;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    :global(.ia-diagnosis-title) {
+      font-size: 17px;
+      font-weight: 800;
+    }
+    :global(.ia-diagnosis-title.ok) {
+      color: #059669;
+    }
+    :global(.ia-diagnosis-title.risk) {
+      color: #d97706;
+    }
+    :global(.ia-confidence) {
+      font-size: 13px;
+      color: #718096;
+      margin-top: 6px;
+      font-weight: 500;
+    }
+    :global(.ia-confidence strong) {
+      color: #4a5568;
+    }
+
+    :global(.session-highlights) {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 16px;
+    }
+    :global(.session-highlight) {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 6px;
+      padding: 8px 11px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: #f8fafc;
+      color: #475569;
+      font-size: 12px;
+    }
+    :global(.session-highlight strong) {
+      color: #1e293b;
+      font-size: 13px;
+    }
+    :global(.card-details) {
+      border-top: 1px solid #f0f4f8;
+      padding-top: 12px;
+    }
+    :global(.card-details summary) {
+      width: fit-content;
+      color: #2563eb;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 0;
+    }
+    :global(.card-details summary:hover) {
+      color: #1d4ed8;
+    }
+    :global(.card-details-content) {
+      padding-top: 14px;
+    }
+    :global(.card-details .metrics-grid) {
+      margin-bottom: 14px;
+    }
+    :global(.details-no-data) {
+      margin: 0;
+      color: #718096;
+      font-size: 13px;
+    }
+    :global(.detail-layout) {
+      display: grid;
+      grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.7fr);
+      align-items: start;
+      gap: 20px;
+    }
+    :global(.analysis-column) {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 18px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      min-width: 0;
+    }
+    :global(.analysis-heading) {
+      margin: 0;
+      color: #1e293b;
+      font-size: 15px;
+      font-weight: 800;
+    }
+    :global(.analysis-hint) {
+      margin: -8px 0 0;
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    :global(.analysis-column .ia-result-panel) {
+      margin-top: 0;
+      min-height: 130px;
+    }
+    :global(.detail-column) {
+      min-width: 0;
+    }
+    :global(.detail-column .metrics-grid) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    :global(.detail-column .metric-section) {
+      padding: 13px;
+    }
+    :global(.detail-actions) {
+      display: flex;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 14px;
+      border-top: 1px solid #f0f4f8;
+    }
+
+    /* ── Vista Tabla ── */
+    .table-container {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    .data-table thead {
+      background: #f7fafc;
+    }
+    .data-table th {
+      padding: 13px 18px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #718096;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .data-table td {
+      padding: 14px 18px;
+      border-bottom: 1px solid #f0f4f8;
+      color: #4a5568;
+      vertical-align: middle;
+    }
+    .data-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+    .data-table tbody tr:hover td {
+      background: #f7fafc;
+    }
+
+    /* ── Vista Gráficos ── */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 800px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .chart-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    }
+    .chart-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1a202c;
+      margin-bottom: 4px;
+    }
+    .chart-subtitle {
+      font-size: 12px;
+      color: #a0aec0;
+      margin-bottom: 20px;
+    }
+    .chart-canvas {
+      position: relative;
+      height: 280px;
+    }
+
+    /* ── Estado vacío ── */
+    .empty-state {
+      background: #fff;
+      border: 1.5px dashed #cbd5e0;
+      border-radius: 18px;
+      padding: 60px 24px;
+      text-align: center;
+    }
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+    .empty-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #4a5568;
+      margin-bottom: 6px;
+    }
+    .empty-subtitle {
+      font-size: 14px;
+      color: #a0aec0;
+    }
+    .btn-reset {
+      margin-top: 20px;
+      background: #f0f4f8;
+      border: 1px solid #e2e8f0;
+      color: #4a5568;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-reset:hover {
+      background: #e2e8f0;
+    }
+
+    /* ── Modal detalle de sesión ── */
+    dialog {
+      position: fixed;
+      inset: 0;
+      margin: auto;
+      border: none;
+      background: transparent;
+      width: min(96vw, 1280px);
+      max-width: none;
+      height: min(860px, calc(100dvh - 32px));
+      max-height: calc(100dvh - 32px);
+      padding: 0;
+      overflow: visible;
+    }
+    dialog::backdrop {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+    }
+    .modal-inner {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      max-height: none;
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a202c;
+    }
+    .modal-close {
+      background: #f0f4f8;
+      border: none;
+      border-radius: 8px;
+      width: 34px;
+      height: 34px;
+      font-size: 16px;
+      cursor: pointer;
+      color: #718096;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-close:hover {
+      background: #e2e8f0;
+      color: #1a202c;
+    }
+    .modal-body {
+      overflow-y: auto;
+      min-height: 0;
+      flex: 1;
+      padding: 20px 24px;
+    }
+    :global(.btn-view-details) {
+      align-self: flex-start;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    :global(.btn-view-details:hover) {
+      background: #dbeafe;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 16px;
+    }
+    .json-toggle {
+      margin-top: 14px;
+    }
+    @media (max-width: 860px) {
+      :global(.detail-layout) {
+        grid-template-columns: 1fr;
+      }
+      :global(.analysis-column) {
+        order: 0;
+      }
+    }
+    @media (max-width: 600px) {
+      dialog {
+        width: calc(100vw - 16px);
+        height: calc(100dvh - 16px);
+        max-height: calc(100dvh - 16px);
+      }
+      .modal-header,
+      .modal-body {
+        padding: 16px;
+      }
+      :global(.detail-column .metrics-grid) {
+        grid-template-columns: 1fr;
+      }
+    }
+    .json-pre {
+      background: #1e293b;
+      color: #7dd3fc;
+      border-radius: 12px;
+      padding: 20px;
+      font-family: "Fira Code", "JetBrains Mono", monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 9999;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      pointer-events: none;
+    }
+    .toast.visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .toast-inner {
+      background: #1a202c;
+      color: #fff;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  </style>
+
+  <!-- ── ENCABEZADO DE PÁGINA ── -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Evaluaciones de Atletas</h1>
+      <p class="page-subtitle">
+        Revisa el rendimiento emocional y físico de cada sesión registrada.
+      </p>
+    </div>
+    <div class="s3-status">
+      <div class="s3-dot"></div>
+      <span id="sources-count">Conectando...</span>
+    </div>
+  </div>
+
+  <!-- ── KPIs ── -->
+  <section
+    class="kpi-grid"
+    id="kpis-section"
+    aria-label="Resumen de evaluaciones filtradas"
+  >
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Sesiones</span>
+        <div class="kpi-icon" style="background:#eff6ff;">📋</div>
+      </div>
+      <div class="kpi-value" id="kpi-total-sessions">—</div>
+      <div class="kpi-unit">en la selección actual</div>
+      <div
+        class="kpi-accent"
+        style="background:linear-gradient(90deg,#3b82f6,#60a5fa);"
+      >
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Atletas</span>
+        <div class="kpi-icon" style="background:#ecfdf5;">👥</div>
+      </div>
+      <div class="kpi-value" id="kpi-unique-athletes">—</div>
+      <div class="kpi-unit">personas en la selección actual</div>
+      <div
+        class="kpi-accent"
+        style="background:linear-gradient(90deg,#10b981,#34d399);"
+      >
+      </div>
+    </div>
+  </section>
+
+  <!-- ── BARRA DE HERRAMIENTAS ── -->
+  <div class="toolbar">
+    <div class="toolbar-top toolbar-top-primary">
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          id="search-input"
+          class="search-input"
+          placeholder="Buscar por nombre, deporte o emoción..."
+          autocomplete="off"
+        />
+        <button
+          id="btn-clear-search"
+          class="btn-clear-search"
+          style="display:none;"
+          aria-label="Limpiar búsqueda">✕</button
+        >
+      </div>
+
+      <select id="filter-sport" class="filter-select">
+        <option value="all">🏆 Todos los deportes</option>
+      </select>
     </div>
 
-    <div class="max-w-7xl mx-auto space-y-6 relative z-10">
-        <!-- Indicador de S3 (Movido aquí ya que quitamos la cabecera vieja) -->
-        <div class="flex justify-end">
-            <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs text-slate-300">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span id="sources-count">Conectando a S3...</span>
-            </div>
-        </div>
+    <details class="advanced-filters">
+      <summary>Más filtros</summary>
+      <div class="toolbar-top">
+        <select id="filter-emotion" class="filter-select">
+          <option value="all">😊 Todas las emociones</option>
+          <option value="calma">😌 Calma</option>
+          <option value="feliz">😊 Feliz</option>
+          <option value="nervioso">⚡ Nervioso</option>
+          <option value="enojado">🔥 Enojado</option>
+          <option value="triste">🌧️ Triste</option>
+        </select>
 
-        <!-- Banner de Resumen / KPIs -->
-        <section id="kpis-section" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 shadow-sm backdrop-blur-sm relative overflow-hidden group hover:border-slate-700 transition">
-                <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
-                    <span>Total Sesiones</span>
-                    <span class="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400">📋</span>
-                </div>
-                <div class="mt-2 flex items-baseline gap-2">
-                    <span id="kpi-total-sessions" class="text-2xl font-bold text-white">—</span>
-                    <span class="text-xs text-slate-400">registros</span>
-                </div>
-                <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-600 opacity-60"></div>
-            </div>
+        <select id="sort-by" class="filter-select">
+          <option value="date-desc">📅 Más reciente primero</option>
+          <option value="date-asc">📅 Más antiguo primero</option>
+          <option value="name-asc">🔤 Nombre (A → Z)</option>
+          <option value="shooting-desc">🎯 Mayor puntaje de tiro</option>
+          <option value="climbing-asc">🧗 Menor tiempo de escalada</option>
+        </select>
+      </div>
+    </details>
 
-            <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 shadow-sm backdrop-blur-sm relative overflow-hidden group hover:border-slate-700 transition">
-                <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
-                    <span>Atletas Evaluados</span>
-                    <span class="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400">👥</span>
-                </div>
-                <div class="mt-2 flex items-baseline gap-2">
-                    <span id="kpi-unique-athletes" class="text-2xl font-bold text-white">—</span>
-                    <span class="text-xs text-slate-400">únicos</span>
-                </div>
-                <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 to-cyan-600 opacity-60"></div>
-            </div>
-
-            <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 shadow-sm backdrop-blur-sm relative overflow-hidden group hover:border-slate-700 transition">
-                <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
-                    <span>Puntaje Medio Tiro</span>
-                    <span class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">🎯</span>
-                </div>
-                <div class="mt-2 flex items-baseline gap-2">
-                    <span id="kpi-avg-shooting" class="text-2xl font-bold text-emerald-400">—</span>
-                    <span class="text-xs text-slate-400">pts</span>
-                </div>
-                <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-600 opacity-60"></div>
-            </div>
-
-            <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 shadow-sm backdrop-blur-sm relative overflow-hidden group hover:border-slate-700 transition">
-                <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
-                    <span>Tiempo Medio Escalada</span>
-                    <span class="p-1.5 rounded-lg bg-amber-500/10 text-amber-400">🧗</span>
-                </div>
-                <div class="mt-2 flex items-baseline gap-2">
-                    <span id="kpi-avg-climbing" class="text-2xl font-bold text-amber-400">—</span>
-                    <span class="text-xs text-slate-400">seg</span>
-                </div>
-                <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-amber-600 opacity-60"></div>
-            </div>
-        </section>
-
-        <!-- Barra de Herramientas, Filtros y Vistas -->
-        <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg space-y-4">
-            <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
-                <!-- Buscador en Vivo -->
-                <div class="relative flex-1">
-                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-sm">🔍</span>
-                    <input type="text" id="search-input" placeholder="Buscar por atleta, deporte, emoción o ID..." class="w-full pl-10 pr-10 py-2.5 bg-slate-950/70 border border-slate-700/80 rounded-xl text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition" />
-                    <button id="btn-clear-search" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white" title="Limpiar búsqueda">✕</button>
-                </div>
-
-                <!-- Filtros Dropdown -->
-                <div class="flex flex-wrap sm:flex-nowrap gap-2 items-center">
-                    <select id="filter-sport" class="bg-slate-950/70 border border-slate-700/80 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-indigo-500 transition cursor-pointer">
-                        <option value="all">🏆 Todos los deportes</option>
-                    </select>
-
-                    <select id="filter-emotion" class="bg-slate-950/70 border border-slate-700/80 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-indigo-500 transition cursor-pointer">
-                        <option value="all">😊 Todas las emociones</option>
-                        <option value="calma">😌 Calma</option>
-                        <option value="feliz">😊 Feliz</option>
-                        <option value="ansioso">⚡ Ansioso</option>
-                        <option value="triste">🌧️ Triste</option>
-                    </select>
-
-                    <select id="sort-by" class="bg-slate-950/70 border border-slate-700/80 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-indigo-500 transition cursor-pointer">
-                        <option value="date-desc">📅 Más reciente</option>
-                        <option value="date-asc">📅 Más antiguo</option>
-                        <option value="name-asc">🔤 Atleta (A - Z)</option>
-                        <option value="shooting-desc">🎯 Mayor puntaje tiro</option>
-                        <option value="climbing-asc">🧗 Menor tiempo escalada</option>
-                    </select>
-
-                    <!-- Selector de Vista -->
-                    <div class="flex items-center bg-slate-950/80 p-1 border border-slate-800 rounded-xl">
-                        <button id="view-cards-btn" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-sm transition" title="Vista de tarjetas">🗂️ Tarjetas</button>
-                        <button id="view-table-btn" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition" title="Vista de tabla">📊 Tabla</button>
-                        <button id="view-charts-btn" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition" title="Gráficos comparativos">📈 Gráficos</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Contador de resultados -->
-            <div class="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-800/60">
-                <span id="results-count">Cargando registros...</span>
-                <span id="active-filter-label" class="hidden text-indigo-400">Filtro aplicado</span>
-            </div>
-        </section>
-
-        <!-- Estado de Carga (Skeletons) -->
-        <div id="loading-state" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 space-y-4 animate-pulse">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-full bg-slate-800"></div>
-                        <div class="space-y-2"><div class="w-32 h-4 bg-slate-800 rounded"></div><div class="w-20 h-3 bg-slate-800 rounded"></div></div>
-                    </div>
-                    <div class="w-24 h-6 bg-slate-800 rounded-full"></div>
-                </div>
-                <div class="h-28 bg-slate-800/50 rounded-xl"></div>
-                <div class="h-28 bg-slate-800/50 rounded-xl"></div>
-            </div>
-            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 space-y-4 animate-pulse">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-full bg-slate-800"></div>
-                        <div class="space-y-2"><div class="w-32 h-4 bg-slate-800 rounded"></div><div class="w-20 h-3 bg-slate-800 rounded"></div></div>
-                    </div>
-                    <div class="w-24 h-6 bg-slate-800 rounded-full"></div>
-                </div>
-                <div class="h-28 bg-slate-800/50 rounded-xl"></div>
-                <div class="h-28 bg-slate-800/50 rounded-xl"></div>
-            </div>
-        </div>
-
-        <!-- VISTA 1: Contenedor de Tarjetas (Grid) -->
-        <div id="cards-view" class="grid grid-cols-1 lg:grid-cols-2 gap-6 hidden"></div>
-
-        <!-- VISTA 2: Contenedor de Tabla -->
-        <div id="table-view" class="hidden bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-slate-300">
-                    <thead class="bg-slate-950/80 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
-                        <tr>
-                            <th class="px-5 py-4">Atleta</th>
-                            <th class="px-5 py-4">Deporte</th>
-                            <th class="px-5 py-4">Estado Inicial</th>
-                            <th class="px-5 py-4">🎯 Tiro (Fácil / Difícil)</th>
-                            <th class="px-5 py-4">🧗 Escalada (Fácil / Difícil)</th>
-                            <th class="px-5 py-4">Post Emociones</th>
-                            <th class="px-5 py-4">Fecha</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body" class="divide-y divide-slate-800/60"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- VISTA 3: Gráficos de Comparación -->
-        <div id="charts-view" class="hidden space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-base font-bold text-white flex items-center gap-2"><span>🎯</span> Rendimiento y Confianza</h3>
-                        <span class="text-xs text-slate-400">Escala 1 a 5</span>
-                    </div>
-                    <div class="relative h-72"><canvas id="chart-performance"></canvas></div>
-                </div>
-                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-base font-bold text-white flex items-center gap-2"><span>🧗</span> Tiempos de Escalada</h3>
-                        <span class="text-xs text-slate-400">Segundos</span>
-                    </div>
-                    <div class="relative h-72"><canvas id="chart-climbing"></canvas></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Estado Vacío (Sin resultados) -->
-        <div id="empty-state" class="hidden text-center py-16 bg-slate-900/40 border border-slate-800/80 rounded-2xl">
-            <span class="text-5xl block mb-3">🔍</span>
-            <h3 class="text-lg font-bold text-white">No se encontraron sesiones coincidentes</h3>
-            <button id="btn-reset-filters" class="mt-4 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition">Restablecer filtros</button>
-        </div>
+    <div class="toolbar-bottom">
+      <p class="results-count" id="results-count">Cargando evaluaciones...</p>
+      <div class="view-switcher">
+        <button id="view-cards-btn" class="view-btn active">🗂️ Tarjetas</button>
+        <button id="view-table-btn" class="view-btn">📊 Tabla</button>
+        <button id="view-charts-btn" class="view-btn">📈 Gráficos</button>
+      </div>
     </div>
+  </div>
 
-    <!-- Modal para ver el JSON crudo -->
-    <dialog id="json-modal" class="bg-transparent backdrop:bg-black/70 p-4 max-w-2xl w-full">
-        <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl text-slate-100 max-h-[85vh] flex flex-col">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-                <h3 class="text-base font-bold text-indigo-400 flex items-center gap-2"><span>📄</span> Estructura JSON Cruda</h3>
-                <button id="btn-close-modal" class="text-slate-400 hover:text-white text-lg">✕</button>
+  <!-- ── LOADING STATE ── -->
+  <div id="loading-state" class="loading-grid">
+    {
+      [0, 1, 2, 3].map(() => (
+        <div class="skeleton-card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+            <div
+              class="skeleton-line sk-anim"
+              style="width:50px;height:50px;border-radius:14px;"
+            />
+            <div style="flex:1;">
+              <div
+                class="skeleton-line sk-anim"
+                style="height:16px;width:70%;margin-bottom:8px;"
+              />
+              <div
+                class="skeleton-line sk-anim"
+                style="height:12px;width:50%;"
+              />
             </div>
-            <div class="overflow-y-auto mt-4 flex-1">
-                <pre id="json-modal-content" class="bg-slate-950 p-4 rounded-xl text-xs font-mono text-indigo-200 overflow-x-auto"></pre>
-            </div>
+          </div>
+          <div
+            class="skeleton-line sk-anim"
+            style="height:110px;margin-bottom:12px;"
+          />
+          <div class="skeleton-line sk-anim" style="height:110px;" />
         </div>
-    </dialog>
+      ))
+    }
+  </div>
 
-    <!-- Toast de Notificación -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
-        <div class="bg-indigo-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2">
-            <span>✓</span><span id="toast-message">Copiado al portapapeles</span>
-        </div>
+  <!-- ── VISTA 1: TARJETAS ── -->
+  <div id="cards-view" class="cards-grid" style="display:none;"></div>
+
+  <!-- ── VISTA 2: TABLA ── -->
+  <div id="table-view" class="table-container" style="display:none;">
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Atleta</th>
+            <th>Deporte</th>
+            <th>Estado Emocional</th>
+            <th>🎯 Tiro (Fácil / Difícil)</th>
+            <th>🧗 Escalada (Fácil / Difícil)</th>
+            <th>Emociones Post</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
     </div>
+  </div>
 
-    <script>
-        import {
-            fetchSportmindData, filterSportmindRecords, getEmotionConfig, formatDateTime, type SportmindSession,
-        } from "../services/sportmindService";
-        import Chart from "chart.js/auto";
+  <!-- ── VISTA 3: GRÁFICOS ── -->
+  <div id="charts-view" class="charts-grid" style="display:none;">
+    <div class="chart-card">
+      <div class="chart-title">Rendimiento y Confianza</div>
+      <div class="chart-subtitle">Escala del 1 al 5 por atleta</div>
+      <div class="chart-canvas"><canvas id="chart-performance"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Tiempos de Escalada</div>
+      <div class="chart-subtitle">Segundos — menor es mejor</div>
+      <div class="chart-canvas"><canvas id="chart-climbing"></canvas></div>
+    </div>
+  </div>
 
-        let allSessions: SportmindSession[] = [];
-        let currentFiltered: SportmindSession[] = [];
-        let currentView: "cards" | "table" | "charts" = "cards";
+  <!-- ── ESTADO VACÍO ── -->
+  <div id="empty-state" class="empty-state" style="display:none;">
+    <div class="empty-icon">🔍</div>
+    <div class="empty-title">No se encontraron evaluaciones</div>
+    <div class="empty-subtitle">Intenta cambiar los filtros de búsqueda.</div>
+    <button id="btn-reset-filters" class="btn-reset">Limpiar filtros</button>
+  </div>
 
-        let chartPerformanceInstance: Chart | null = null;
-        let chartClimbingInstance: Chart | null = null;
+  <!-- ── MODAL DETALLE DE SESIÓN ── -->
+  <dialog id="session-modal" aria-labelledby="detail-modal-title">
+    <div class="modal-inner">
+      <div class="modal-header">
+        <span id="detail-modal-title" class="modal-title"
+          >Detalle de la sesión</span
+        >
+        <button
+          id="btn-close-modal"
+          class="modal-close"
+          aria-label="Cerrar detalle">✕</button
+        >
+      </div>
+      <div class="modal-body">
+        <div id="detail-modal-content"></div>
+        <pre id="json-modal-content" class="json-pre" hidden></pre>
+      </div>
+    </div>
+  </dialog>
 
-        const loadingState = document.getElementById("loading-state");
-        const cardsView = document.getElementById("cards-view");
-        const tableView = document.getElementById("table-view");
-        const chartsView = document.getElementById("charts-view");
-        const tableBody = document.getElementById("table-body");
-        const emptyState = document.getElementById("empty-state");
-        const resultsCount = document.getElementById("results-count");
-        const sourcesCount = document.getElementById("sources-count");
+  <!-- ── TOAST ── -->
+  <div id="toast" class="toast">
+    <div class="toast-inner">
+      <span>✓</span><span id="toast-message">Copiado</span>
+    </div>
+  </div>
 
-        const searchInput = document.getElementById("search-input") as HTMLInputElement;
-        const btnClearSearch = document.getElementById("btn-clear-search");
-        const filterSport = document.getElementById("filter-sport") as HTMLSelectElement;
-        const filterEmotion = document.getElementById("filter-emotion") as HTMLSelectElement;
-        const sortBy = document.getElementById("sort-by") as HTMLSelectElement;
+  <script>
+    import * as ort from "onnxruntime-web";
+    import {
+      fetchSportmindData,
+      filterSportmindRecords,
+      getEmotionConfig,
+      formatDateTime,
+      type SportmindSession,
+    } from "../services/sportmindService";
+    import Chart from "chart.js/auto";
 
-        const viewCardsBtn = document.getElementById("view-cards-btn");
-        const viewTableBtn = document.getElementById("view-table-btn");
-        const viewChartsBtn = document.getElementById("view-charts-btn");
-        
-        // CONECTANDO CON LOS BOTONES DEL NUEVO LAYOUT
-        const btnRefresh = document.getElementById("btn-refresh-s3");
-        const refreshIcon = btnRefresh ? btnRefresh.querySelector("svg") : null;
-        const btnLogout = document.getElementById("logout-btn"); 
+    // ── Logging ──
+    function registrarEventoLog(accion: string) {
+      const usuario = localStorage.getItem("sportmind_user") || "Administrador";
+      const fechaHora = new Date().toLocaleString("es-CL");
+      const historialLogs = JSON.parse(
+        localStorage.getItem("sportmind_logs") || "[]",
+      );
+      historialLogs.push(`[${fechaHora}] [INFO] [${usuario}]: ${accion}`);
+      localStorage.setItem("sportmind_logs", JSON.stringify(historialLogs));
+    }
 
-        const jsonModal = document.getElementById("json-modal") as HTMLDialogElement;
-        const jsonModalContent = document.getElementById("json-modal-content");
-        const btnCloseModal = document.getElementById("btn-close-modal");
+    // ── Funciones Auxiliares para Reemplazar LabelEncoder de Python ──
+    function codificarDeporte(deporte: string) {
+      const d = (deporte || "").toLowerCase();
+      if (d.includes("escalada")) return 0; // Ajusta según LabelEncoder original
+      if (d.includes("tiro")) return 1;
+      return 0;
+    }
 
-        function renderMetricMeter(label: string, value: number | undefined, max = 5): string {
-            const val = Number(value) || 0;
-            const percent = Math.min(Math.max((val / max) * 100, 0), 100);
-            let color = "bg-indigo-500";
-            if (val >= 4) color = "bg-emerald-400";
-            else if (val <= 2) color = "bg-amber-400";
-            return `
-                <div class="space-y-1">
-                    <div class="flex justify-between items-center text-[11px]">
-                        <span class="text-slate-400 font-medium">${label}</span>
-                        <span class="font-bold text-slate-200">${val}/${max}</span>
-                    </div>
-                    <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
-                        <div class="${color} h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
-                    </div>
+    function codificarGenero(genero: string) {
+      const g = (genero || "").toLowerCase();
+      return g === "femenino" ? 0 : 1;
+    }
+
+    function codificarEmocion(emocion: string) {
+      const e = (emocion || "").toLowerCase();
+      // Ajusta estos valores según los índices exactos de tu entrenamiento original
+      const mapa: Record<string, number> = {
+        calma: 0,
+        feliz: 1,
+        nervioso: 2,
+        triste: 3,
+        enojado: 4,
+        neutral: 5,
+      };
+      return mapa[e] ?? 0;
+    }
+
+    // ── API de IA NATIVA EN NAVEGADOR (ONNX) ──
+    async function predecirAutorregulacion(datos: any) {
+      try {
+        // Cargar el modelo ONNX alojado estáticamente en tu carpeta /public
+        const session = await ort.InferenceSession.create(
+          "/modelo_autoregulacion.onnx",
+        );
+
+        // Construir el vector de características en el mismo orden que tu Python dictaba
+        const inputData = Float32Array.from([
+          codificarDeporte(datos.selectedSport),
+          codificarGenero(datos.gender),
+          codificarEmocion(datos.emotionalState),
+          Number(datos.preEmotionTiroEasy || 0),
+          Number(datos.preEmotionTiroHard || 0),
+          Number(datos.preEmotionMuroEasy || 0),
+          Number(datos.preEmotionMuroHard || 0),
+          Number(datos.shootingScoreEasy || 0),
+          Number(datos.shootingScoreHard || 0),
+          Number(datos.shootingRendimiento || 0),
+          Number(datos.shootingRitmo || 0),
+          Number(datos.shootingConfianza || 0),
+          codificarEmocion(datos.shootingPostEmotion),
+          Number(datos.climbingTimeEasy || 0),
+          Number(datos.climbingTimeHard || 0),
+          Number(datos.climbingRendimiento || 0),
+          Number(datos.climbingRitmo || 0),
+          Number(datos.climbingConfianza || 0),
+          codificarEmocion(datos.climbingPostEmotion),
+          Number(datos.recomendacionFinal || 0),
+        ]);
+
+        // Crear el tensor de entrada (1 batch x 20 features)
+        const tensor = new ort.Tensor("float32", inputData, [1, 20]);
+
+        // Ejecutar inferencia ('float_input' debe coincidir con el initial_type en Python)
+        // 1. Ejecutar la inferencia
+        const results = await session.run({ float_input: tensor });
+
+        // 2. Obtener los nombres exactos que Python le asignó a las salidas
+        const nombrePrediccion = session.outputNames[0];
+        const nombreProbabilidad = session.outputNames[1];
+
+        // 3. Extraer la predicción principal usando el nombre dinámico
+        const prediccion = Number(results[nombrePrediccion].data[0]);
+
+        // 4. Extraer las probabilidades de forma segura
+        let probs = null;
+        if (nombreProbabilidad && results[nombreProbabilidad]) {
+          probs = results[nombreProbabilidad].data;
+        }
+        return {
+          prediccion: prediccion,
+          etiqueta:
+            prediccion === 1
+              ? "Autorregulación Óptima"
+              : "Requiere Intervención / Desregulado",
+          probabilidades: probs ? [probs[0], probs[1]] : null,
+        };
+      } catch (error) {
+        console.error("Error al conectar con la IA NATIVA (ONNX):", error);
+        return null;
+      }
+    }
+
+    // ── Estado global ──
+    let allSessions: SportmindSession[] = [];
+    let currentFiltered: SportmindSession[] = [];
+    let currentView: "cards" | "table" | "charts" = "cards";
+    let chartPerformanceInstance: Chart | null = null;
+    let chartClimbingInstance: Chart | null = null;
+
+    // ── Referencias DOM ──
+    const loadingState = document.getElementById("loading-state");
+    const cardsView = document.getElementById("cards-view");
+    const tableView = document.getElementById("table-view");
+    const chartsView = document.getElementById("charts-view");
+    const tableBody = document.getElementById("table-body");
+    const emptyState = document.getElementById("empty-state");
+    const resultsCount = document.getElementById("results-count");
+    const sourcesCount = document.getElementById("sources-count");
+    const searchInput = document.getElementById(
+      "search-input",
+    ) as HTMLInputElement;
+    const btnClearSearch = document.getElementById(
+      "btn-clear-search",
+    ) as HTMLButtonElement;
+    const filterSport = document.getElementById(
+      "filter-sport",
+    ) as HTMLSelectElement;
+    const filterEmotion = document.getElementById(
+      "filter-emotion",
+    ) as HTMLSelectElement;
+    const sortBy = document.getElementById("sort-by") as HTMLSelectElement;
+    const viewCardsBtn = document.getElementById("view-cards-btn");
+    const viewTableBtn = document.getElementById("view-table-btn");
+    const viewChartsBtn = document.getElementById("view-charts-btn");
+    const btnRefresh = document.getElementById("btn-refresh-s3");
+    const jsonModal = document.getElementById(
+      "session-modal",
+    ) as HTMLDialogElement;
+    const detailModalTitle = document.getElementById("detail-modal-title");
+    const detailModalContent = document.getElementById("detail-modal-content");
+    const jsonModalContent = document.getElementById("json-modal-content");
+    const btnCloseModal = document.getElementById("btn-close-modal");
+
+    // ── Toast ──
+    function showToast(msg: string) {
+      const toast = document.getElementById("toast");
+      const toastMsg = document.getElementById("toast-message");
+      if (!toast || !toastMsg) return;
+      toastMsg.textContent = msg;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2800);
+    }
+
+    // ── Helpers de UI ──
+    function getInitials(name?: string): string {
+      if (!name) return "??";
+      const parts = name.trim().split(/\s+/);
+      if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+
+    function formatName(name?: string): string {
+      if (!name) return "Atleta sin nombre";
+      return name
+        .toLowerCase()
+        .split(" ")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+    }
+
+    function renderMeter(
+      label: string,
+      val: number | undefined,
+      max = 5,
+    ): string {
+      if (typeof val !== "number" || !Number.isFinite(val)) return "";
+      const v = val;
+      const pct = Math.min(Math.max((v / max) * 100, 0), 100);
+      const color =
+        v >= 4
+          ? "#10b981"
+          : v >= 3
+            ? "#3b82f6"
+            : v >= 2
+              ? "#f59e0b"
+              : "#ef4444";
+      return `
+        <div style="margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span class="meter-label">${label}</span>
+            <span class="meter-val">${v}/${max}</span>
+          </div>
+          <div class="meter-track">
+            <div class="meter-fill" style="width:${pct}%;background:${color};"></div>
+          </div>
+        </div>`;
+    }
+
+    // ── Carga de datos ──
+    async function loadData() {
+      if (loadingState) loadingState.style.display = "grid";
+      if (cardsView) cardsView.style.display = "none";
+      if (tableView) tableView.style.display = "none";
+      if (chartsView) chartsView.style.display = "none";
+      if (emptyState) emptyState.style.display = "none";
+
+      const btnSvg = btnRefresh?.querySelector("svg");
+      btnSvg?.classList.add("animate-spin");
+
+      try {
+        allSessions = await fetchSportmindData();
+        populateSportFilter(allSessions);
+        updateKPIs(allSessions);
+        applyFilters();
+        if (sourcesCount)
+          sourcesCount.textContent = `${allSessions.length} registros en la nube`;
+      } catch (err) {
+        console.error("Error al cargar datos:", err);
+        if (resultsCount)
+          resultsCount.innerHTML = `<span style="color:#ef4444;">❌ Error al cargar archivos desde S3</span>`;
+      } finally {
+        if (loadingState) loadingState.style.display = "none";
+        btnSvg?.classList.remove("animate-spin");
+      }
+    }
+
+    function populateSportFilter(sessions: SportmindSession[]) {
+      const sports = new Set<string>();
+      sessions.forEach((s) => {
+        if (s.data.selectedSport) sports.add(s.data.selectedSport);
+      });
+      filterSport.innerHTML = `<option value="all">🏆 Todos los deportes</option>`;
+      sports.forEach((sport) => {
+        const opt = document.createElement("option");
+        opt.value = sport;
+        opt.textContent = sport;
+        filterSport.appendChild(opt);
+      });
+    }
+
+    function updateKPIs(sessions: SportmindSession[]) {
+      const total = document.getElementById("kpi-total-sessions");
+      const athletes = document.getElementById("kpi-unique-athletes");
+
+      if (total) total.textContent = String(sessions.length);
+      const uniqueAthletes = new Set(
+        sessions
+          .map((s) => (s.data.playerName || "").toLowerCase().trim())
+          .filter(Boolean),
+      );
+      if (athletes) athletes.textContent = String(uniqueAthletes.size);
+    }
+
+    function applyFilters() {
+      const query = searchInput.value;
+      const sport = filterSport.value;
+      const emotion = filterEmotion.value;
+      const sort = sortBy.value as any;
+
+      btnClearSearch.style.display = query.length > 0 ? "block" : "none";
+      currentFiltered = filterSportmindRecords(allSessions, {
+        query,
+        sport,
+        emotion,
+        sortBy: sort,
+      });
+      updateKPIs(currentFiltered);
+      if (resultsCount)
+        resultsCount.textContent = `Mostrando ${currentFiltered.length} de ${allSessions.length} evaluaciones`;
+      renderCurrentView();
+    }
+
+    function renderCurrentView() {
+      if (currentFiltered.length === 0) {
+        cardsView && (cardsView.style.display = "none");
+        tableView && (tableView.style.display = "none");
+        chartsView && (chartsView.style.display = "none");
+        emptyState && (emptyState.style.display = "block");
+        return;
+      }
+      emptyState && (emptyState.style.display = "none");
+
+      if (currentView === "cards") {
+        cardsView && (cardsView.style.display = "grid");
+        tableView && (tableView.style.display = "none");
+        chartsView && (chartsView.style.display = "none");
+        renderCards(currentFiltered);
+      } else if (currentView === "table") {
+        cardsView && (cardsView.style.display = "none");
+        tableView && (tableView.style.display = "block");
+        chartsView && (chartsView.style.display = "none");
+        renderTable(currentFiltered);
+      } else {
+        cardsView && (cardsView.style.display = "none");
+        tableView && (tableView.style.display = "none");
+        chartsView && (chartsView.style.display = "grid");
+        renderCharts(currentFiltered);
+      }
+    }
+
+    // ── Render de Tarjetas ──
+    function renderCards(sessions: SportmindSession[]) {
+      if (!cardsView) return;
+      cardsView.innerHTML = sessions
+        .map((session, index) => {
+          const d = session.data;
+          const em = getEmotionConfig(d.emotionalState);
+          const shootPost = getEmotionConfig(d.shootingPostEmotion);
+          const climbPost = getEmotionConfig(d.climbingPostEmotion);
+          const name = formatName(d.playerName);
+          const initials = getInitials(d.playerName);
+          const date = formatDateTime(session.timestamp);
+          const climbEasy =
+            typeof d.climbingTimeEasy === "number"
+              ? d.climbingTimeEasy.toFixed(1)
+              : "—";
+          const climbHard =
+            typeof d.climbingTimeHard === "number"
+              ? d.climbingTimeHard.toFixed(1)
+              : "—";
+          const shootingSummary =
+            typeof d.shootingScoreEasy === "number" ||
+            typeof d.shootingScoreHard === "number"
+              ? `<div class="session-highlight">🎯 Tiro <strong>${d.shootingScoreEasy ?? "—"} / ${d.shootingScoreHard ?? "—"} pts</strong></div>`
+              : "";
+          const climbingSummary =
+            typeof d.climbingTimeEasy === "number" ||
+            typeof d.climbingTimeHard === "number"
+              ? `<div class="session-highlight">🧗 Escalada <strong>${climbEasy} / ${climbHard} s</strong></div>`
+              : "";
+          const hasShootingData =
+            [
+              d.shootingScoreEasy,
+              d.shootingScoreHard,
+              d.shootingRendimiento,
+              d.shootingRitmo,
+              d.shootingConfianza,
+            ].some((value) => typeof value === "number") ||
+            Boolean(d.shootingPostEmotion);
+          const hasClimbingData =
+            [
+              d.climbingTimeEasy,
+              d.climbingTimeHard,
+              d.climbingRendimiento,
+              d.climbingRitmo,
+              d.climbingConfianza,
+            ].some((value) => typeof value === "number") ||
+            Boolean(d.climbingPostEmotion);
+
+          return `
+          <article class="eval-card" style="animation-delay:${index * 40}ms;">
+            <!-- Cabecera: Atleta + Emoción -->
+            <div class="card-header">
+              <div class="athlete-info">
+                <div class="athlete-avatar">${initials}</div>
+                <div>
+                  <div class="athlete-name">${name}</div>
+                  <div class="athlete-meta">
+                    <span class="badge-gender">${d.gender || "N/A"}</span>
+                    <span>🏅 ${d.selectedSport || "Deporte"}</span>
+                    <span>📅 ${date}</span>
+                  </div>
                 </div>
-            `;
-        }
+              </div>
+              <div class="emotion-badge" style="background:${em.badgeClass.includes("emerald") ? "#ecfdf5" : em.badgeClass.includes("cyan") ? "#ecfeff" : em.badgeClass.includes("amber") ? "#fffbeb" : em.badgeClass.includes("purple") ? "#faf5ff" : em.badgeClass.includes("rose") ? "#fff1f2" : "#f8fafc"};color:${em.badgeClass.includes("emerald") ? "#059669" : em.badgeClass.includes("cyan") ? "#0891b2" : em.badgeClass.includes("amber") ? "#d97706" : em.badgeClass.includes("purple") ? "#7c3aed" : em.badgeClass.includes("rose") ? "#e11d48" : "#475569"};border-color:${em.badgeClass.includes("emerald") ? "#a7f3d0" : em.badgeClass.includes("cyan") ? "#a5f3fc" : em.badgeClass.includes("amber") ? "#fde68a" : em.badgeClass.includes("purple") ? "#ddd6fe" : em.badgeClass.includes("rose") ? "#fecdd3" : "#e2e8f0"};">
+                <div class="emotion-dot" style="background:${em.badgeClass.includes("emerald") ? "#10b981" : em.badgeClass.includes("cyan") ? "#06b6d4" : em.badgeClass.includes("amber") ? "#f59e0b" : em.badgeClass.includes("purple") ? "#8b5cf6" : em.badgeClass.includes("rose") ? "#f43f5e" : "#94a3b8"};"></div>
+                ${em.icon} ${em.label}
+              </div>
+            </div>
 
-        function getInitials(name?: string): string {
-            if (!name) return "??";
-            const parts = name.trim().split(/\s+/);
-            if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-            return (parts[0][0] + parts[1][0]).toUpperCase();
-        }
+            <div class="session-highlights" aria-label="Resultados registrados">
+              ${shootingSummary}${climbingSummary}
+              ${!shootingSummary && !climbingSummary ? '<span class="session-highlight">Sin resultados cuantitativos registrados</span>' : ""}
+            </div>
 
-        function formatName(name?: string): string {
-            if (!name) return "Atleta sin nombre";
-            return name.toLowerCase().split(" ").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
-        }
-
-        function showToast(msg: string) {
-            const toast = document.getElementById("toast");
-            const toastMsg = document.getElementById("toast-message");
-            if (toast && toastMsg) {
-                toastMsg.textContent = msg;
-                toast.classList.remove("translate-y-20", "opacity-0");
-                setTimeout(() => { toast.classList.add("translate-y-20", "opacity-0"); }, 2500);
-            }
-        }
-
-        async function loadData() {
-            if (loadingState) loadingState.classList.remove("hidden");
-            if (cardsView) cardsView.classList.add("hidden");
-            if (tableView) tableView.classList.add("hidden");
-            if (chartsView) chartsView.classList.add("hidden");
-            if (emptyState) emptyState.classList.add("hidden");
-            if (refreshIcon) refreshIcon.classList.add("animate-spin");
-
-            try {
-                allSessions = await fetchSportmindData();
-                populateSportFilter(allSessions);
-                updateKPIs(allSessions);
-                applyFilters();
-
-                if (sourcesCount) {
-                    sourcesCount.textContent = `${allSessions.length} registros S3`;
-                }
-            } catch (err) {
-                console.error("Error al cargar datos:", err);
-                if (resultsCount) {
-                    resultsCount.innerHTML = `<span class="text-red-400">❌ Error al cargar los archivos desde S3</span>`;
-                }
-            } finally {
-                if (loadingState) loadingState.classList.add("hidden");
-                if (refreshIcon) refreshIcon.classList.remove("animate-spin");
-            }
-        }
-
-        function populateSportFilter(sessions: SportmindSession[]) {
-            const sports = new Set<string>();
-            sessions.forEach((s) => { if (s.data.selectedSport) sports.add(s.data.selectedSport); });
-            filterSport.innerHTML = `<option value="all">🏆 Todos los deportes</option>`;
-            sports.forEach((sport) => {
-                const opt = document.createElement("option");
-                opt.value = sport;
-                opt.textContent = `🏊 ${sport}`;
-                filterSport.appendChild(opt);
-            });
-        }
-
-        function updateKPIs(sessions: SportmindSession[]) {
-            const kpiTotal = document.getElementById("kpi-total-sessions");
-            const kpiAthletes = document.getElementById("kpi-unique-athletes");
-            const kpiAvgShooting = document.getElementById("kpi-avg-shooting");
-            const kpiAvgClimbing = document.getElementById("kpi-avg-climbing");
-
-            if (kpiTotal) kpiTotal.textContent = String(sessions.length);
-            const athletes = new Set(sessions.map((s) => (s.data.playerName || "").toLowerCase().trim()));
-            if (kpiAthletes) kpiAthletes.textContent = String(athletes.size);
-
-            const scores = sessions.flatMap((s) => [s.data.shootingScoreEasy, s.data.shootingScoreHard]).filter((n): n is number => typeof n === "number");
-            if (kpiAvgShooting) kpiAvgShooting.textContent = scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : "—";
-
-            const times = sessions.flatMap((s) => [s.data.climbingTimeEasy, s.data.climbingTimeHard]).filter((n): n is number => typeof n === "number");
-            if (kpiAvgClimbing) kpiAvgClimbing.textContent = times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—";
-        }
-
-        function applyFilters() {
-            const query = searchInput.value;
-            const sport = filterSport.value;
-            const emotion = filterEmotion.value;
-            const sort = sortBy.value as any;
-
-            if (btnClearSearch) btnClearSearch.classList.toggle("hidden", query.length === 0);
-
-            currentFiltered = filterSportmindRecords(allSessions, { query, sport, emotion, sortBy: sort });
-
-            if (resultsCount) resultsCount.textContent = `Mostrando ${currentFiltered.length} de ${allSessions.length} evaluaciones`;
-            renderCurrentView();
-        }
-
-        function renderCurrentView() {
-            if (currentFiltered.length === 0) {
-                if (cardsView) cardsView.classList.add("hidden");
-                if (tableView) tableView.classList.add("hidden");
-                if (chartsView) chartsView.classList.add("hidden");
-                if (emptyState) emptyState.classList.remove("hidden");
-                return;
-            }
-
-            if (emptyState) emptyState.classList.add("hidden");
-
-            if (currentView === "cards") {
-                if (cardsView) cardsView.classList.remove("hidden");
-                if (tableView) tableView.classList.add("hidden");
-                if (chartsView) chartsView.classList.add("hidden");
-                renderCards(currentFiltered);
-            } else if (currentView === "table") {
-                if (cardsView) cardsView.classList.add("hidden");
-                if (tableView) tableView.classList.remove("hidden");
-                if (chartsView) chartsView.classList.add("hidden");
-                renderTable(currentFiltered);
-            } else if (currentView === "charts") {
-                if (cardsView) cardsView.classList.add("hidden");
-                if (tableView) tableView.classList.add("hidden");
-                if (chartsView) chartsView.classList.remove("hidden");
-                renderCharts(currentFiltered);
-            }
-        }
-
-        function renderCards(sessions: SportmindSession[]) {
-            if (!cardsView) return;
-            cardsView.innerHTML = sessions.map((session, index) => {
-                const d = session.data;
-                const initialEmotion = getEmotionConfig(d.emotionalState);
-                const shootingPostEmotion = getEmotionConfig(d.shootingPostEmotion);
-                const climbingPostEmotion = getEmotionConfig(d.climbingPostEmotion);
-                const initials = getInitials(d.playerName);
-                const formattedName = formatName(d.playerName);
-                const dateFormatted = formatDateTime(session.timestamp);
-                const climbingEasy = typeof d.climbingTimeEasy === "number" ? d.climbingTimeEasy.toFixed(2) : "—";
-                const climbingHard = typeof d.climbingTimeHard === "number" ? d.climbingTimeHard.toFixed(2) : "—";
-
-                return `
-                <article class="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-xl hover:border-slate-700/80 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl ${initialEmotion.bgGlow} rounded-full blur-3xl pointer-events-none -z-0"></div>
-                    <div class="relative z-10 space-y-5">
-                        <div class="flex items-start justify-between gap-3 border-b border-slate-800/80 pb-4">
-                            <div class="flex items-center gap-3.5">
-                                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-extrabold text-base shadow-md shadow-indigo-600/30">${initials}</div>
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <h2 class="text-base sm:text-lg font-bold text-white group-hover:text-indigo-300 transition">${formattedName}</h2>
-                                        <span class="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">${d.gender || "N/A"}</span>
-                                    </div>
-                                    <div class="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
-                                        <span>🏊 ${d.selectedSport || "Deporte"}</span><span>•</span><span>📅 ${dateFormatted}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold border ${initialEmotion.badgeClass}">
-                                <span class="w-2 h-2 rounded-full ${initialEmotion.dotClass}"></span>
-                                <span>${initialEmotion.icon} ${initialEmotion.label}</span>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Tiro -->
-                            <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-bold text-indigo-400 flex items-center gap-1.5"><span>🎯</span> Evaluación Tiro</span>
-                                    <span class="text-[11px] px-2 py-0.5 rounded-lg border ${shootingPostEmotion.badgeClass}">Post: ${shootingPostEmotion.icon} ${shootingPostEmotion.label}</span>
-                                </div>
-                                <div class="grid grid-cols-2 gap-2 text-center">
-                                    <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2">
-                                        <span class="text-[10px] text-slate-400 uppercase font-semibold block">Fácil</span>
-                                        <span class="text-lg font-extrabold text-emerald-400">${d.shootingScoreEasy ?? "—"} <span class="text-xs font-normal text-slate-400">pts</span></span>
-                                    </div>
-                                    <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2">
-                                        <span class="text-[10px] text-slate-400 uppercase font-semibold block">Difícil</span>
-                                        <span class="text-lg font-extrabold text-indigo-400">${d.shootingScoreHard ?? "—"} <span class="text-xs font-normal text-slate-400">pts</span></span>
-                                    </div>
-                                </div>
-                                <div class="space-y-2 pt-1 border-t border-slate-800/60">
-                                    ${renderMetricMeter("Rendimiento", d.shootingRendimiento)}
-                                    ${renderMetricMeter("Ritmo", d.shootingRitmo)}
-                                    ${renderMetricMeter("Confianza", d.shootingConfianza)}
-                                </div>
-                            </div>
-
-                            <!-- Escalada -->
-                            <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5"><span>🧗</span> Muro / Escalada</span>
-                                    <span class="text-[11px] px-2 py-0.5 rounded-lg border ${climbingPostEmotion.badgeClass}">Post: ${climbingPostEmotion.icon} ${climbingPostEmotion.label}</span>
-                                </div>
-                                <div class="grid grid-cols-2 gap-2 text-center">
-                                    <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2">
-                                        <span class="text-[10px] text-slate-400 uppercase font-semibold block">T. Fácil</span>
-                                        <span class="text-lg font-extrabold text-amber-400">${climbingEasy} <span class="text-xs font-normal text-slate-400">s</span></span>
-                                    </div>
-                                    <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2">
-                                        <span class="text-[10px] text-slate-400 uppercase font-semibold block">T. Difícil</span>
-                                        <span class="text-lg font-extrabold text-amber-300">${climbingHard} <span class="text-xs font-normal text-slate-400">s</span></span>
-                                    </div>
-                                </div>
-                                <div class="space-y-2 pt-1 border-t border-slate-800/60">
-                                    ${renderMetricMeter("Rendimiento", d.climbingRendimiento)}
-                                    ${renderMetricMeter("Ritmo", d.climbingRitmo)}
-                                    ${renderMetricMeter("Confianza", d.climbingConfianza)}
-                                </div>
-                            </div>
-                        </div>
+            <button class="btn-view-details" data-session-index="${index}" aria-haspopup="dialog">
+              Ver informe detallado
+            </button>
+            <template id="session-detail-${index}">
+              <div class="card-details-content">
+                <div class="detail-layout">
+                  <aside class="analysis-column" aria-label="Análisis automatizado">
+                    <h3 class="analysis-heading">Análisis de apoyo</h3>
+                    <p class="analysis-hint">La predicción complementa la lectura profesional y no constituye un diagnóstico.</p>
+                    <div class="recommendation-chip">
+                      ⭐ Recomendación registrada: <strong>${d.recomendacionFinal ?? "—"}/10</strong>
                     </div>
-
-                    <div class="relative z-10 mt-5 pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
-                        <div class="flex items-center gap-3">
-                            <div class="flex items-center gap-1.5 text-slate-300 font-semibold bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-700/60">
-                                <span>⭐ Recomendación:</span><span class="text-indigo-400 font-extrabold">${d.recomendacionFinal ?? "—"}/10</span>
-                            </div>
-                            <button class="btn-view-raw text-indigo-400 hover:text-indigo-300 underline underline-offset-2 cursor-pointer transition" data-session-index="${index}">Ver JSON</button>
-                        </div>
-                        <button class="btn-copy-id inline-flex items-center gap-1.5 bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-slate-200 px-2.5 py-1 rounded-lg border border-slate-800 transition active:scale-95 cursor-pointer" data-id="${session.session_id}" title="Copiar Session ID">
-                            <span>ID: ${session.session_id.substring(0, 8)}...</span><span>📋</span>
-                        </button>
+                    <button class="btn-ai btn-predict-ia" data-session-index="${index}">
+                      🧠 Analizar sesión
+                    </button>
+                    <div id="ia-result-${index}" class="ia-result-panel">
+                      <div class="ia-diagnosis-label">Resultado del análisis</div>
+                      <div class="ia-confidence">Pulsa “Analizar sesión” para consultar la predicción y su certeza.</div>
                     </div>
-                </article>
-                `;
-            }).join("");
-            attachCardListeners();
-        }
+                  </aside>
+                  <section class="detail-column" aria-label="Resultados de la sesión">
+            <!-- Métricas detalladas: tiro + escalada -->
+            <div class="metrics-grid">
+              ${
+                hasShootingData
+                  ? `
+              <!-- Tiro -->
+              <div class="metric-section">
+                <div class="metric-section-header">
+                  <span class="metric-section-title" style="color:#3b82f6;">🎯 Evaluación de Tiro</span>
+                  <span class="metric-post-badge" style="background:#eff6ff;color:#2563eb;border-color:#bfdbfe;">Post: ${shootPost.icon}${shootPost.label}</span>
+                </div>
+                <div class="scores-row">
+                  <div class="score-box">
+                    <div class="score-label">Fácil</div>
+                    <div class="score-value" style="color:#10b981;">${d.shootingScoreEasy ?? "—"}</div>
+                    <div class="score-unit">puntos</div>
+                  </div>
+                  <div class="score-box">
+                    <div class="score-label">Difícil</div>
+                    <div class="score-value" style="color:#3b82f6;">${d.shootingScoreHard ?? "—"}</div>
+                    <div class="score-unit">puntos</div>
+                  </div>
+                </div>
+                ${renderMeter("Rendimiento", d.shootingRendimiento)}
+                ${renderMeter("Ritmo", d.shootingRitmo)}
+                ${renderMeter("Confianza", d.shootingConfianza)}
+              </div>
+              `
+                  : ""
+              }
 
-        function renderTable(sessions: SportmindSession[]) {
-            if (!tableBody) return;
-            tableBody.innerHTML = sessions.map((s) => {
-                const d = s.data;
-                const initialEmotion = getEmotionConfig(d.emotionalState);
-                const shootingPost = getEmotionConfig(d.shootingPostEmotion);
-                const climbingPost = getEmotionConfig(d.climbingPostEmotion);
-                const formattedName = formatName(d.playerName);
-                const dateFormatted = formatDateTime(s.timestamp);
-                return `
-                <tr class="hover:bg-slate-800/40 transition">
-                    <td class="px-5 py-4 font-semibold text-white flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-lg bg-indigo-600/30 text-indigo-300 flex items-center justify-center text-xs font-bold">${getInitials(d.playerName)}</div>
-                        <span>${formattedName}</span>
-                    </td>
-                    <td class="px-5 py-4">${d.selectedSport || "—"}</td>
-                    <td class="px-5 py-4"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-xs ${initialEmotion.badgeClass}">${initialEmotion.icon} ${initialEmotion.label}</span></td>
-                    <td class="px-5 py-4 font-mono text-xs"><span class="text-emerald-400 font-bold">${d.shootingScoreEasy ?? "—"} pts</span> / <span class="text-indigo-400">${d.shootingScoreHard ?? "—"} pts</span></td>
-                    <td class="px-5 py-4 font-mono text-xs"><span class="text-amber-400 font-bold">${d.climbingTimeEasy ? d.climbingTimeEasy.toFixed(1) + "s" : "—"}</span> / <span class="text-amber-300">${d.climbingTimeHard ? d.climbingTimeHard.toFixed(1) + "s" : "—"}</span></td>
-                    <td class="px-5 py-4 text-xs space-x-1"><span>🎯 ${shootingPost.icon}</span><span>🧗 ${climbingPost.icon}</span></td>
-                    <td class="px-5 py-4 text-xs text-slate-400">${dateFormatted}</td>
-                </tr>
-                `;
-            }).join("");
-        }
+              ${
+                hasClimbingData
+                  ? `
+              <!-- Escalada -->
+              <div class="metric-section">
+                <div class="metric-section-header">
+                  <span class="metric-section-title" style="color:#f59e0b;">🧗 Muro / Escalada</span>
+                  <span class="metric-post-badge" style="background:#fffbeb;color:#d97706;border-color:#fde68a;">Post: ${climbPost.icon}${climbPost.label}</span>
+                </div>
+                <div class="scores-row">
+                  <div class="score-box">
+                    <div class="score-label">T. Fácil</div>
+                    <div class="score-value" style="color:#f59e0b;">${climbEasy}</div>
+                    <div class="score-unit">segundos</div>
+                  </div>
+                  <div class="score-box">
+                    <div class="score-label">T. Difícil</div>
+                    <div class="score-value" style="color:#d97706;">${climbHard}</div>
+                    <div class="score-unit">segundos</div>
+                  </div>
+                </div>
+                ${renderMeter("Rendimiento", d.climbingRendimiento)}
+                ${renderMeter("Ritmo", d.climbingRitmo)}
+                ${renderMeter("Confianza", d.climbingConfianza)}
+              </div>
+              `
+                  : ""
+              }
+              ${!hasShootingData && !hasClimbingData ? '<p class="details-no-data">No hay métricas adicionales registradas para esta sesión.</p>' : ""}
+            </div>
 
-        function renderCharts(sessions: SportmindSession[]) {
-            const labels = sessions.map((s) => formatName(s.data.playerName));
-            const canvasPerf = document.getElementById("chart-performance") as HTMLCanvasElement;
-            if (canvasPerf) {
-                if (chartPerformanceInstance) chartPerformanceInstance.destroy();
-                chartPerformanceInstance = new Chart(canvasPerf, {
-                    type: "bar",
-                    data: {
-                        labels,
-                        datasets: [
-                            { label: "Rendimiento Tiro", data: sessions.map((s) => s.data.shootingRendimiento ?? 0), backgroundColor: "rgba(99, 102, 241, 0.7)", borderRadius: 6 },
-                            { label: "Confianza Tiro", data: sessions.map((s) => s.data.shootingConfianza ?? 0), backgroundColor: "rgba(168, 85, 247, 0.7)", borderRadius: 6 },
-                            { label: "Rendimiento Escalada", data: sessions.map((s) => s.data.climbingRendimiento ?? 0), backgroundColor: "rgba(245, 158, 11, 0.7)", borderRadius: 6 },
-                            { label: "Confianza Escalada", data: sessions.map((s) => s.data.climbingConfianza ?? 0), backgroundColor: "rgba(16, 185, 129, 0.7)", borderRadius: 6 },
-                        ],
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 5, ticks: { stepSize: 1, color: "#94a3b8" }, grid: { color: "rgba(255,255,255,0.05)" } }, x: { ticks: { color: "#94a3b8" }, grid: { display: false } } }, plugins: { legend: { labels: { color: "#e2e8f0", boxWidth: 12, font: { size: 11 } } } } },
-                });
-            }
+            <div class="detail-actions">
+              <button class="btn-json btn-view-raw" data-session-index="${index}">Ver datos completos</button>
+              <button class="btn-copy-id" data-id="${session.session_id}" title="Copiar ID de sesión">
+                📋 Copiar ID
+              </button>
+            </div>
+                  </section>
+                </div>
+              </div>
+            </template>
+          </article>`;
+        })
+        .join("");
+      attachCardListeners();
+    }
 
-            const canvasClimbing = document.getElementById("chart-climbing") as HTMLCanvasElement;
-            if (canvasClimbing) {
-                if (chartClimbingInstance) chartClimbingInstance.destroy();
-                chartClimbingInstance = new Chart(canvasClimbing, {
-                    type: "bar",
-                    data: {
-                        labels,
-                        datasets: [
-                            { label: "Tiempo Fácil (seg)", data: sessions.map((s) => s.data.climbingTimeEasy ?? 0), backgroundColor: "rgba(56, 189, 248, 0.7)", borderRadius: 6 },
-                            { label: "Tiempo Difícil (seg)", data: sessions.map((s) => s.data.climbingTimeHard ?? 0), backgroundColor: "rgba(251, 146, 60, 0.7)", borderRadius: 6 },
-                        ],
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: "#94a3b8" }, grid: { color: "rgba(255,255,255,0.05)" } }, x: { ticks: { color: "#94a3b8" }, grid: { display: false } } }, plugins: { legend: { labels: { color: "#e2e8f0", boxWidth: 12, font: { size: 11 } } } } },
-                });
-            }
-        }
+    // ── Render de Tabla ──
+    function renderTable(sessions: SportmindSession[]) {
+      if (!tableBody) return;
+      tableBody.innerHTML = sessions
+        .map((s) => {
+          const d = s.data;
+          const em = getEmotionConfig(d.emotionalState);
+          const sp = getEmotionConfig(d.shootingPostEmotion);
+          const cp = getEmotionConfig(d.climbingPostEmotion);
+          return `
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${getInitials(d.playerName)}</div>
+                <div>
+                  <div style="font-weight:700;color:#1a202c;">${formatName(d.playerName)}</div>
+                  <div style="font-size:11px;color:#a0aec0;">${d.gender || ""}</div>
+                </div>
+              </div>
+            </td>
+            <td><span style="font-weight:600;">${d.selectedSport || "—"}</span></td>
+            <td><span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;background:#f7fafc;border:1px solid #e2e8f0;">${em.icon} ${em.label}</span></td>
+            <td>
+              <span style="color:#10b981;font-weight:700;">${d.shootingScoreEasy ?? "—"} pts</span>
+              <span style="color:#a0aec0;"> / </span>
+              <span style="color:#3b82f6;font-weight:600;">${d.shootingScoreHard ?? "—"} pts</span>
+            </td>
+            <td>
+              <span style="color:#f59e0b;font-weight:700;">${d.climbingTimeEasy ? d.climbingTimeEasy.toFixed(1) + "s" : "—"}</span>
+              <span style="color:#a0aec0;"> / </span>
+              <span style="color:#d97706;font-weight:600;">${d.climbingTimeHard ? d.climbingTimeHard.toFixed(1) + "s" : "—"}</span>
+            </td>
+            <td><span style="font-size:18px;">${sp.icon}</span> <span style="font-size:18px;">${cp.icon}</span></td>
+            <td style="color:#a0aec0;font-size:12px;">${formatDateTime(s.timestamp)}</td>
+          </tr>`;
+        })
+        .join("");
+    }
 
-        function attachCardListeners() {
-            document.querySelectorAll(".btn-copy-id").forEach((btn) => {
-                btn.addEventListener("click", (e) => {
-                    const target = e.currentTarget as HTMLElement;
-                    const id = target.dataset.id || "";
-                    navigator.clipboard.writeText(id).then(() => { showToast(`ID copiado: ${id.substring(0, 8)}...`); });
-                });
-            });
+    // ── Render de Gráficos ──
+    function renderCharts(sessions: SportmindSession[]) {
+      const labels = sessions.map((s) => formatName(s.data.playerName));
 
-            document.querySelectorAll(".btn-view-raw").forEach((btn) => {
-                btn.addEventListener("click", (e) => {
-                    const target = e.currentTarget as HTMLElement;
-                    const idx = Number(target.dataset.sessionIndex);
-                    const session = currentFiltered[idx];
-                    if (session && jsonModalContent && jsonModal) {
-                        jsonModalContent.textContent = JSON.stringify(session, null, 2);
-                        jsonModal.showModal();
-                    }
-                });
-            });
-        }
-
-        searchInput?.addEventListener("input", applyFilters);
-        filterSport?.addEventListener("change", applyFilters);
-        filterEmotion?.addEventListener("change", applyFilters);
-        sortBy?.addEventListener("change", applyFilters);
-
-        btnClearSearch?.addEventListener("click", () => {
-            searchInput.value = "";
-            applyFilters();
+      const perfCanvas = document.getElementById(
+        "chart-performance",
+      ) as HTMLCanvasElement;
+      if (perfCanvas) {
+        if (chartPerformanceInstance) chartPerformanceInstance.destroy();
+        chartPerformanceInstance = new Chart(perfCanvas, {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Rendimiento Tiro",
+                data: sessions.map((s) => s.data.shootingRendimiento ?? 0),
+                backgroundColor: "rgba(59,130,246,0.75)",
+                borderRadius: 6,
+              },
+              {
+                label: "Confianza Tiro",
+                data: sessions.map((s) => s.data.shootingConfianza ?? 0),
+                backgroundColor: "rgba(139,92,246,0.75)",
+                borderRadius: 6,
+              },
+              {
+                label: "Rendimiento Escalada",
+                data: sessions.map((s) => s.data.climbingRendimiento ?? 0),
+                backgroundColor: "rgba(245,158,11,0.75)",
+                borderRadius: 6,
+              },
+              {
+                label: "Confianza Escalada",
+                data: sessions.map((s) => s.data.climbingConfianza ?? 0),
+                backgroundColor: "rgba(16,185,129,0.75)",
+                borderRadius: 6,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                min: 0,
+                max: 5,
+                ticks: { stepSize: 1, color: "#718096" },
+                grid: { color: "rgba(0,0,0,0.05)" },
+              },
+              x: { ticks: { color: "#718096" }, grid: { display: false } },
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  color: "#4a5568",
+                  boxWidth: 13,
+                  font: { size: 12, weight: "600" },
+                },
+              },
+            },
+          },
         });
+      }
 
-        document.getElementById("btn-reset-filters")?.addEventListener("click", () => {
-            searchInput.value = "";
-            filterSport.value = "all";
-            filterEmotion.value = "all";
-            sortBy.value = "date-desc";
-            applyFilters();
+      const climbCanvas = document.getElementById(
+        "chart-climbing",
+      ) as HTMLCanvasElement;
+      if (climbCanvas) {
+        if (chartClimbingInstance) chartClimbingInstance.destroy();
+        chartClimbingInstance = new Chart(climbCanvas, {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Tiempo Fácil (s)",
+                data: sessions.map((s) => s.data.climbingTimeEasy ?? 0),
+                backgroundColor: "rgba(56,189,248,0.75)",
+                borderRadius: 6,
+              },
+              {
+                label: "Tiempo Difícil (s)",
+                data: sessions.map((s) => s.data.climbingTimeHard ?? 0),
+                backgroundColor: "rgba(251,146,60,0.75)",
+                borderRadius: 6,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                ticks: { color: "#718096" },
+                grid: { color: "rgba(0,0,0,0.05)" },
+              },
+              x: { ticks: { color: "#718096" }, grid: { display: false } },
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  color: "#4a5568",
+                  boxWidth: 13,
+                  font: { size: 12, weight: "600" },
+                },
+              },
+            },
+          },
         });
+      }
+    }
 
-        function setView(view: "cards" | "table" | "charts") {
-            currentView = view;
-            viewCardsBtn?.classList.toggle("bg-indigo-600", view === "cards");
-            viewCardsBtn?.classList.toggle("text-white", view === "cards");
-            viewCardsBtn?.classList.toggle("text-slate-400", view !== "cards");
+    // ── Listeners de tarjetas ──
+    function attachCardListeners() {
+      document.querySelectorAll(".btn-view-details").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const index = Number(
+            (e.currentTarget as HTMLElement).dataset.sessionIndex,
+          );
+          const template = document.getElementById(
+            `session-detail-${index}`,
+          ) as HTMLTemplateElement | null;
+          if (
+            !template ||
+            !detailModalContent ||
+            !jsonModal ||
+            !jsonModalContent
+          )
+            return;
+          detailModalContent.replaceChildren(template.content.cloneNode(true));
+          jsonModalContent.hidden = true;
+          jsonModalContent.textContent = "";
+          const session = currentFiltered[index];
+          if (detailModalTitle && session) {
+            detailModalTitle.textContent = `Informe de ${formatName(session.data.playerName)} · ${session.data.selectedSport || "Sesión"}`;
+          }
+          jsonModal.showModal();
+          registrarEventoLog("Abrió el detalle de una sesión");
+        });
+      });
+    }
 
-            viewTableBtn?.classList.toggle("bg-indigo-600", view === "table");
-            viewTableBtn?.classList.toggle("text-white", view === "table");
-            viewTableBtn?.classList.toggle("text-slate-400", view !== "table");
+    detailModalContent?.addEventListener("click", async (e) => {
+      const target = (e.target as HTMLElement).closest(
+        "button",
+      ) as HTMLButtonElement | null;
+      if (!target) return;
 
-            viewChartsBtn?.classList.toggle("bg-indigo-600", view === "charts");
-            viewChartsBtn?.classList.toggle("text-white", view === "charts");
-            viewChartsBtn?.classList.toggle("text-slate-400", view !== "charts");
+      if (target.classList.contains("btn-copy-id")) {
+        const id = target.dataset.id || "";
+        await navigator.clipboard.writeText(id);
+        showToast(`ID copiado: ${id.substring(0, 8)}…`);
+        return;
+      }
 
-            renderCurrentView();
+      const index = Number(target.dataset.sessionIndex);
+      const session = currentFiltered[index];
+      if (
+        target.classList.contains("btn-view-raw") &&
+        session &&
+        jsonModalContent
+      ) {
+        jsonModalContent.textContent = JSON.stringify(session, null, 2);
+        jsonModalContent.hidden = !jsonModalContent.hidden;
+        target.textContent = jsonModalContent.hidden
+          ? "Ver datos completos"
+          : "Ocultar datos";
+        if (!jsonModalContent.hidden)
+          jsonModalContent.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
+        registrarEventoLog("Consultó el JSON de la sesión");
+        return;
+      }
+
+      if (target.classList.contains("btn-predict-ia") && session) {
+        const resultPanel = detailModalContent.querySelector(
+          `#ia-result-${index}`,
+        );
+        if (!resultPanel) return;
+        const original = target.innerHTML;
+        target.innerHTML = "⏳ Analizando...";
+        target.disabled = true;
+        resultPanel.innerHTML =
+          '<div class="ia-diagnosis-label">Análisis en curso</div><div class="ia-confidence">Estamos procesando los datos de esta sesión…</div>';
+
+        // ── LLAMADA A IA NATIVA ──
+        const iaResponse = await predecirAutorregulacion({ ...session.data });
+
+        target.innerHTML = original;
+        target.disabled = false;
+
+        if (iaResponse) {
+          const isOk = iaResponse.prediccion === 1;
+          const prob = iaResponse.probabilidades
+            ? (Math.max(...iaResponse.probabilidades) * 100).toFixed(1) + "%"
+            : "No disponible"; // Se omite si el modelo ONNX no devolvió distribución de probabilidad
+          resultPanel.className = `ia-result-panel ${isOk ? "" : "danger"}`;
+          (resultPanel as HTMLElement).style.display = "block";
+          resultPanel.innerHTML = `
+            <div class="ia-diagnosis-label">🧠 Resultado del análisis automatizado</div>
+            <div class="ia-diagnosis-title ${isOk ? "ok" : "risk"}">${isOk ? "✅" : "⚠️"} ${iaResponse.etiqueta}</div>
+            <div class="ia-confidence">Certeza informada por el modelo: <strong>${prob}</strong></div>
+            <div class="ia-confidence">Resultado de apoyo; no reemplaza la evaluación profesional.</div>
+          `;
+          registrarEventoLog(
+            `Análisis de IA ejecutado para sesión ${session.session_id.substring(0, 8)}`,
+          );
+        } else {
+          resultPanel.innerHTML =
+            '<div class="ia-diagnosis-label">Análisis no disponible</div><div class="ia-confidence">No se pudo cargar el modelo localmente. Revisa la consola para más detalles.</div>';
+          showToast("❌ No se pudo inicializar la IA nativa.");
         }
+      }
+    });
 
-        viewCardsBtn?.addEventListener("click", () => setView("cards"));
-        viewTableBtn?.addEventListener("click", () => setView("table"));
-        viewChartsBtn?.addEventListener("click", () => setView("charts"));
+    // ── Cambio de vista ──
+    function setView(view: "cards" | "table" | "charts") {
+      currentView = view;
+      [viewCardsBtn, viewTableBtn, viewChartsBtn].forEach((btn, i) => {
+        btn?.classList.toggle(
+          "active",
+          ["cards", "table", "charts"][i] === view,
+        );
+      });
+      renderCurrentView();
+    }
 
-        btnRefresh?.addEventListener("click", loadData);
-        btnCloseModal?.addEventListener("click", () => jsonModal?.close());
+    // ── Event Listeners globales ──
+    searchInput?.addEventListener("input", applyFilters);
+    filterSport?.addEventListener("change", applyFilters);
+    filterEmotion?.addEventListener("change", applyFilters);
+    sortBy?.addEventListener("change", applyFilters);
 
-        btnLogout?.addEventListener("click", () => {
-            localStorage.removeItem("sportmind_token");
-            window.location.replace("/login");
-        });
+    btnClearSearch?.addEventListener("click", () => {
+      searchInput.value = "";
+      applyFilters();
+    });
 
-        loadData();
-    </script>
+    document
+      .getElementById("btn-reset-filters")
+      ?.addEventListener("click", () => {
+        searchInput.value = "";
+        filterSport.value = "all";
+        filterEmotion.value = "all";
+        sortBy.value = "date-desc";
+        applyFilters();
+      });
+
+    viewCardsBtn?.addEventListener("click", () => {
+      registrarEventoLog("Vista: Tarjetas");
+      setView("cards");
+    });
+    viewTableBtn?.addEventListener("click", () => {
+      registrarEventoLog("Vista: Tabla");
+      setView("table");
+    });
+    viewChartsBtn?.addEventListener("click", () => {
+      registrarEventoLog("Vista: Gráficos");
+      setView("charts");
+    });
+    btnRefresh?.addEventListener("click", () => {
+      registrarEventoLog("Actualizó datos de S3");
+      loadData();
+    });
+    btnCloseModal?.addEventListener("click", () => jsonModal?.close());
+    jsonModal?.addEventListener("click", (e) => {
+      if (e.target === jsonModal) jsonModal.close();
+    });
+
+    // ── Inicio ──
+    loadData();
+  </script>
 </Layout>
