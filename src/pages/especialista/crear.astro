@@ -1,131 +1,238 @@
 ---
-import Layout from '../../layouts/Layout.astro';
+import Layout from "../../layouts/Layout.astro";
 ---
 
 <Layout>
   <style>
-    h1, h2, h3 { letter-spacing: -0.3px; }
+    h1,
+    h2,
+    h3 {
+      letter-spacing: -0.3px;
+    }
 
     .page-header {
       margin-bottom: 32px;
       padding-bottom: 20px;
       border-bottom: 1px solid #e2e8f0;
-      display: flex; align-items: flex-start;
-      justify-content: space-between; gap: 16px; flex-wrap: wrap;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
     }
-    .page-title { font-size: 24px; font-weight: 800; color: #1a202c; }
-    .page-subtitle { font-size: 14px; color: #718096; margin-top: 4px; }
+    .page-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #1a202c;
+    }
+    .page-subtitle {
+      font-size: 14px;
+      color: #718096;
+      margin-top: 4px;
+    }
 
     .btn-back {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: #fff; color: #4a5568;
-      border: 1.5px solid #e2e8f0; border-radius: 10px;
-      padding: 9px 16px; font-size: 13px; font-weight: 600;
-      text-decoration: none; transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff;
+      color: #4a5568;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
     }
-    .btn-back:hover { border-color: #cbd5e0; color: #1a202c; }
+    .btn-back:hover {
+      border-color: #cbd5e0;
+      color: #1a202c;
+    }
 
     /* Formulario */
     .form-card {
       background: #fff;
       border: 1px solid #e2e8f0;
-      border-radius: 22px; padding: 36px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      border-radius: 22px;
+      padding: 36px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
       max-width: 640px;
     }
     .form-card-title {
-      font-size: 17px; font-weight: 700; color: #1a202c;
+      font-size: 17px;
+      font-weight: 700;
+      color: #1a202c;
       margin-bottom: 6px;
     }
     .form-card-desc {
-      font-size: 14px; color: #718096; margin-bottom: 28px;
+      font-size: 14px;
+      color: #718096;
+      margin-bottom: 28px;
       line-height: 1.55;
     }
 
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-    @media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
-    .form-group { margin-bottom: 18px; }
-    .form-group-full { grid-column: span 2; }
-    @media (max-width: 560px) { .form-group-full { grid-column: span 1; } }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    @media (max-width: 560px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .form-group {
+      margin-bottom: 18px;
+    }
+    .form-group-full {
+      grid-column: span 2;
+    }
+    @media (max-width: 560px) {
+      .form-group-full {
+        grid-column: span 1;
+      }
+    }
 
     .form-label {
-      display: block; font-size: 13px; font-weight: 600;
-      color: #4a5568; margin-bottom: 7px;
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 7px;
     }
-    .form-input, .form-select {
+    .form-input,
+    .form-select {
       width: 100%;
       padding: 12px 14px;
       background: #f7fafc;
       border: 1.5px solid #e2e8f0;
-      border-radius: 12px; font-size: 14px; color: #1a202c;
-      outline: none; transition: all 0.2s ease;
+      border-radius: 12px;
+      font-size: 14px;
+      color: #1a202c;
+      outline: none;
+      transition: all 0.2s ease;
       font-family: inherit;
     }
-    .form-input:focus, .form-select:focus {
+    .form-input:focus,
+    .form-select:focus {
       border-color: #3b82f6;
       background: #eff6ff;
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.10);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
-    .form-input::placeholder { color: #a0aec0; }
+    .form-input::placeholder {
+      color: #a0aec0;
+    }
 
     .form-divider {
-      border: none; border-top: 1px solid #f0f4f8;
+      border: none;
+      border-top: 1px solid #f0f4f8;
       margin: 28px 0;
     }
 
     .form-actions {
-      display: flex; justify-content: flex-end; gap: 10px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
     }
     .btn-cancel {
-      background: #f7fafc; color: #718096;
-      border: 1.5px solid #e2e8f0; border-radius: 12px;
-      padding: 12px 22px; font-size: 14px; font-weight: 600;
-      cursor: pointer; text-decoration: none;
-      display: inline-flex; align-items: center;
+      background: #f7fafc;
+      color: #718096;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 22px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
       transition: all 0.2s;
     }
-    .btn-cancel:hover { background: #e2e8f0; color: #1a202c; }
+    .btn-cancel:hover {
+      background: #e2e8f0;
+      color: #1a202c;
+    }
     .btn-submit {
       background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: #fff; border: none; border-radius: 12px;
-      padding: 12px 28px; font-size: 14px; font-weight: 700;
-      cursor: pointer; transition: all 0.25s ease;
-      box-shadow: 0 3px 12px rgba(59,130,246,0.3);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 28px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 3px 12px rgba(59, 130, 246, 0.3);
     }
-    .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 5px 18px rgba(59,130,246,0.4); }
-    .btn-submit:active { transform: translateY(0); }
+    .btn-submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 18px rgba(59, 130, 246, 0.4);
+    }
+    .btn-submit:active {
+      transform: translateY(0);
+    }
 
     /* Toast */
     .toast-success {
-      position: fixed; bottom: 28px; right: 28px;
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
       z-index: 9999;
-      background: #ecfdf5; color: #059669;
-      border: 1.5px solid #a7f3d0; border-radius: 12px;
-      padding: 14px 20px; font-size: 14px; font-weight: 700;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.10);
-      display: flex; align-items: center; gap: 8px;
-      transform: translateY(80px); opacity: 0;
-      transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      background: #ecfdf5;
+      color: #059669;
+      border: 1.5px solid #a7f3d0;
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
       pointer-events: none;
     }
-    .toast-success.visible { transform: translateY(0); opacity: 1; }
+    .toast-success.visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
 
     /* Info lateral */
-    .info-cards { margin-top: 32px; }
+    .info-cards {
+      margin-top: 32px;
+    }
     .info-card {
-      background: #eff6ff; border: 1px solid #bfdbfe;
-      border-radius: 14px; padding: 16px 20px;
-      font-size: 13px; color: #1d4ed8; margin-bottom: 12px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 14px;
+      padding: 16px 20px;
+      font-size: 13px;
+      color: #1d4ed8;
+      margin-bottom: 12px;
       line-height: 1.55;
     }
-    .info-card strong { display: block; font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-    .info-card.warning { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+    .info-card strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .info-card.warning {
+      background: #fffbeb;
+      border-color: #fde68a;
+      color: #92400e;
+    }
   </style>
 
   <div class="page-header">
     <div>
       <h1 class="page-title">👤 Crear entrenador/profesional</h1>
-      <p class="page-subtitle">Registra las credenciales de un nuevo profesional en el sistema.</p>
+      <p class="page-subtitle">
+        Registra las credenciales de un nuevo profesional en el sistema.
+      </p>
     </div>
     <a href="/dashboard" class="btn-back">← Volver al Dashboard</a>
   </div>
@@ -133,21 +240,34 @@ import Layout from '../../layouts/Layout.astro';
   <div style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;">
     <!-- Formulario principal -->
     <div class="form-card" style="flex:1;min-width:320px;">
-        <h2 class="form-card-title">Información del entrenador/profesional</h2>
+      <h2 class="form-card-title">Información del entrenador/profesional</h2>
       <p class="form-card-desc">
-        Completa todos los campos requeridos. El entrenador/profesional recibirá sus credenciales de acceso al sistema.
+        Completa todos los campos requeridos. El entrenador/profesional recibirá
+        sus credenciales de acceso al sistema.
       </p>
 
       <form id="form-especialista" novalidate>
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label" for="nombre">Nombre completo *</label>
-            <input type="text" id="nombre" class="form-input" placeholder="Ej: María González" required />
+            <input
+              type="text"
+              id="nombre"
+              class="form-input"
+              placeholder="Ej: María González"
+              required
+            />
           </div>
 
           <div class="form-group">
             <label class="form-label" for="email">Correo electrónico *</label>
-            <input type="email" id="email" class="form-input" placeholder="correo@sportmind.com" required />
+            <input
+              type="email"
+              id="email"
+              class="form-input"
+              placeholder="correo@sportmind.com"
+              required
+            />
           </div>
 
           <div class="form-group">
@@ -164,12 +284,25 @@ import Layout from '../../layouts/Layout.astro';
 
           <div class="form-group">
             <label class="form-label" for="telefono">Teléfono (opcional)</label>
-            <input type="tel" id="telefono" class="form-input" placeholder="+56 9 1234 5678" />
+            <input
+              type="tel"
+              id="telefono"
+              class="form-input"
+              placeholder="+56 9 1234 5678"
+            />
           </div>
 
           <div class="form-group form-group-full">
-            <label class="form-label" for="password">Contraseña temporal *</label>
-            <input type="password" id="password" class="form-input" placeholder="Mínimo 8 caracteres" required />
+            <label class="form-label" for="password"
+              >Contraseña temporal *</label
+            >
+            <input
+              type="password"
+              id="password"
+              class="form-input"
+              placeholder="Mínimo 8 caracteres"
+              required
+            />
           </div>
         </div>
 
@@ -177,7 +310,9 @@ import Layout from '../../layouts/Layout.astro';
 
         <div class="form-actions">
           <a href="/dashboard" class="btn-cancel">Cancelar</a>
-          <button type="submit" class="btn-submit">✓ Guardar entrenador/profesional</button>
+          <button type="submit" class="btn-submit"
+            >✓ Guardar entrenador/profesional</button
+          >
         </div>
       </form>
     </div>
@@ -187,37 +322,72 @@ import Layout from '../../layouts/Layout.astro';
       <div class="info-cards">
         <div class="info-card">
           <strong>ℹ️ ¿Cómo funciona?</strong>
-          Al crear un entrenador/profesional, se generarán sus credenciales en Amazon Cognito. Recibirá un correo con instrucciones de primer acceso.
+          Al crear un entrenador/profesional, se generarán sus credenciales en Amazon
+          Cognito. Recibirá un correo con instrucciones de primer acceso.
         </div>
         <div class="info-card warning">
           <strong>⚠️ Contraseña temporal</strong>
-          La primera vez que el entrenador/profesional inicie sesión, deberá cambiar esta contraseña por una personal y segura.
+          La primera vez que el entrenador/profesional inicie sesión, deberá cambiar
+          esta contraseña por una personal y segura.
         </div>
         <div class="info-card">
           <strong>🔒 Roles de acceso</strong>
-          Cada especialidad tiene acceso a distintas secciones del sistema. Los psicólogos tienen acceso completo, el resto solo a su área.
+          Cada especialidad tiene acceso a distintas secciones del sistema. Los psicólogos
+          tienen acceso completo, el resto solo a su área.
         </div>
       </div>
     </div>
   </div>
 
   <!-- Toast -->
-  <div id="toast" class="toast-success">✅ Entrenador/profesional registrado correctamente</div>
+  <div id="toast" class="toast-success">
+    ✅ Entrenador/profesional registrado correctamente
+  </div>
 
   <script>
-    const form = document.getElementById('form-especialista') as HTMLFormElement;
-    const toast = document.getElementById('toast');
+    const form = document.getElementById(
+      "form-especialista",
+    ) as HTMLFormElement;
+    const toast = document.getElementById("toast");
 
-    form?.addEventListener('submit', (e) => {
+    form?.addEventListener("submit", async (e) => {
       e.preventDefault();
-      // TODO: conectar con API de Cognito cuando esté disponible
-      console.log('Enviando formulario de especialista...');
 
-      if (toast) {
-        toast.classList.add('visible');
-        setTimeout(() => toast.classList.remove('visible'), 3000);
+      const formData = {
+        nombre: (document.getElementById("nombre") as HTMLInputElement).value,
+        email: (document.getElementById("email") as HTMLInputElement).value,
+        rol: (document.getElementById("rol") as HTMLSelectElement).value,
+        telefono: (document.getElementById("telefono") as HTMLInputElement)
+          .value,
+        password: (document.getElementById("password") as HTMLInputElement)
+          .value,
+      };
+
+      try {
+        const response = await fetch("/api/crear-entrenador", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok)
+          throw new Error(result.error || "No se pudo registrar el usuario");
+
+        if (toast) {
+          toast.textContent =
+            "✅ Especialista registrado en Cognito correctamente";
+          toast.classList.add("visible");
+          setTimeout(() => {
+            toast.classList.remove("visible");
+            window.location.href = "/dashboard";
+          }, 2000);
+        }
+        form.reset();
+      } catch (error: any) {
+        alert("❌ Error: " + error.message);
       }
-      form.reset();
     });
   </script>
 </Layout>
