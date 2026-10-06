@@ -33,6 +33,32 @@ import Layout from "../layouts/Layout.astro";
       font-weight: 400;
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-crear-entrenador {
+      display: none; /* Oculto por defecto hasta validar rol de administrador */
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: 0 3px 12px rgba(59, 130, 246, 0.3);
+      transition: all 0.2s ease;
+    }
+    .btn-crear-entrenador:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 18px rgba(59, 130, 246, 0.4);
+    }
+
     .s3-status {
       display: flex;
       align-items: center;
@@ -1013,9 +1039,19 @@ import Layout from "../layouts/Layout.astro";
         Revisa el rendimiento emocional y físico de cada sesión registrada.
       </p>
     </div>
-    <div class="s3-status">
-      <div class="s3-dot"></div>
-      <span id="sources-count">Conectando...</span>
+    <div class="header-actions">
+      <!-- Botón exclusivo para Administradores -->
+      <a
+        href="/especialista/crear"
+        id="btn-crear-entrenador"
+        class="btn-crear-entrenador"
+      >
+        ➕ Crear Entrenador
+      </a>
+      <div class="s3-status">
+        <div class="s3-dot"></div>
+        <span id="sources-count">Conectando...</span>
+      </div>
     </div>
   </div>
 
@@ -1223,9 +1259,75 @@ import Layout from "../layouts/Layout.astro";
     } from "../services/sportmindService";
     import Chart from "chart.js/auto";
 
+    // ── Restricción de Roles ──
+    function restringirVistasPorRol() {
+      const token = localStorage.getItem("sportmind_token");
+      if (!token) return;
+
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const gruposCrudos =
+          payload["cognito:groups"] || payload["groups"] || [];
+        const grupos = Array.isArray(gruposCrudos)
+          ? gruposCrudos.map((g: string) => g.toLowerCase())
+          : [String(gruposCrudos).toLowerCase()];
+
+        // Verificamos si es administrador
+        const esAdmin = grupos.some(
+          (g) => g.includes("administrador") || g.includes("admin"),
+        );
+
+        if (!esAdmin) {
+          // Ocultar elementos de administración en la barra lateral
+          // Buscamos los enlaces o contenedores por su texto o href común en el menú lateral
+          const enlacesMenu = document.querySelectorAll(
+            "aside a, nav a, .sidebar a, a",
+          );
+          enlacesMenu.forEach((enlace) => {
+            const texto = enlace.textContent?.toLowerCase() || "";
+            const href = enlace.getAttribute("href") || "";
+
+            if (
+              texto.includes("historial de acciones") ||
+              texto.includes("crear entrenador") ||
+              href.includes("logs") ||
+              href.includes("crear")
+            ) {
+              // Ocultar el elemento contenedor o el enlace completo
+              (enlace as HTMLElement).style.display = "none";
+            }
+          });
+        }
+      } catch (e) {
+        console.error("Error al validar los roles del token:", e);
+      }
+    }
+
     // ── Logging ──
+    // ── Obtener el nombre del usuario actual desde el token de Cognito ──
+    function obtenerUsuarioActual(): string {
+      const token = localStorage.getItem("sportmind_token");
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          // Priorizamos el atributo 'name' o los nombres alternativos guardados en Cognito, respaldando con el email
+          return (
+            payload.name ||
+            payload.given_name ||
+            payload.email ||
+            payload["cognito:username"] ||
+            "Especialista"
+          );
+        } catch (e) {
+          console.error("Error al leer el token para el log:", e);
+        }
+      }
+      return localStorage.getItem("sportmind_user") || "Usuario";
+    }
+
+    // ── Logging dinámico para Admin y Especialistas ──
     function registrarEventoLog(accion: string) {
-      const usuario = localStorage.getItem("sportmind_user") || "Administrador";
+      const usuario = obtenerUsuarioActual();
       const fechaHora = new Date().toLocaleString("es-CL");
       const historialLogs = JSON.parse(
         localStorage.getItem("sportmind_logs") || "[]",
@@ -1233,7 +1335,6 @@ import Layout from "../layouts/Layout.astro";
       historialLogs.push(`[${fechaHora}] [INFO] [${usuario}]: ${accion}`);
       localStorage.setItem("sportmind_logs", JSON.stringify(historialLogs));
     }
-
     // ── Estado global ──
     let allSessions: SportmindSession[] = [];
     let currentFiltered: SportmindSession[] = [];
@@ -1705,7 +1806,7 @@ import Layout from "../layouts/Layout.astro";
                 labels: {
                   color: "#4a5568",
                   boxWidth: 13,
-                  font: { size: 12, weight: "600" },
+                  font: { size: 12, weight: 600 },
                 },
               },
             },
@@ -1752,7 +1853,7 @@ import Layout from "../layouts/Layout.astro";
                 labels: {
                   color: "#4a5568",
                   boxWidth: 13,
-                  font: { size: 12, weight: "600" },
+                  font: { size: 12, weight: 600 },
                 },
               },
             },
@@ -1838,7 +1939,9 @@ import Layout from "../layouts/Layout.astro";
 
         // ── LLAMADA A IA NATIVA ──
         const iaResponse = await import("../services/autorregulacion")
-          .then(({ predecirAutorregulacion }) => predecirAutorregulacion(session.data))
+          .then(({ predecirAutorregulacion }) =>
+            predecirAutorregulacion(session.data),
+          )
           .catch((error) => {
             console.error("No fue posible cargar el módulo de IA.", error);
             return null;
@@ -1926,6 +2029,7 @@ import Layout from "../layouts/Layout.astro";
     });
 
     // ── Inicio ──
+    restringirVistasPorRol();
     loadData();
   </script>
   <script>
