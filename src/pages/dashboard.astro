@@ -1618,14 +1618,14 @@ import Layout from "../layouts/Layout.astro";
                     <h3 class="analysis-heading">Análisis de apoyo</h3>
                     <p class="analysis-hint">La predicción complementa la lectura profesional y no constituye un diagnóstico.</p>
                     <div class="recommendation-chip">
-                      ⭐ Recomendación registrada: <strong>${d.recomendacionFinal ?? "—"}/10</strong>
+                      ⭐&nbsp;Recomendación&nbsp;registrada: <strong>${d.recomendacionFinal ?? "-"}&nbsp;/10</strong>
                     </div>
                     <button class="btn-ai btn-predict-ia" data-session-index="${index}">
                       🧠 Analizar sesión
                     </button>
                     <div id="ia-result-${index}" class="ia-result-panel">
                       <div class="ia-diagnosis-label">Resultado del análisis</div>
-                      <div class="ia-confidence">Pulsa “Analizar sesión” para consultar la predicción y su certeza.</div>
+                      <div class="ia-confidence">Pulsa "Analizar sesión" para consultar la predicción&nbsp;y su certeza</div>
                     </div>
                   </aside>
                   <section class="detail-column" aria-label="Resultados de la sesión">
