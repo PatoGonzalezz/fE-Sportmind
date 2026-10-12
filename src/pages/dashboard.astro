@@ -1973,6 +1973,25 @@ import Layout from "../layouts/Layout.astro";
         }
       }
     });
+    async function loadDataSilencioso() {
+      try {
+        const nuevosDatos = await fetchSportmindData();
+        
+        // Verificamos si hay cambios en la cantidad o contenido para actualizar sin molestar al usuario
+        if (nuevosDatos.length !== allSessions.length) {
+          allSessions = nuevosDatos;
+          populateSportFilter(allSessions);
+          updateKPIs(allSessions);
+          applyFilters();
+          if (sourcesCount)
+            sourcesCount.textContent = `${allSessions.length} registros en la nube`;
+          showToast("🔄 Datos actualizados automáticamente desde S3");
+        }
+      } catch (err) {
+        // Fallos silenciosos en segundo plano para no interrumpir al usuario si hay un microcorte
+        console.error("Error en sincronización automática:", err);
+      }
+    } 
 
     // ── Cambio de vista ──
     function setView(view: "cards" | "table" | "charts") {
@@ -2031,6 +2050,11 @@ import Layout from "../layouts/Layout.astro";
     // ── Inicio ──
     restringirVistasPorRol();
     loadData();
+    // Actualización automática cada 15 segundos (Polling en segundo plano)
+    setInterval(() => {
+      // Llamamos a loadData de forma silenciosa para no mostrar el skeleton de carga completo
+    loadDataSilencioso();
+    }, 15000); //15 segundos
   </script>
   <script>
     import { inicializarGeneradorPdf } from "../services/generadorpdf";
