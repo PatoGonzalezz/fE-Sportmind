@@ -308,9 +308,6 @@ import "../styles/global.css";
         msgEl.textContent = text;
         msgEl.className = `msg-box visible ${type}`;
       }
-      function hideMsg() {
-        msgEl.className = 'msg-box';
-      }
 
       loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
