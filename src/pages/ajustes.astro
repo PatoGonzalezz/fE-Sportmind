@@ -1,0 +1,117 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout>
+  <div style="max-width: 600px; margin: 0 auto; padding-top: 20px;">
+    <div style="margin-bottom: 24px;">
+      <h1 style="font-size: 26px; font-weight: 800; color: #1a202c;">Cambiar Contraseña</h1>
+      <p style="font-size: 14px; color: #718096; margin-top: 4px;">Actualiza tu clave de acceso a la plataforma.</p>
+    </div>
+
+    <div style="background: #fff; border: 1.5px solid #e2e8f0; border-radius: 20px; padding: 32px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);">
+      <form id="ajustesForm">
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-size: 13px; font-weight: 600; color: #4a5568; margin-bottom: 8px;">Correo electrónico</label>
+          <input
+            type="email"
+            id="userEmail"
+            disabled
+            style="width: 100%; padding: 12px 14px; background: #f7fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; color: #a0aec0; font-size: 14px; box-sizing: border-box;"
+          />
+        </div>
+
+        <div style="margin-bottom: 28px;">
+          <label style="display: block; font-size: 13px; font-weight: 600; color: #4a5568; margin-bottom: 8px;">Nueva contraseña</label>
+          <input
+            type="password"
+            id="userPassword"
+            required
+            style="width: 100%; padding: 12px 14px; background: #f7fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 14px; color: #1a202c; outline: none; box-sizing: border-box;"
+            placeholder="Ingresa tu nueva contraseña segura"
+          />
+        </div>
+
+        <button
+          type="submit"
+          id="btnSave"
+          style="width: 100%; padding: 13px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(59,130,246,0.3);"
+        >
+          Actualizar Contraseña
+        </button>
+      </form>
+
+      <div id="msgBox" style="margin-top: 16px; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 500; text-align: center; display: none;"></div>
+    </div>
+  </div>
+
+  <script>
+    const emailInput = document.getElementById("userEmail") as HTMLInputElement;
+    const passwordInput = document.getElementById("userPassword") as HTMLInputElement;
+    const ajustesForm = document.getElementById("ajustesForm") as HTMLFormElement;
+    const btnSave = document.getElementById("btnSave") as HTMLButtonElement;
+    const msgBox = document.getElementById("msgBox") as HTMLElement;
+
+    const token = localStorage.getItem("sportmind_token");
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        emailInput.value = payload.email || "";
+      } catch (e) {
+        console.error("Error al leer datos de sesión:", e);
+      }
+    }
+
+    function showMsg(text: string, type: 'success' | 'error' | 'loading') {
+      msgBox.textContent = text;
+      msgBox.style.display = "block";
+      if (type === 'success') {
+        msgBox.style.background = "#ecfdf5";
+        msgBox.style.color = "#059669";
+        msgBox.style.border = "1px solid #a7f3d0";
+      } else if (type === 'error') {
+        msgBox.style.background = "#fef2f2";
+        msgBox.style.color = "#dc2626";
+        msgBox.style.border = "1px solid #fecaca";
+      } else {
+        msgBox.style.background = "#eff6ff";
+        msgBox.style.color = "#3b82f6";
+        msgBox.style.border = "1px solid #bfdbfe";
+      }
+    }
+
+    ajustesForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      showMsg("Actualizando contraseña...", "loading");
+      btnSave.disabled = true;
+
+      try {
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "changePassword",
+            email: emailInput.value,
+            newPassword: passwordInput.value
+          })
+        });
+
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || "No se pudo actualizar la contraseña.");
+        }
+
+        showMsg("✅ ¡Contraseña actualizada con éxito!", "success");
+        setTimeout(() => {
+          passwordInput.value = "";
+          btnSave.disabled = false;
+          msgBox.style.display = "none";
+        }, 2000);
+
+      } catch (error: any) {
+        showMsg("❌ " + (error.message || "Error al procesar la solicitud."), "error");
+        btnSave.disabled = false;
+      }
+    });
+  </script>
+</Layout>

@@ -345,6 +345,27 @@ import Layout from "../../layouts/Layout.astro";
   </div>
 
   <script>
+    // Añadir al inicio del script en las páginas protegidas de administrador
+(function() {
+  const token = localStorage.getItem('sportmind_token');
+  if (!token) {
+    window.location.replace('/login');
+    return;
+  }
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const grupos = payload['cognito:groups'] || payload['groups'] || [];
+    const esAdmin = Array.isArray(grupos) 
+      ? grupos.some(g => String(g).toLowerCase().includes('admin')) 
+      : String(grupos).toLowerCase().includes('admin');
+
+    if (!esAdmin) {
+      window.location.replace('/dashboard');
+    }
+  } catch (e) {
+    window.location.replace('/login');
+  }
+})();
     const form = document.getElementById(
       "form-especialista",
     ) as HTMLFormElement;

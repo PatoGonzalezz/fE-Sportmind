@@ -4,7 +4,7 @@ import type { APIRoute } from "astro";
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json();
-    const LOGIN_API_URL = "https://6d9jfdv0qh.execute-api.us-east-1.amazonaws.com/prod/login"; // Tu URL de API Gateway
+    const LOGIN_API_URL = "https://6d9jfdv0qh.execute-api.us-east-1.amazonaws.com/prod/login";
 
     const apiResponse = await fetch(LOGIN_API_URL, {
       method: "POST",
