@@ -230,7 +230,7 @@ import "../styles/global.css";
         <div class="hero-features">
           <div class="feature-item"><span class="icon">📊</span> Evaluaciones en tiempo real desde la nube</div>
           <div class="feature-item"><span class="icon">🧠</span> Análisis de autorregulación emocional con IA</div>
-          <div class="feature-item"><span class="icon">🔒</span> Acceso seguro con Amazon Cognito</div>
+          <div class="feature-item"><span class="icon">🔒</span> Acceso seguro unificado</div>
         </div>
       </div>
 
@@ -281,16 +281,8 @@ import "../styles/global.css";
     </div>
 
     <script>
-      import {
-        CognitoIdentityProviderClient,
-        InitiateAuthCommand,
-        RespondToAuthChallengeCommand,
-      } from "@aws-sdk/client-cognito-identity-provider";
-
-      const REGION = "us-east-1";
-      const CLIENT_ID = "4ul825nprfht1evlpqmf5v5jd3";
-
-      const client = new CognitoIdentityProviderClient({ region: REGION });
+            
+      const LOGIN_API_URL = "/api/login";
 
       let cognitoSession: string | undefined;
       let currentEmail: string | undefined;
@@ -319,60 +311,55 @@ import "../styles/global.css";
         btnSubmit.disabled = true;
 
         try {
-          if (!cognitoSession) {
-            currentEmail = email;
-            const command = new InitiateAuthCommand({
-              AuthFlow: "USER_PASSWORD_AUTH",
-              ClientId: CLIENT_ID,
-              AuthParameters: { USERNAME: email, PASSWORD: password },
-            });
-            const response = await client.send(command);
+          let payload: any = { email, password };
 
-            if (response.ChallengeName === "NEW_PASSWORD_REQUIRED") {
-              cognitoSession = response.Session;
-              divPasswordActual.style.display = "none";
-              divNuevaPassword.style.display = "block";
-              if (newPasswordInput) newPasswordInput.required = true;
-              btnSubmit.textContent = "Guardar y Entrar";
-              btnSubmit.disabled = false;
-              showMsg("Debes establecer una nueva contraseña para continuar.", "warning");
-              return;
-            }
-
-            if (response.AuthenticationResult?.IdToken) {
-              procesarLoginExitoso(response.AuthenticationResult.IdToken);
-            } else {
-              throw new Error("No se recibió el token de autenticación.");
-            }
+          if (cognitoSession) {
+            payload = {
+              email: currentEmail,
+              password,
+              newPassword,
+              session: cognitoSession,
+              action: "respondChallenge"
+            };
           } else {
-            const command = new RespondToAuthChallengeCommand({
-              ChallengeName: "NEW_PASSWORD_REQUIRED",
-              ClientId: CLIENT_ID,
-              Session: cognitoSession,
-              ChallengeResponses: { USERNAME: currentEmail || "", NEW_PASSWORD: newPassword },
-            });
-            const response = await client.send(command);
-            if (response.AuthenticationResult?.IdToken) {
-              procesarLoginExitoso(response.AuthenticationResult.IdToken);
-            } else {
-              throw new Error("No se pudo establecer la nueva contraseña.");
-            }
+            currentEmail = email;
           }
-        } catch (error) {
+
+          const response = await fetch(LOGIN_API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+
+          const result = await response.json();
+
+          if (result.challenge === "NEW_PASSWORD_REQUIRED") {
+            cognitoSession = result.session;
+            divPasswordActual.style.display = "none";
+            divNuevaPassword.style.display = "block";
+            if (newPasswordInput) newPasswordInput.required = true;
+            btnSubmit.textContent = "Guardar y Entrar";
+            btnSubmit.disabled = false;
+            showMsg("⚠️ Debes establecer una nueva contraseña.", "warning");
+            return;
+          }
+
+          if (!response.ok || !result.success) {
+            throw new Error(result.error || "Credenciales inválidas.");
+          }
+
+          // Guardar token y redirigir
+          localStorage.setItem("sportmind_token", result.token);
+          showMsg("✅ ¡Bienvenido! Redirigiendo...", "success");
+          setTimeout(() => { window.location.replace("/dashboard"); }, 600);
+
+        } catch (error: any) {
           console.error(error);
-          const errorMsg = error instanceof Error ? error.message : "Credenciales incorrectas.";
-          showMsg("❌ " + errorMsg, "error");
+          showMsg("❌ " + (error.message || "Error al iniciar sesión."), "error");
           cognitoSession = undefined;
           btnSubmit.disabled = false;
         }
       });
-
-      function procesarLoginExitoso(idToken: string) {
-        localStorage.setItem("sportmind_token", idToken);
-        showMsg("✅ ¡Bienvenido! Redirigiendo...", "success");
-        btnSubmit.disabled = true;
-        setTimeout(() => { window.location.replace("/dashboard"); }, 600);
-      }
     </script>
   </body>
 </html>
