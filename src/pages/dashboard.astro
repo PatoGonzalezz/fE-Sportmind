@@ -4,6 +4,7 @@ import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout>
+ 
   <style>
     /* ── Tipografía y espaciado base ── */
     h1,
@@ -1055,39 +1056,29 @@ import Layout from "../layouts/Layout.astro";
     </div>
   </div>
 
-  <!-- ── KPIs ── -->
-  <section
-    class="kpi-grid"
-    id="kpis-section"
-    aria-label="Resumen de evaluaciones filtradas"
-  >
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span class="kpi-label">Sesiones</span>
-        <div class="kpi-icon" style="background:#eff6ff;">📋</div>
+  <!-- --- KPIs --- -->
+<section id="kpis-section" class="bg-gradient-to-r from-teal-700 to-teal-900 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden mb-8 w-full mt-6" aria-label="Resumen de evaluaciones filtradas">
+  <div class="relative z-10">
+    <h3 class="text-2xl font-bold mb-2">Administración Clínica SportMind</h3>
+    <p class="text-teal-100 text-sm mb-8 max-w-2xl">Gestiona los reportes automatizados y la telemetría de las gafas VR.</p>
+    
+    <div class="flex gap-4">
+      
+      <div class="bg-white/10 border border-white/20 rounded-xl p-4 min-w-[140px] backdrop-blur-sm">
+        <p class="text-teal-100 text-xs font-medium uppercase tracking-wide">Atletas Activos</p>
+        <p class="text-3xl font-bold mt-1" id="kpi-unique-athletes">-</p> 
       </div>
-      <div class="kpi-value" id="kpi-total-sessions">—</div>
-      <div class="kpi-unit">en la selección actual</div>
-      <div
-        class="kpi-accent"
-        style="background:linear-gradient(90deg,#3b82f6,#60a5fa);"
-      >
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span class="kpi-label">Atletas</span>
-        <div class="kpi-icon" style="background:#ecfdf5;">👥</div>
-      </div>
-      <div class="kpi-value" id="kpi-unique-athletes">—</div>
-      <div class="kpi-unit">personas en la selección actual</div>
-      <div
-        class="kpi-accent"
-        style="background:linear-gradient(90deg,#10b981,#34d399);"
-      >
+      
+      
+      <div class="bg-white/10 border border-white/20 rounded-xl p-4 min-w-[140px] backdrop-blur-sm">
+        <p class="text-teal-100 text-xs font-medium uppercase tracking-wide">Sesiones Totales</p>
+        <p class="text-3xl font-bold mt-1" id="kpi-total-sessions">-</p> 
       </div>
     </div>
-  </section>
+  </div>
+  
+  <div class="absolute -right-20 -top-20 w-96 h-96 bg-teal-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
+</section>
 
   <!-- ── BARRA DE HERRAMIENTAS ── -->
   <div class="toolbar">
