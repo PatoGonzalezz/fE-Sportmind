@@ -1,0 +1,249 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout>
+  <style>
+    .page-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;
+    }
+    .page-title { font-size: 26px; font-weight: 800; color: #1a202c; }
+    .page-subtitle { font-size: 14px; color: #718096; margin-top: 4px; }
+
+    .users-table-container {
+      background: #fff; border: 1px solid #e2e8f0; border-radius: 18px; overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .data-table thead { background: #f7fafc; }
+    .data-table th {
+      padding: 14px 18px; text-align: left; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; color: #718096; border-bottom: 1px solid #e2e8f0;
+    }
+    .data-table td { padding: 14px 18px; border-bottom: 1px solid #f0f4f8; color: #4a5568; vertical-align: middle; }
+    .data-table tbody tr:hover td { background: #f7fafc; }
+
+    .badge-role {
+      display: inline-block; padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    }
+    .badge-admin { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+    .badge-trainer { background: #f0fdf4; color: #059669; border: 1px solid #a7f3d0; }
+
+    .btn-edit {
+      background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 8px;
+      padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-edit:hover { background: #dbeafe; }
+
+    dialog {
+      position: fixed; inset: 0; margin: auto; border: none; background: transparent;
+      width: min(92vw, 480px); padding: 0; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+    dialog::backdrop { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
+    .modal-content { background: #fff; padding: 28px; border-radius: 20px; }
+    .modal-title { font-size: 18px; font-weight: 800; color: #1a202c; margin-bottom: 16px; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 13px; font-weight: 600; color: #4a5568; margin-bottom: 6px; }
+    .form-input {
+      width: 100%; padding: 10px 14px; background: #f7fafc; border: 1.5px solid #e2e8f0;
+      border-radius: 10px; font-size: 14px; color: #1a202c; outline: none; box-sizing: border-box;
+    }
+    .form-input:focus { border-color: #3b82f6; background: #eff6ff; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+    .btn-cancel { background: #f0f4f8; border: none; color: #718096; padding: 10px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+    .btn-save { background: #3b82f6; border: none; color: #fff; padding: 10px 16px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+  </style>
+
+  <script is:inline>
+    (function() {
+      const token = localStorage.getItem('sportmind_token');
+      if (!token) { window.location.replace('/login'); return; }
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const grupos = payload['cognito:groups'] || payload['groups'] || [];
+        const esAdmin = Array.isArray(grupos) 
+          ? grupos.some(g => String(g).toLowerCase().includes('admin')) 
+          : String(grupos).toLowerCase().includes('admin');
+        if (!esAdmin) { window.location.replace('/dashboard'); }
+      } catch (e) { window.location.replace('/login'); }
+    })();
+  </script>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Gestión de Usuarios</h1>
+      <p class="page-subtitle">Listado y administración de entrenadores y administradores registrados.</p>
+    </div>
+  </div>
+
+  <div class="users-table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Correo electrónico</th>
+          <th>Rol</th>
+          <th>Especialidad Específica</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="users-tbody">
+        <tr>
+          <td colspan="5" style="text-align:center; color:#718096; padding:24px;">Cargando usuarios...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Modal de Edición -->
+  <dialog id="edit-modal">
+    <div class="modal-content">
+      <h3 class="modal-title">Editar Usuario</h3>
+      <form id="edit-form">
+        <div class="form-group">
+          <label class="form-label">Correo electrónico</label>
+          <input type="email" id="edit-email" class="form-input" disabled style="background:#edf2f7; color:#a0aec0;" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nombre completo</label>
+          <input type="text" id="edit-nombre" class="form-input" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rol</label>
+          <select id="edit-rol" class="form-input">
+            <option value="Entrenador">Entrenador</option>
+            <option value="Administrador">Administrador</option>
+          </select>
+        </div>
+        <div class="form-group" id="group-especialidad">
+          <label class="form-label">Especialidad Específica</label>
+          <input type="text" id="edit-especialidad" class="form-input" placeholder="Ej: Kinesiólogo, Psicólogo deportivo..." />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nueva contraseña (opcional)</label>
+          <input type="password" id="edit-password" class="form-input" placeholder="Déjalo en blanco para no cambiarla" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="btn-cancel" class="btn-cancel">Cancelar</button>
+          <button type="submit" class="btn-save">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <script>
+    let currentUsers: any[] = [];
+    const tbody = document.getElementById("users-tbody") as HTMLElement;
+    const editModal = document.getElementById("edit-modal") as HTMLDialogElement;
+    const editForm = document.getElementById("edit-form") as HTMLFormElement;
+    const editEmail = document.getElementById("edit-email") as HTMLInputElement;
+    const editNombre = document.getElementById("edit-nombre") as HTMLInputElement;
+    const editRol = document.getElementById("edit-rol") as HTMLSelectElement;
+    const editEspecialidad = document.getElementById("edit-especialidad") as HTMLInputElement;
+    const groupEspecialidad = document.getElementById("group-especialidad") as HTMLElement;
+    const editPassword = document.getElementById("edit-password") as HTMLInputElement;
+    const btnCancel = document.getElementById("btn-cancel") as HTMLElement;
+
+    editRol.addEventListener("change", () => {
+      if (editRol.value === "Administrador") {
+        groupEspecialidad.style.display = "none";
+        editEspecialidad.value = "No aplica";
+      } else {
+        groupEspecialidad.style.display = "block";
+        if (editEspecialidad.value === "No aplica") editEspecialidad.value = "";
+      }
+    });
+
+    async function loadUsers() {
+      try {
+        const res = await fetch("/api/especialistas");
+        const data = await res.json();
+        if (data.success && data.especialistas) {
+          currentUsers = data.especialistas;
+          renderTable(currentUsers);
+        } else {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#ef4444; padding:24px;">No se pudieron cargar los usuarios.</td></tr>`;
+        }
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#ef4444; padding:24px;">Error de conexión.</td></tr>`;
+      }
+    }
+
+    function renderTable(users: any[]) {
+      if (users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#718096; padding:24px;">No hay usuarios registrados.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = users.map((u, index) => {
+        const rol = u.rol || "Entrenador";
+        const isAdmin = rol.toLowerCase().includes("admin");
+        const badgeClass = isAdmin ? "badge-admin" : "badge-trainer";
+        const especialidadTexto = isAdmin ? "No aplica" : (u.especialidadEspecifica || "General");
+
+        return `
+          <tr>
+            <td style="font-weight:700; color:#1a202c;">${u.nombre || "Sin nombre"}</td>
+            <td>${u.email}</td>
+            <td><span class="badge-role ${badgeClass}">${rol}</span></td>
+            <td>${especialidadTexto}</td>
+            <td>
+              <button class="btn-edit" data-index="${index}">Editar</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      document.querySelectorAll(".btn-edit").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          const idx = Number((e.currentTarget as HTMLElement).dataset.index);
+          const user = currentUsers[idx];
+          editEmail.value = user.email;
+          editNombre.value = user.nombre || "";
+          editRol.value = user.rol || "Entrenador";
+          
+          if (editRol.value === "Administrador") {
+            groupEspecialidad.style.display = "none";
+            editEspecialidad.value = "No aplica";
+          } else {
+            groupEspecialidad.style.display = "block";
+            editEspecialidad.value = user.especialidadEspecifica && user.especialidadEspecifica !== "No aplica" ? user.especialidadEspecifica : "";
+          }
+
+          editPassword.value = "";
+          editModal.showModal();
+        });
+      });
+    }
+
+    btnCancel.addEventListener("click", () => editModal.close());
+
+    editForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      try {
+        const res = await fetch("/api/especialistas", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: editEmail.value,
+            nombre: editNombre.value.trim(),
+            rol: editRol.value,
+            especialidadEspecifica: editRol.value === "Administrador" ? "No aplica" : editEspecialidad.value.trim(),
+            passwordTemp: editPassword.value ? editPassword.value : undefined
+          })
+        });
+        const result = await res.json();
+        if (result.success) {
+          editModal.close();
+          loadUsers();
+        } else {
+          alert("Error: " + result.error);
+        }
+      } catch (e) {
+        alert("Error al actualizar el usuario.");
+      }
+    });
+
+    loadUsers();
+  </script>
+</Layout>

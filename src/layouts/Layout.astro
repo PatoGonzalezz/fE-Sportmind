@@ -206,7 +206,6 @@ import '../styles/global.css';
       }
     </style>
 
-    <!-- Verificación instantánea de sesión y roles antes de renderizar -->
     <script is:inline>
       const token = localStorage.getItem('sportmind_token');
       if (!token) {
@@ -224,7 +223,6 @@ import '../styles/global.css';
             document.documentElement.classList.add('is-admin');
           }
 
-          // Bloquear acceso manual por URL a páginas exclusivas de admin si es especialista
           const path = window.location.pathname;
           if (!esAdmin && (path.includes('/logs') || path.includes('/especialista/crear'))) {
             window.location.replace('/dashboard');
@@ -252,11 +250,18 @@ import '../styles/global.css';
       <!-- Navegación -->
       <p class="nav-section-label">Secciones</p>
       <nav style="flex:1;">
+        <a href="/inicio" class="nav-link" id="nav-inicio">
+          <div class="nav-link-icon">🏠</div>
+          <span class="nav-link-label">Inicio / Resumen</span>
+        </a>
         <a href="/dashboard" class="nav-link" id="nav-dashboard">
           <div class="nav-link-icon">📊</div>
           <span class="nav-link-label">Evaluaciones</span>
         </a>
-        <!-- Opciones exclusivas de Administrador con clase admin-only -->
+        <a href="/usuarios" class="nav-link admin-only" id="nav-usuarios">
+          <div class="nav-link-icon">👥</div>
+          <span class="nav-link-label">Usuarios</span>
+        </a>
         <a href="/logs" class="nav-link admin-only" id="nav-logs">
           <div class="nav-link-icon">📋</div>
           <span class="nav-link-label">Historial de Acciones</span>
@@ -265,7 +270,6 @@ import '../styles/global.css';
           <div class="nav-link-icon">👤</div>
           <span class="nav-link-label">Crear entrenador/profesional</span>
         </a>
-        <!-- Opción general para todos -->
         <a href="/ajustes" class="nav-link" id="nav-ajustes">
           <div class="nav-link-icon">⚙️</div>
           <span class="nav-link-label">Ajustes de Cuenta</span>
@@ -303,16 +307,14 @@ import '../styles/global.css';
   </body>
 
   <script>
-    // Marcar enlace activo
     const path = window.location.pathname;
     document.querySelectorAll('.nav-link').forEach(link => {
       const href = link.getAttribute('href') || '';
-      if (path.startsWith(href) && href !== '/') {
+      if (path === href || (path.startsWith(href) && href !== '/')) {
         link.classList.add('active');
       }
     });
 
-    // Rellenar datos del usuario en el sidebar
     try {
       const token = localStorage.getItem('sportmind_token');
       if (token) {
@@ -340,7 +342,6 @@ import '../styles/global.css';
       console.error('Error al leer el token en layout:', e);
     }
 
-    // Logout
     document.getElementById('logout-btn')?.addEventListener('click', () => {
       localStorage.removeItem('sportmind_token');
       window.location.replace('/login');

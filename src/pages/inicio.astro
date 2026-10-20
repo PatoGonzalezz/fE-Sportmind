@@ -1,0 +1,315 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout>
+  <style>
+    .home-header {
+      margin-bottom: 24px;
+    }
+    .home-subtitle {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+    .home-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: #1a202c;
+      letter-spacing: -0.3px;
+    }
+
+    /* Grid principal */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 1024px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Hero Card (Vista General) */
+    .hero-card {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border-radius: 20px;
+      padding: 32px;
+      color: #fff;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-card::after {
+      content: '';
+      position: absolute;
+      top: -50px; right: -50px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(59,130,246,0.3) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-tag {
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+      color: #93c5fd; margin-bottom: 8px; display: block;
+    }
+    .hero-title {
+      font-size: 24px; font-weight: 800; color: #f8fafc; margin-bottom: 10px;
+      letter-spacing: -0.3px;
+    }
+    .hero-desc {
+      font-size: 14px; color: #94a3b8; line-height: 1.6; max-width: 540px; margin-bottom: 24px;
+    }
+    .hero-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    @media (max-width: 600px) {
+      .hero-metrics { grid-template-columns: 1fr; }
+    }
+    .metric-box {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 16px;
+      backdrop-filter: blur(8px);
+    }
+    .metric-label { font-size: 12px; color: #94a3b8; font-weight: 500; margin-bottom: 4px; }
+    .metric-val { font-size: 24px; font-weight: 900; color: #f8fafc; }
+
+    /* Paneles */
+    .panel-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .panel-title {
+      font-size: 16px; font-weight: 800; color: #1a202c;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .panel-title::before {
+      content: ''; width: 4px; height: 16px; background: #3b82f6; border-radius: 99px;
+    }
+    .panel-subtitle {
+      font-size: 13px; color: #718096; margin-bottom: 16px;
+    }
+
+    /* Accesos rápidos */
+    .quick-link {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      text-decoration: none;
+      color: #334155;
+      font-size: 14px; font-weight: 600;
+      margin-bottom: 10px;
+      transition: all 0.2s ease;
+    }
+    .quick-link:hover {
+      background: #eff6ff; border-color: #bfdbfe; color: #2563eb;
+      transform: translateX(2px);
+    }
+
+    /* Tabla actividad reciente con usuario */
+    .activity-table {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+    }
+    .activity-table th {
+      text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; color: #718096; border-bottom: 1px solid #e2e8f0;
+    }
+    .activity-table td {
+      padding: 12px; color: #4a5568; border-bottom: 1px solid #f1f5f9;
+    }
+    .badge-correct {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #ecfdf5; color: #059669; padding: 3px 8px; border-radius: 99px;
+      font-size: 11px; font-weight: 700;
+    }
+  </style>
+
+  <div class="home-header">
+    <div class="home-subtitle">Resumen Operativo del Sistema</div>
+    <h1 class="home-title">Inicio / Dashboard</h1>
+  </div>
+
+  <!-- Fila Superior: Vista General + Accesos Rápidos -->
+  <div class="dashboard-grid">
+    <!-- Vista General (Exclusiva Admin) -->
+    <div class="hero-card admin-only">
+      <span class="hero-tag">Vista General de Administración</span>
+      <h2 class="hero-title">Panel central de control</h2>
+      <p class="hero-desc">
+        Revisa el estado operativo global del sistema, supervisa el flujo de evaluaciones y controla la actividad general de la plataforma.
+      </p>
+      <div class="hero-metrics">
+        <div class="metric-box">
+          <div class="metric-label">Sesiones Registradas</div>
+          <div class="metric-val" id="stat-sessions">—</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Atletas Evaluados</div>
+          <div class="metric-val" id="stat-athletes">—</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Estado de S3</div>
+          <div class="metric-val" style="color:#34d399; font-size:18px; margin-top:4px;">● Conectado</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista General para Especialistas (Simplificada) -->
+    <div class="panel-card" style="display:flex; flex-direction:column; justify-content:center; background:linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); color:#fff;" id="specialist-welcome">
+      <span style="font-size:11px; font-weight:700; color:#93c5fd; text-transform:uppercase; margin-bottom:6px; display:block;">Panel de Especialista</span>
+      <h2 style="font-size:22px; font-weight:800; margin-bottom:10px;">¡Bienvenido a SportMind!</h2>
+      <p style="font-size:13px; color:#94a3b8; line-height:1.6; margin-bottom:16px;">
+        Accede rápidamente a las evaluaciones de tus atletas y consulta métricas en tiempo real.
+      </p>
+      <a href="/dashboard" style="display:inline-block; background:#3b82f6; color:#white; padding:10px 16px; border-radius:10px; font-weight:700; text-decoration:none; text-align:center; box-shadow:0 4px 12px rgba(59,130,246,0.3);">
+        Ir a Evaluaciones →
+      </a>
+    </div>
+
+    <!-- Accesos rápidos -->
+    <div class="panel-card" style="display:flex; flex-direction:column; justify-content:space-between;">
+      <div>
+        <div class="panel-header" style="margin-bottom:8px;">
+          <h3 class="panel-title">Accesos Rápidos</h3>
+        </div>
+        <p class="panel-subtitle">Atajos para las tareas más frecuentes.</p>
+        
+        <a href="/dashboard" class="quick-link">
+          <span>📊 Ver Evaluaciones y Métricas</span>
+          <span>→</span>
+        </a>
+        <a href="/ajustes" class="quick-link">
+          <span>⚙️ Ajustes de Cuenta</span>
+          <span>→</span>
+        </a>
+        <a href="/especialista/crear" class="quick-link admin-only">
+          <span>👤 Crear Nuevo Profesional</span>
+          <span>→</span>
+        </a>
+        <a href="/logs" class="quick-link admin-only">
+          <span>📋 Consultar Auditoría</span>
+          <span>→</span>
+        </a>
+      </div>
+      <div style="font-size:11px; color:#94a3b8; text-align:right; margin-top:12px;">SportMind v1.0.4</div>
+    </div>
+  </div>
+
+  <!-- Fila Inferior: Actividad Reciente (Admin) -->
+  <div class="dashboard-grid">
+    <div class="panel-card admin-only" style="grid-column: span 2;">
+      <div class="panel-header">
+        <h3 class="panel-title">Actividad Reciente</h3>
+        <a href="/logs" style="font-size:12px; color:#3b82f6; text-decoration:none; font-weight:700;">Ver todo</a>
+      </div>
+      <p class="panel-subtitle">Últimos eventos registrados por el sistema.</p>
+
+      <div style="overflow-x:auto;">
+        <table class="activity-table">
+          <thead>
+            <tr>
+              <th>Fecha y Hora</th>
+              <th>Usuario</th>
+              <th>Acción</th>
+              <th>Resultado</th>
+            </tr>
+          </thead>
+          <tbody id="activity-body">
+            <tr>
+              <td colspan="4" style="text-align:center; color:#94a3b8; padding:20px;">Cargando actividad...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { fetchSportmindData } from "../services/sportmindService";
+
+    try {
+      const token = localStorage.getItem('sportmind_token');
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const grupos = payload['cognito:groups'] || payload['groups'] || [];
+        const esAdmin = Array.isArray(grupos) 
+          ? grupos.some(g => String(g).toLowerCase().includes('admin')) 
+          : String(grupos).toLowerCase().includes('admin');
+
+        if (esAdmin) {
+          const specCard = document.getElementById('specialist-welcome');
+          if (specCard) specCard.style.display = 'none';
+        }
+      }
+    } catch (e) {}
+    
+    async function initHomeStats() {
+      try {
+        const sessions = await fetchSportmindData();
+        const statSessions = document.getElementById("stat-sessions");
+        const statAthletes = document.getElementById("stat-athletes");
+
+        if (statSessions) statSessions.textContent = String(sessions.length);
+
+        const uniqueAthletes = new Set(
+          sessions.map(s => (s.data.playerName || "").toLowerCase().trim()).filter(Boolean)
+        );
+        if (statAthletes) statAthletes.textContent = String(uniqueAthletes.size);
+      } catch (e) {
+        console.error("Error al cargar estadísticas de inicio:", e);
+      }
+    }
+
+    function initRecentActivity() {
+      const activityBody = document.getElementById("activity-body");
+      if (!activityBody) return;
+
+      try {
+        const logs = JSON.parse(localStorage.getItem("sportmind_logs") || "[]");
+        if (logs.length === 0) {
+          activityBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding:20px;">Sin actividad reciente registrada.</td></tr>`;
+          return;
+        }
+
+        const ultimosLogs = logs.slice(-5).reverse();
+        activityBody.innerHTML = ultimosLogs.map((log: string) => {
+          const match = log.match(/\[(.*?)\]\s*\[(.*?)\]\s*\[(.*?)\]:\s*(.*)/);
+          const fecha = match ? match[1] : "Reciente";
+          const usuario = match ? match[3] : "Sistema";
+          const accion = match ? match[4] : log;
+
+          return `
+            <tr>
+              <td style="white-space:nowrap; color:#64748b;">${fecha}</td>
+              <td style="font-weight:600; color:#334155;">${usuario}</td>
+              <td style="color:#1e293b;">${accion}</td>
+              <td><span class="badge-correct">● Correcto</span></td>
+            </tr>
+          `;
+        }).join("");
+      } catch (e) {
+        activityBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#ef4444; padding:20px;">Error al cargar historial.</td></tr>`;
+      }
+    }
+
+    initHomeStats();
+    initRecentActivity();
+  </script>
+</Layout>
