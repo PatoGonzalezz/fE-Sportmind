@@ -3,279 +3,201 @@ import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout>
-  <style>
-    .home-header {
-      margin-bottom: 24px;
-    }
-    .home-subtitle {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #64748b;
-      margin-bottom: 4px;
-    }
-    .home-title {
-      font-size: 26px;
-      font-weight: 800;
-      color: #1a202c;
-      letter-spacing: -0.3px;
-    }
+  <header class="mb-6">
+    <h1 class="text-[1.65rem] font-extrabold tracking-tight text-slate-900 sm:text-3xl">Inicio</h1>
+    <p class="mt-1.5 text-sm leading-relaxed text-slate-500">Resumen operativo del sistema.</p>
+  </header>
 
-    /* Grid principal */
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 24px;
-      margin-bottom: 24px;
-    }
-    @media (max-width: 1024px) {
-      .dashboard-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* Hero Card (Vista General) */
-    .hero-card {
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-      border-radius: 20px;
-      padding: 32px;
-      color: #fff;
-      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
-      position: relative;
-      overflow: hidden;
-    }
-    .hero-card::after {
-      content: '';
-      position: absolute;
-      top: -50px; right: -50px;
-      width: 200px; height: 200px;
-      background: radial-gradient(circle, rgba(59,130,246,0.3) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .hero-tag {
-      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
-      color: #93c5fd; margin-bottom: 8px; display: block;
-    }
-    .hero-title {
-      font-size: 24px; font-weight: 800; color: #f8fafc; margin-bottom: 10px;
-      letter-spacing: -0.3px;
-    }
-    .hero-desc {
-      font-size: 14px; color: #94a3b8; line-height: 1.6; max-width: 540px; margin-bottom: 24px;
-    }
-    .hero-metrics {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-    }
-    @media (max-width: 600px) {
-      .hero-metrics { grid-template-columns: 1fr; }
-    }
-    .metric-box {
-      background: rgba(255, 255, 255, 0.07);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 14px;
-      padding: 16px;
-      backdrop-filter: blur(8px);
-    }
-    .metric-label { font-size: 12px; color: #94a3b8; font-weight: 500; margin-bottom: 4px; }
-    .metric-val { font-size: 24px; font-weight: 900; color: #f8fafc; }
-
-    /* Paneles */
-    .panel-card {
-      background: #fff;
-      border: 1px solid #e2e8f0;
-      border-radius: 20px;
-      padding: 24px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-    }
-    .panel-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 16px;
-    }
-    .panel-title {
-      font-size: 16px; font-weight: 800; color: #1a202c;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .panel-title::before {
-      content: ''; width: 4px; height: 16px; background: #3b82f6; border-radius: 99px;
-    }
-    .panel-subtitle {
-      font-size: 13px; color: #718096; margin-bottom: 16px;
-    }
-
-    /* Accesos rápidos */
-    .quick-link {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 16px;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      text-decoration: none;
-      color: #334155;
-      font-size: 14px; font-weight: 600;
-      margin-bottom: 10px;
-      transition: all 0.2s ease;
-    }
-    .quick-link:hover {
-      background: #eff6ff; border-color: #bfdbfe; color: #2563eb;
-      transform: translateX(2px);
-    }
-
-    /* Tabla actividad reciente con usuario */
-    .activity-table {
-      width: 100%; border-collapse: collapse; font-size: 13px;
-    }
-    .activity-table th {
-      text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 700;
-      text-transform: uppercase; color: #718096; border-bottom: 1px solid #e2e8f0;
-    }
-    .activity-table td {
-      padding: 12px; color: #4a5568; border-bottom: 1px solid #f1f5f9;
-    }
-    .badge-correct {
-      display: inline-flex; align-items: center; gap: 4px;
-      background: #ecfdf5; color: #059669; padding: 3px 8px; border-radius: 99px;
-      font-size: 11px; font-weight: 700;
-    }
-  </style>
-
-  <div class="home-header">
-    <div class="home-subtitle">Resumen Operativo del Sistema</div>
-    <h1 class="home-title">Inicio / Dashboard</h1>
-  </div>
-
-  <!-- Fila Superior: Vista General + Accesos Rápidos -->
-  <div class="dashboard-grid">
-    <!-- Vista General (Exclusiva Admin) -->
-    <div class="hero-card admin-only">
-      <span class="hero-tag">Vista General de Administración</span>
-      <h2 class="hero-title">Panel central de control</h2>
-      <p class="hero-desc">
+  <!-- Fila superior: bienvenida + accesos rápidos -->
+  <div class="grid gap-6 lg:grid-cols-[2fr_1fr]">
+    <!-- Vista general (solo administración) -->
+    <section class="admin-only rounded-2xl bg-slate-900 p-6 text-white shadow-[0_12px_32px_-16px_rgba(15,23,42,0.5)] sm:p-8" aria-labelledby="hero-title">
+      <h2 id="hero-title" class="text-2xl font-extrabold tracking-tight text-slate-50">Panel central de control</h2>
+      <p class="mt-2.5 max-w-xl text-sm leading-relaxed text-slate-400">
         Revisa el estado operativo global del sistema, supervisa el flujo de evaluaciones y controla la actividad general de la plataforma.
       </p>
-      <div class="hero-metrics">
-        <div class="metric-box">
-          <div class="metric-label">Sesiones Registradas</div>
-          <div class="metric-val" id="stat-sessions">—</div>
-        </div>
-        <div class="metric-box">
-          <div class="metric-label">Atletas Evaluados</div>
-          <div class="metric-val" id="stat-athletes">—</div>
-        </div>
-        <div class="metric-box">
-          <div class="metric-label">Estado de S3</div>
-          <div class="metric-val" style="color:#34d399; font-size:18px; margin-top:4px;">● Conectado</div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Vista General para Especialistas (Simplificada) -->
-    <div class="panel-card" style="display:flex; flex-direction:column; justify-content:center; background:linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); color:#fff;" id="specialist-welcome">
-      <span style="font-size:11px; font-weight:700; color:#93c5fd; text-transform:uppercase; margin-bottom:6px; display:block;">Panel de Especialista</span>
-      <h2 style="font-size:22px; font-weight:800; margin-bottom:10px;">¡Bienvenido a SportMind!</h2>
-      <p style="font-size:13px; color:#94a3b8; line-height:1.6; margin-bottom:16px;">
+      <dl class="mt-7 grid grid-cols-1 divide-y divide-white/10 border-t border-white/10 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+        <div class="py-4 sm:px-5 sm:py-5 sm:first:pl-0">
+          <dt class="text-[13px] font-medium text-slate-400">Sesiones registradas</dt>
+          <dd id="stat-sessions" class="mt-1 text-3xl font-extrabold tabular-nums text-slate-50">—</dd>
+        </div>
+        <div class="py-4 sm:px-5 sm:py-5">
+          <dt class="text-[13px] font-medium text-slate-400">Atletas evaluados</dt>
+          <dd id="stat-athletes" class="mt-1 text-3xl font-extrabold tabular-nums text-slate-50">—</dd>
+        </div>
+        <div class="py-4 sm:px-5 sm:py-5 sm:last:pr-0">
+          <dt class="text-[13px] font-medium text-slate-400">Estado de S3</dt>
+          <dd class="mt-2.5 inline-flex items-center gap-2 text-base font-semibold text-emerald-400">
+            <span class="size-2 rounded-full bg-emerald-400 ring-4 ring-emerald-400/20" aria-hidden="true"></span>
+            Conectado
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- Bienvenida para especialistas (se oculta si el usuario es admin) -->
+    <section id="specialist-welcome" class="flex flex-col justify-center rounded-2xl bg-slate-900 p-6 text-white shadow-[0_12px_32px_-16px_rgba(15,23,42,0.5)] sm:p-8" aria-labelledby="welcome-title">
+      <h2 id="welcome-title" class="text-2xl font-extrabold tracking-tight text-slate-50">¡Bienvenido a SportMind!</h2>
+      <p class="mt-2.5 text-sm leading-relaxed text-slate-400">
         Accede rápidamente a las evaluaciones de tus atletas y consulta métricas en tiempo real.
       </p>
-      <a href="/dashboard" style="display:inline-block; background:#3b82f6; color:#white; padding:10px 16px; border-radius:10px; font-weight:700; text-decoration:none; text-align:center; box-shadow:0 4px 12px rgba(59,130,246,0.3);">
-        Ir a Evaluaciones →
+      <a
+        href="/dashboard"
+        class="mt-6 inline-flex h-11 w-fit items-center justify-center gap-2 rounded-xl bg-blue-500 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+      >
+        Ir a evaluaciones
+        <svg viewBox="0 0 20 20" fill="none" class="size-4" aria-hidden="true">
+          <path d="M8 5l5 5-5 5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </a>
+    </section>
+
+    <!-- Accesos rápidos -->
+    <section class="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm" aria-labelledby="quick-title">
+      <h3 id="quick-title" class="text-base font-extrabold tracking-tight text-slate-900">Accesos rápidos</h3>
+      <p class="mt-1 text-sm text-slate-500">Atajos para las tareas más frecuentes.</p>
+
+      <ul class="mt-4 flex flex-col gap-2">
+        <li>
+          <a href="/dashboard" class="group flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+            <span class="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-slate-500 ring-1 ring-slate-200 transition-colors group-hover:text-blue-600 group-hover:ring-blue-200">
+              <svg viewBox="0 0 20 20" fill="none" class="size-4.5" aria-hidden="true">
+                <path d="M4 16V9m6 7V4m6 12v-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+              </svg>
+            </span>
+            <span class="flex-1">Ver evaluaciones y métricas</span>
+            <svg viewBox="0 0 20 20" fill="none" class="size-4 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-blue-600" aria-hidden="true">
+              <path d="M8 5l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </a>
+        </li>
+        <li>
+          <a href="/ajustes" class="group flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+            <span class="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-slate-500 ring-1 ring-slate-200 transition-colors group-hover:text-blue-600 group-hover:ring-blue-200">
+              <svg viewBox="0 0 20 20" fill="none" class="size-4.5" aria-hidden="true">
+                <path d="M3 6h8m4 0h2M3 14h2m4 0h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                <circle cx="13" cy="6" r="2" stroke="currentColor" stroke-width="1.8" />
+                <circle cx="7" cy="14" r="2" stroke="currentColor" stroke-width="1.8" />
+              </svg>
+            </span>
+            <span class="flex-1">Ajustes de cuenta</span>
+            <svg viewBox="0 0 20 20" fill="none" class="size-4 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-blue-600" aria-hidden="true">
+              <path d="M8 5l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </a>
+        </li>
+        <li class="admin-only">
+          <a href="/especialista/crear" class="group flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+            <span class="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-slate-500 ring-1 ring-slate-200 transition-colors group-hover:text-blue-600 group-hover:ring-blue-200">
+              <svg viewBox="0 0 20 20" fill="none" class="size-4.5" aria-hidden="true">
+                <circle cx="8" cy="7" r="3" stroke="currentColor" stroke-width="1.8" />
+                <path d="M2.5 17c.6-3 2.8-4.5 5.5-4.5s4.9 1.5 5.5 4.5M16 6v5M13.5 8.5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+              </svg>
+            </span>
+            <span class="flex-1">Crear nuevo profesional</span>
+            <svg viewBox="0 0 20 20" fill="none" class="size-4 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-blue-600" aria-hidden="true">
+              <path d="M8 5l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </a>
+        </li>
+        <li class="admin-only">
+          <a href="/logs" class="group flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+            <span class="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-slate-500 ring-1 ring-slate-200 transition-colors group-hover:text-blue-600 group-hover:ring-blue-200">
+              <svg viewBox="0 0 20 20" fill="none" class="size-4.5" aria-hidden="true">
+                <rect x="4.5" y="4" width="11" height="13" rx="2" stroke="currentColor" stroke-width="1.8" />
+                <path d="M8 4V3h4v1M7.5 9h5M7.5 12.5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+              </svg>
+            </span>
+            <span class="flex-1">Consultar auditoría</span>
+            <svg viewBox="0 0 20 20" fill="none" class="size-4 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-blue-600" aria-hidden="true">
+              <path d="M8 5l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </a>
+        </li>
+      </ul>
+
+      <p class="mt-auto pt-5 text-right text-xs text-slate-400">SportMind v0.0.6</p>
+    </section>
+  </div>
+
+  <!-- Actividad reciente (solo administración) -->
+  <section class="admin-only mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="activity-title">
+    <div class="flex items-start justify-between gap-4 px-6 pt-6">
+      <div>
+        <h3 id="activity-title" class="text-base font-extrabold tracking-tight text-slate-900">Actividad reciente</h3>
+        <p class="mt-1 text-sm text-slate-500">Últimos eventos registrados por el sistema.</p>
+      </div>
+      <a href="/logs" class="shrink-0 rounded-lg px-2.5 py-1.5 text-[13px] font-semibold text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+        Ver todo
       </a>
     </div>
 
-    <!-- Accesos rápidos -->
-    <div class="panel-card" style="display:flex; flex-direction:column; justify-content:space-between;">
-      <div>
-        <div class="panel-header" style="margin-bottom:8px;">
-          <h3 class="panel-title">Accesos Rápidos</h3>
-        </div>
-        <p class="panel-subtitle">Atajos para las tareas más frecuentes.</p>
-        
-        <a href="/dashboard" class="quick-link">
-          <span>📊 Ver Evaluaciones y Métricas</span>
-          <span>→</span>
-        </a>
-        <a href="/ajustes" class="quick-link">
-          <span>⚙️ Ajustes de Cuenta</span>
-          <span>→</span>
-        </a>
-        <a href="/especialista/crear" class="quick-link admin-only">
-          <span>👤 Crear Nuevo Profesional</span>
-          <span>→</span>
-        </a>
-        <a href="/logs" class="quick-link admin-only">
-          <span>📋 Consultar Auditoría</span>
-          <span>→</span>
-        </a>
-      </div>
-      <div style="font-size:11px; color:#94a3b8; text-align:right; margin-top:12px;">SportMind v1.0.4</div>
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full min-w-[620px] border-collapse text-sm">
+        <caption class="sr-only">Últimos eventos registrados</caption>
+        <thead class="bg-slate-50">
+          <tr class="border-y border-slate-200 text-left text-[13px] font-semibold text-slate-500">
+            <th scope="col" class="whitespace-nowrap px-6 py-3">Fecha y hora</th>
+            <th scope="col" class="whitespace-nowrap px-6 py-3">Usuario</th>
+            <th scope="col" class="whitespace-nowrap px-6 py-3">Acción</th>
+            <th scope="col" class="whitespace-nowrap px-6 py-3">Resultado</th>
+          </tr>
+        </thead>
+        <tbody id="activity-body" class="divide-y divide-slate-100">
+          <tr>
+            <td colspan="4" class="px-6 py-10 text-center text-slate-500">Cargando actividad…</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-  </div>
-
-  <!-- Fila Inferior: Actividad Reciente (Admin) -->
-  <div class="dashboard-grid">
-    <div class="panel-card admin-only" style="grid-column: span 2;">
-      <div class="panel-header">
-        <h3 class="panel-title">Actividad Reciente</h3>
-        <a href="/logs" style="font-size:12px; color:#3b82f6; text-decoration:none; font-weight:700;">Ver todo</a>
-      </div>
-      <p class="panel-subtitle">Últimos eventos registrados por el sistema.</p>
-
-      <div style="overflow-x:auto;">
-        <table class="activity-table">
-          <thead>
-            <tr>
-              <th>Fecha y Hora</th>
-              <th>Usuario</th>
-              <th>Acción</th>
-              <th>Resultado</th>
-            </tr>
-          </thead>
-          <tbody id="activity-body">
-            <tr>
-              <td colspan="4" style="text-align:center; color:#94a3b8; padding:20px;">Cargando actividad...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+  </section>
 
   <script>
     import { fetchSportmindData } from "../services/sportmindService";
 
+    const escapeHtml = (value: unknown) =>
+      String(value ?? "").replace(/[&<>"']/g, (c) =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string)
+      );
+
+    // Oculta la tarjeta de bienvenida si el usuario es administrador
     try {
-      const token = localStorage.getItem('sportmind_token');
+      const token = localStorage.getItem("sportmind_token");
       if (token) {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const grupos = payload['cognito:groups'] || payload['groups'] || [];
-        const esAdmin = Array.isArray(grupos) 
-          ? grupos.some(g => String(g).toLowerCase().includes('admin')) 
-          : String(grupos).toLowerCase().includes('admin');
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const grupos = payload["cognito:groups"] || payload["groups"] || [];
+        const esAdmin = Array.isArray(grupos)
+          ? grupos.some((g) => String(g).toLowerCase().includes("admin"))
+          : String(grupos).toLowerCase().includes("admin");
 
         if (esAdmin) {
-          const specCard = document.getElementById('specialist-welcome');
-          if (specCard) specCard.style.display = 'none';
+          const specCard = document.getElementById("specialist-welcome");
+          if (specCard) specCard.style.display = "none";
         }
       }
     } catch (e) {}
-    
+
     async function initHomeStats() {
       try {
         const sessions = await fetchSportmindData();
         const statSessions = document.getElementById("stat-sessions");
         const statAthletes = document.getElementById("stat-athletes");
+        const fmt = new Intl.NumberFormat("es-CL");
 
-        if (statSessions) statSessions.textContent = String(sessions.length);
+        if (statSessions) statSessions.textContent = fmt.format(sessions.length);
 
         const uniqueAthletes = new Set(
-          sessions.map(s => (s.data.playerName || "").toLowerCase().trim()).filter(Boolean)
+          sessions.map((s) => (s.data.playerName || "").toLowerCase().trim()).filter(Boolean)
         );
-        if (statAthletes) statAthletes.textContent = String(uniqueAthletes.size);
+        if (statAthletes) statAthletes.textContent = fmt.format(uniqueAthletes.size);
       } catch (e) {
         console.error("Error al cargar estadísticas de inicio:", e);
       }
     }
+
+    const messageRow = (text: string, error = false) =>
+      `<tr><td colspan="4" class="px-6 py-10 text-center ${error ? "text-red-600" : "text-slate-500"}">${text}</td></tr>`;
 
     function initRecentActivity() {
       const activityBody = document.getElementById("activity-body");
@@ -284,28 +206,34 @@ import Layout from "../layouts/Layout.astro";
       try {
         const logs = JSON.parse(localStorage.getItem("sportmind_logs") || "[]");
         if (logs.length === 0) {
-          activityBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding:20px;">Sin actividad reciente registrada.</td></tr>`;
+          activityBody.innerHTML = messageRow("Aún no hay actividad registrada.");
           return;
         }
 
         const ultimosLogs = logs.slice(-5).reverse();
         activityBody.innerHTML = ultimosLogs.map((log: string) => {
           const match = log.match(/\[(.*?)\]\s*\[(.*?)\]\s*\[(.*?)\]:\s*(.*)/);
-          const fecha = match ? match[1] : "Reciente";
-          const usuario = match ? match[3] : "Sistema";
-          const accion = match ? match[4] : log;
+          const fecha = escapeHtml(match ? match[1] : "Reciente");
+          const usuario = escapeHtml(match ? match[3] : "Sistema");
+          const accion = escapeHtml(match ? match[4] : log);
 
           return `
-            <tr>
-              <td style="white-space:nowrap; color:#64748b;">${fecha}</td>
-              <td style="font-weight:600; color:#334155;">${usuario}</td>
-              <td style="color:#1e293b;">${accion}</td>
-              <td><span class="badge-correct">● Correcto</span></td>
-            </tr>
-          `;
+            <tr class="transition-colors hover:bg-slate-50/70">
+              <td class="whitespace-nowrap px-6 py-3.5 tabular-nums text-slate-500">${fecha}</td>
+              <td class="px-6 py-3.5 font-semibold text-slate-900">${usuario}</td>
+              <td class="px-6 py-3.5 text-slate-700">${accion}</td>
+              <td class="px-6 py-3.5">
+                <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-200">
+                  <svg viewBox="0 0 20 20" fill="none" class="size-3" aria-hidden="true">
+                    <path d="M4.5 10.5l3.5 3.5 7.5-8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  Correcto
+                </span>
+              </td>
+            </tr>`;
         }).join("");
       } catch (e) {
-        activityBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#ef4444; padding:20px;">Error al cargar historial.</td></tr>`;
+        activityBody.innerHTML = messageRow("No se pudo leer el historial de actividad.", true);
       }
     }
 
