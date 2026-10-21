@@ -8,8 +8,11 @@ import '../styles/global.css';
     <title>SportMind – Plataforma de Análisis Deportivo</title>
 
     <style is:global>
-      /* Ocultar hasta verificar sesión */
+      /* Ocultar hasta verificar sesión y roles */
       html:not(.auth-ok) body { display: none !important; }
+
+      /* Ocultar elementos de administración por defecto para evitar parpadeos */
+      html:not(.is-admin) .admin-only { display: none !important; }
 
       html, body {
         margin: 0;
@@ -166,6 +169,8 @@ import '../styles/global.css';
         cursor: pointer; border: none;
         transition: all 0.2s ease;
         margin-bottom: 6px;
+        text-decoration: none;
+        box-sizing: border-box;
       }
       .btn-refresh-s3 {
         background: rgba(59,130,246,0.15);
@@ -190,7 +195,6 @@ import '../styles/global.css';
         box-sizing: border-box;
       }
 
-      /* Responsive: ocultar sidebar en pantallas pequeñas */
       @media (max-width: 768px) {
         .sidebar { width: 72px; min-width: 72px; }
         .sidebar-brand-text,
@@ -204,10 +208,29 @@ import '../styles/global.css';
 
     <script is:inline>
       const token = localStorage.getItem('sportmind_token');
-      if (token) {
-        document.documentElement.classList.add('auth-ok');
-      } else {
+      if (!token) {
         window.location.replace('/login');
+      } else {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const grupos = payload['cognito:groups'] || payload['groups'] || [];
+          const esAdmin = Array.isArray(grupos) 
+            ? grupos.some(g => String(g).toLowerCase().includes('admin')) 
+            : String(grupos).toLowerCase().includes('admin');
+
+          document.documentElement.classList.add('auth-ok');
+          if (esAdmin) {
+            document.documentElement.classList.add('is-admin');
+          }
+
+          const path = window.location.pathname;
+          if (!esAdmin && (path.includes('/logs') || path.includes('/especialista/crear'))) {
+            window.location.replace('/dashboard');
+          }
+        } catch (e) {
+          localStorage.removeItem('sportmind_token');
+          window.location.replace('/login');
+        }
       }
     </script>
   </head>
@@ -227,27 +250,39 @@ import '../styles/global.css';
       <!-- Navegación -->
       <p class="nav-section-label">Secciones</p>
       <nav style="flex:1;">
+        <a href="/inicio" class="nav-link" id="nav-inicio">
+          <div class="nav-link-icon">🏠</div>
+          <span class="nav-link-label">Inicio / Resumen</span>
+        </a>
         <a href="/dashboard" class="nav-link" id="nav-dashboard">
           <div class="nav-link-icon">📊</div>
           <span class="nav-link-label">Evaluaciones</span>
         </a>
-        <a href="/logs" class="nav-link" id="nav-logs">
+        <a href="/usuarios" class="nav-link admin-only" id="nav-usuarios">
+          <div class="nav-link-icon">👥</div>
+          <span class="nav-link-label">Usuarios</span>
+        </a>
+        <a href="/logs" class="nav-link admin-only" id="nav-logs">
           <div class="nav-link-icon">📋</div>
           <span class="nav-link-label">Historial de Acciones</span>
         </a>
-        <a href="/especialista/crear" class="nav-link" id="nav-crear">
+        <a href="/especialista/crear" class="nav-link admin-only" id="nav-crear">
           <div class="nav-link-icon">👤</div>
           <span class="nav-link-label">Crear entrenador/profesional</span>
+        </a>
+        <a href="/ajustes" class="nav-link" id="nav-ajustes">
+          <div class="nav-link-icon">⚙️</div>
+          <span class="nav-link-label">Ajustes de Cuenta</span>
         </a>
       </nav>
 
       <!-- Usuario y Acciones -->
       <div class="sidebar-user">
         <div class="user-card sidebar-user-info">
-          <div class="user-avatar" id="sidebar-avatar">AD</div>
+          <div class="user-avatar" id="sidebar-avatar">US</div>
           <div>
-            <div class="user-info-name" id="sidebar-username">Administrador</div>
-            <div class="user-info-role">Sesión activa</div>
+            <div class="user-info-name" id="sidebar-username">Cargando...</div>
+            <div class="user-info-role" id="sidebar-user-role">Sesión activa</div>
           </div>
         </div>
         <button id="btn-refresh-s3" class="btn-sidebar-action btn-refresh-s3">
@@ -272,33 +307,41 @@ import '../styles/global.css';
   </body>
 
   <script>
-    // Marcar enlace activo
     const path = window.location.pathname;
     document.querySelectorAll('.nav-link').forEach(link => {
       const href = link.getAttribute('href') || '';
-      if (path.startsWith(href) && href !== '/') {
+      if (path === href || (path.startsWith(href) && href !== '/')) {
         link.classList.add('active');
       }
     });
 
-    // Mostrar nombre/avatar desde token Cognito
     try {
       const token = localStorage.getItem('sportmind_token');
       if (token) {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        const email: string = payload.email || payload['cognito:username'] || '';
-        if (email) {
-          const name = email.split('@')[0];
-          const initials = name.substring(0, 2).toUpperCase();
-          const avatarEl = document.getElementById('sidebar-avatar');
-          const usernameEl = document.getElementById('sidebar-username');
-          if (avatarEl) avatarEl.textContent = initials;
-          if (usernameEl) usernameEl.textContent = name;
-        }
-      }
-    } catch {}
+        const nombre = payload.name || payload.given_name || payload.email || 'Usuario';
+        
+        const grupos = payload['cognito:groups'] || payload['groups'] || [];
+        const esAdmin = Array.isArray(grupos) 
+          ? grupos.some((g: string) => g.toLowerCase().includes('admin')) 
+          : String(grupos).toLowerCase().includes('admin');
 
-    // Logout
+        let rolTexto = esAdmin ? 'Administrador' : 'Especialista';
+
+        const avatarEl = document.getElementById('sidebar-avatar');
+        const usernameEl = document.getElementById('sidebar-username');
+        const roleEl = document.getElementById('sidebar-user-role');
+
+        if (avatarEl) {
+          avatarEl.textContent = nombre.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+        }
+        if (usernameEl) usernameEl.textContent = nombre;
+        if (roleEl) roleEl.textContent = rolTexto;
+      }
+    } catch (e) {
+      console.error('Error al leer el token en layout:', e);
+    }
+
     document.getElementById('logout-btn')?.addEventListener('click', () => {
       localStorage.removeItem('sportmind_token');
       window.location.replace('/login');

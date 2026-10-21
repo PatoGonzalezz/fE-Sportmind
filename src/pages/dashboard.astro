@@ -5,1238 +5,317 @@ import Layout from "../layouts/Layout.astro";
 
 <Layout>
  
-  <style>
-    /* ── Tipografía y espaciado base ── */
-    h1,
-    h2,
-    h3 {
-      letter-spacing: -0.3px;
-    }
-
-    /* ── Header de página ── */
-    .page-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      margin-bottom: 32px;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .page-title {
-      font-size: 26px;
-      font-weight: 800;
-      color: #1a202c;
-    }
-    .page-subtitle {
-      font-size: 14px;
-      color: #718096;
-      margin-top: 4px;
-      font-weight: 400;
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .btn-crear-entrenador {
-      display: none; /* Oculto por defecto hasta validar rol de administrador */
-      align-items: center;
-      gap: 6px;
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: #fff;
-      padding: 10px 16px;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: 700;
-      text-decoration: none;
-      box-shadow: 0 3px 12px rgba(59, 130, 246, 0.3);
-      transition: all 0.2s ease;
-    }
-    .btn-crear-entrenador:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 5px 18px rgba(59, 130, 246, 0.4);
-    }
-
-    .s3-status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: #fff;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 8px 14px;
-      font-size: 13px;
-      color: #4a5568;
-      font-weight: 500;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-      white-space: nowrap;
-    }
-    .s3-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #10b981;
-      animation: pulse-dot 2s infinite;
-    }
-    @keyframes pulse-dot {
-      0%,
-      100% {
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
-      }
-      50% {
-        box-shadow: 0 0 0 5px rgba(16, 185, 129, 0);
-      }
-    }
-
-    /* ── KPI Cards ── */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-      margin-bottom: 28px;
-    }
-    @media (max-width: 500px) {
-      .kpi-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .kpi-card {
-      background: #fff;
-      border-radius: 18px;
-      padding: 20px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-      border: 1px solid #e2e8f0;
-      transition: all 0.2s ease;
-      position: relative;
-      overflow: hidden;
-    }
-    .kpi-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-    }
-    .kpi-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
-    .kpi-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: #718096;
-    }
-    .kpi-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-    }
-    .kpi-value {
-      font-size: 32px;
-      font-weight: 900;
-      color: #1a202c;
-      line-height: 1;
-    }
-    .kpi-unit {
-      font-size: 13px;
-      font-weight: 500;
-      color: #a0aec0;
-      margin-top: 4px;
-    }
-    .kpi-accent {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      border-radius: 0 0 18px 18px;
-    }
-
-    /* ── Barra de herramientas / Filtros ── */
-    .toolbar {
-      background: #fff;
-      border: 1px solid #e2e8f0;
-      border-radius: 18px;
-      padding: 18px 22px;
-      margin-bottom: 24px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-    }
-    .toolbar-top {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-      margin-bottom: 14px;
-    }
-    .toolbar-top-primary {
-      margin-bottom: 0;
-    }
-    .advanced-filters {
-      margin-top: 14px;
-    }
-    .advanced-filters summary {
-      width: fit-content;
-      color: #4a5568;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      padding: 6px 0;
-    }
-    .advanced-filters[open] .toolbar-top {
-      margin-top: 10px;
-    }
-    .search-wrapper {
-      flex: 1;
-      min-width: 220px;
-      position: relative;
-    }
-    .search-icon {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #a0aec0;
-      font-size: 16px;
-      pointer-events: none;
-    }
-    .search-input {
-      width: 100%;
-      padding: 11px 14px 11px 42px;
-      background: #f7fafc;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 12px;
-      font-size: 14px;
-      color: #1a202c;
-      outline: none;
-      transition: all 0.2s ease;
-    }
-    .search-input:focus {
-      border-color: #3b82f6;
-      background: #eff6ff;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-    .search-input::placeholder {
-      color: #a0aec0;
-    }
-    .btn-clear-search {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      color: #a0aec0;
-      cursor: pointer;
-      font-size: 16px;
-      padding: 4px;
-      border-radius: 4px;
-      transition: color 0.15s;
-    }
-    .btn-clear-search:hover {
-      color: #4a5568;
-    }
-
-    .filter-select {
-      padding: 10px 12px;
-      background: #f7fafc;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 12px;
-      font-size: 13px;
-      color: #4a5568;
-      cursor: pointer;
-      outline: none;
-      transition: border-color 0.2s;
-      min-width: 150px;
-    }
-    .filter-select:focus {
-      border-color: #3b82f6;
-    }
-
-    .toolbar-bottom {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding-top: 14px;
-      border-top: 1px solid #f0f4f8;
-      flex-wrap: wrap;
-    }
-    .results-count {
-      font-size: 13px;
-      color: #718096;
-      font-weight: 500;
-    }
-
-    /* Selector de vista */
-    .view-switcher {
-      display: flex;
-      align-items: center;
-      background: #f7fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 3px;
-      gap: 2px;
-    }
-    .view-btn {
-      padding: 7px 14px;
-      border-radius: 8px;
-      border: none;
-      background: transparent;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      color: #718096;
-      transition: all 0.2s ease;
-    }
-    .view-btn.active {
-      background: #fff;
-      color: #3b82f6;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-    }
-    .view-btn:hover:not(.active) {
-      color: #4a5568;
-      background: rgba(0, 0, 0, 0.03);
-    }
-
-    /* ── Loading skeleton ── */
-    .loading-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-    @media (max-width: 700px) {
-      .loading-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-    .skeleton-card {
-      background: #fff;
-      border: 1px solid #e2e8f0;
-      border-radius: 20px;
-      padding: 24px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-    }
-    .skeleton-line {
-      border-radius: 8px;
-    }
-    .sk-anim {
-      background: linear-gradient(90deg, #e2e8f0 25%, #f7fafc 50%, #e2e8f0 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-    @keyframes shimmer {
-      0% {
-        background-position: -200% 0;
-      }
-      100% {
-        background-position: 200% 0;
-      }
-    }
-
-    /* ── Cards de evaluación ── */
-    :global(.cards-grid) {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 20px;
-      min-width: 0;
-    }
-    @media (max-width: 1100px) {
-      :global(.cards-grid) {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    :global(.eval-card) {
-      background: #fff;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 22px;
-      padding: 24px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-      transition: all 0.25s ease;
-      display: flex;
-      flex-direction: column;
-      animation: fadeInUp 0.35s ease both;
-    }
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(14px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    :global(.eval-card:hover) {
-      border-color: #bfdbfe;
-      box-shadow: 0 6px 24px rgba(59, 130, 246, 0.1);
-    }
-
-    /* Header de la card */
-    :global(.card-header) {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid #f0f4f8;
-    }
-    :global(.athlete-info) {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-width: 0;
-    }
-    :global(.athlete-avatar) {
-      width: 50px;
-      height: 50px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-      color: #fff;
-      font-size: 17px;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-    :global(.athlete-name) {
-      font-size: 17px;
-      font-weight: 800;
-      color: #1a202c;
-    }
-    :global(.athlete-meta) {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: #718096;
-      margin-top: 4px;
-      flex-wrap: wrap;
-    }
-    :global(.athlete-meta span) {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    :global(.badge-gender) {
-      background: #f0f4f8;
-      color: #4a5568;
-      border-radius: 6px;
-      padding: 2px 8px;
-      font-size: 11px;
-      font-weight: 600;
-    }
-
-    /* Badge emoción */
-    :global(.emotion-badge) {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: 99px;
-      font-size: 12px;
-      font-weight: 700;
-      border: 1.5px solid;
-      white-space: nowrap;
-    }
-    :global(.emotion-dot) {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-    }
-
-    /* Secciones de métricas (tiro / escalada) */
-    :global(.metrics-grid) {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-      margin-bottom: 18px;
-    }
-    @media (max-width: 700px) {
-      :global(.metrics-grid) {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    :global(.metric-section) {
-      background: #f7fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 16px;
-      padding: 16px;
-    }
-    :global(.metric-section-header) {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
-    :global(.metric-section-title) {
-      font-size: 13px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    :global(.metric-post-badge) {
-      font-size: 10px;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 99px;
-      border: 1px solid;
-    }
-    :global(.scores-row) {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    :global(.score-box) {
-      background: #fff;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 10px;
-      text-align: center;
-    }
-    :global(.score-label) {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      color: #a0aec0;
-      letter-spacing: 0.5px;
-    }
-    :global(.score-value) {
-      font-size: 22px;
-      font-weight: 900;
-      margin-top: 4px;
-    }
-    :global(.score-unit) {
-      font-size: 11px;
-      color: #a0aec0;
-      font-weight: 500;
-    }
-
-    /* Barras de métricas */
-    :global(.meter-label) {
-      font-size: 12px;
-      font-weight: 600;
-      color: #4a5568;
-    }
-    :global(.meter-val) {
-      font-size: 12px;
-      font-weight: 700;
-      color: #1a202c;
-    }
-    :global(.meter-track) {
-      height: 7px;
-      background: #e2e8f0;
-      border-radius: 99px;
-      margin-top: 5px;
-      overflow: hidden;
-    }
-    :global(.meter-fill) {
-      height: 100%;
-      border-radius: 99px;
-      transition: width 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    /* Footer de la card */
-    :global(.card-footer) {
-      margin-top: auto;
-      padding-top: 16px;
-      border-top: 1px solid #f0f4f8;
-    }
-    :global(.card-footer-row) {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    :global(.recommendation-chip) {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #eff6ff;
-      color: #2563eb;
-      border: 1.5px solid #bfdbfe;
-      border-radius: 10px;
-      padding: 6px 12px;
-      font-size: 13px;
-      font-weight: 700;
-    }
-    :global(.btn-ai) {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 8px 16px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
-    }
-    :global(.btn-ai:hover) {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
-    }
-    :global(.btn-ai:disabled) {
-      opacity: 0.7;
-      transform: none;
-      cursor: not-allowed;
-    }
-    :global(.btn-json) {
-      background: none;
-      border: 1.5px solid #e2e8f0;
-      color: #718096;
-      border-radius: 10px;
-      padding: 8px 12px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    :global(.btn-json:hover) {
-      border-color: #3b82f6;
-      color: #3b82f6;
-      background: #eff6ff;
-    }
-    :global(.btn-copy-id) {
-      background: none;
-      border: 1.5px solid #e2e8f0;
-      color: #a0aec0;
-      border-radius: 10px;
-      padding: 8px 12px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    :global(.btn-copy-id:hover) {
-      border-color: #cbd5e0;
-      color: #4a5568;
-    }
-
-    /* Panel resultado IA */
-    :global(.ia-result-panel) {
-      display: block;
-      margin-top: 12px;
-      background: #f0fdf4;
-      border: 1.5px solid #a7f3d0;
-      border-radius: 14px;
-      padding: 16px;
-      animation: fadeInUp 0.3s ease;
-    }
-    :global(.ia-result-panel.danger) {
-      background: #fffbeb;
-      border-color: #fde68a;
-    }
-    :global(.ia-diagnosis-label) {
-      font-size: 11px;
-      font-weight: 700;
-      color: #718096;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 4px;
-    }
-    :global(.ia-diagnosis-title) {
-      font-size: 17px;
-      font-weight: 800;
-    }
-    :global(.ia-diagnosis-title.ok) {
-      color: #059669;
-    }
-    :global(.ia-diagnosis-title.risk) {
-      color: #d97706;
-    }
-    :global(.ia-confidence) {
-      font-size: 13px;
-      color: #718096;
-      margin-top: 6px;
-      font-weight: 500;
-    }
-    :global(.ia-confidence strong) {
-      color: #4a5568;
-    }
-
-    :global(.session-highlights) {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin: 0 0 16px;
-    }
-    :global(.session-highlight) {
-      display: inline-flex;
-      align-items: baseline;
-      gap: 6px;
-      padding: 8px 11px;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      background: #f8fafc;
-      color: #475569;
-      font-size: 12px;
-    }
-    :global(.session-highlight strong) {
-      color: #1e293b;
-      font-size: 13px;
-    }
-    :global(.card-details) {
-      border-top: 1px solid #f0f4f8;
-      padding-top: 12px;
-    }
-    :global(.card-details summary) {
-      width: fit-content;
-      color: #2563eb;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 700;
-      padding: 4px 0;
-    }
-    :global(.card-details summary:hover) {
-      color: #1d4ed8;
-    }
-    :global(.card-details-content) {
-      padding-top: 14px;
-    }
-    :global(.card-details .metrics-grid) {
-      margin-bottom: 14px;
-    }
-    :global(.details-no-data) {
-      margin: 0;
-      color: #718096;
-      font-size: 13px;
-    }
-    :global(.detail-layout) {
-      display: grid;
-      grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.7fr);
-      align-items: start;
-      gap: 20px;
-    }
-    :global(.analysis-column) {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      padding: 18px;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 16px;
-      min-width: 0;
-    }
-    :global(.analysis-heading) {
-      margin: 0;
-      color: #1e293b;
-      font-size: 15px;
-      font-weight: 800;
-    }
-    :global(.analysis-hint) {
-      margin: -8px 0 0;
-      color: #64748b;
-      font-size: 12px;
-      line-height: 1.5;
-    }
-    :global(.analysis-column .ia-result-panel) {
-      margin-top: 0;
-      min-height: 130px;
-    }
-    :global(.detail-column) {
-      min-width: 0;
-    }
-    :global(.detail-column .metrics-grid) {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-    }
-    :global(.detail-column .metric-section) {
-      padding: 13px;
-    }
-    :global(.detail-actions) {
-      display: flex;
-      justify-content: flex-end;
-      flex-wrap: wrap;
-      gap: 8px;
-      padding-top: 14px;
-      border-top: 1px solid #f0f4f8;
-    }
-
-    /* ── Vista Tabla ── */
-    .table-container {
-      background: #fff;
-      border: 1px solid #e2e8f0;
-      border-radius: 18px;
-      overflow: hidden;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-    }
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
-    .data-table thead {
-      background: #f7fafc;
-    }
-    .data-table th {
-      padding: 13px 18px;
-      text-align: left;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: #718096;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    .data-table td {
-      padding: 14px 18px;
-      border-bottom: 1px solid #f0f4f8;
-      color: #4a5568;
-      vertical-align: middle;
-    }
-    .data-table tbody tr:last-child td {
-      border-bottom: none;
-    }
-    .data-table tbody tr:hover td {
-      background: #f7fafc;
-    }
-
-    /* ── Vista Gráficos ── */
-    .charts-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-    @media (max-width: 800px) {
-      .charts-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-    .chart-card {
-      background: #fff;
-      border: 1px solid #e2e8f0;
-      border-radius: 18px;
-      padding: 24px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-    }
-    .chart-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: #1a202c;
-      margin-bottom: 4px;
-    }
-    .chart-subtitle {
-      font-size: 12px;
-      color: #a0aec0;
-      margin-bottom: 20px;
-    }
-    .chart-canvas {
-      position: relative;
-      height: 280px;
-    }
-
-    /* ── Estado vacío ── */
-    .empty-state {
-      background: #fff;
-      border: 1.5px dashed #cbd5e0;
-      border-radius: 18px;
-      padding: 60px 24px;
-      text-align: center;
-    }
-    .empty-icon {
-      font-size: 48px;
-      margin-bottom: 12px;
-    }
-    .empty-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #4a5568;
-      margin-bottom: 6px;
-    }
-    .empty-subtitle {
-      font-size: 14px;
-      color: #a0aec0;
-    }
-    .btn-reset {
-      margin-top: 20px;
-      background: #f0f4f8;
-      border: 1px solid #e2e8f0;
-      color: #4a5568;
-      border-radius: 10px;
-      padding: 10px 20px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-reset:hover {
-      background: #e2e8f0;
-    }
-
-    /* ── Modal detalle de sesión ── */
-    dialog {
-      position: fixed;
-      inset: 0;
-      margin: auto;
-      border: none;
-      background: transparent;
-      width: min(96vw, 1280px);
-      max-width: none;
-      height: min(860px, calc(100dvh - 32px));
-      max-height: calc(100dvh - 32px);
-      padding: 0;
-      overflow: visible;
-    }
-    dialog::backdrop {
-      background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(4px);
-    }
-    .modal-inner {
-      background: #fff;
-      border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      max-height: none;
-    }
-    .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 24px;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    .modal-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: #1a202c;
-    }
-    .modal-close {
-      background: #f0f4f8;
-      border: none;
-      border-radius: 8px;
-      width: 34px;
-      height: 34px;
-      font-size: 16px;
-      cursor: pointer;
-      color: #718096;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-close:hover {
-      background: #e2e8f0;
-      color: #1a202c;
-    }
-    .modal-body {
-      overflow-y: auto;
-      min-height: 0;
-      flex: 1;
-      padding: 20px 24px;
-    }
-    :global(.btn-view-details) {
-      align-self: flex-start;
-      background: #eff6ff;
-      color: #1d4ed8;
-      border: 1px solid #bfdbfe;
-      border-radius: 10px;
-      padding: 9px 14px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    :global(.btn-view-details:hover) {
-      background: #dbeafe;
-    }
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 16px;
-    }
-    .json-toggle {
-      margin-top: 14px;
-    }
-    @media (max-width: 860px) {
-      :global(.detail-layout) {
-        grid-template-columns: 1fr;
-      }
-      :global(.analysis-column) {
-        order: 0;
-      }
-    }
-    @media (max-width: 600px) {
-      dialog {
-        width: calc(100vw - 16px);
-        height: calc(100dvh - 16px);
-        max-height: calc(100dvh - 16px);
-      }
-      .modal-header,
-      .modal-body {
-        padding: 16px;
-      }
-      :global(.detail-column .metrics-grid) {
-        grid-template-columns: 1fr;
-      }
-    }
-    .json-pre {
-      background: #1e293b;
-      color: #7dd3fc;
-      border-radius: 12px;
-      padding: 20px;
-      font-family: "Fira Code", "JetBrains Mono", monospace;
-      font-size: 12px;
-      line-height: 1.7;
-      overflow-x: auto;
-      white-space: pre;
-    }
-
-    /* ── Toast ── */
-    .toast {
-      position: fixed;
-      bottom: 28px;
-      right: 28px;
-      z-index: 9999;
-      transform: translateY(80px);
-      opacity: 0;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      pointer-events: none;
-    }
-    .toast.visible {
-      transform: translateY(0);
-      opacity: 1;
-    }
-    .toast-inner {
-      background: #1a202c;
-      color: #fff;
-      border-radius: 12px;
-      padding: 12px 18px;
-      font-size: 14px;
-      font-weight: 600;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-  </style>
-
-  <!-- ── ENCABEZADO DE PÁGINA ── -->
-  <div class="page-header">
-    <div>
-      <h1 class="page-title">Evaluaciones de Atletas</h1>
-      <p class="page-subtitle">
+  <!-- ── ENCABEZADO ── -->
+  <header class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div class="max-w-2xl">
+      <h1 class="text-[1.65rem] font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+        Evaluaciones de atletas
+      </h1>
+      <p class="mt-1.5 text-sm leading-relaxed text-slate-500">
         Revisa el rendimiento emocional y físico de cada sesión registrada.
       </p>
     </div>
-    <div class="header-actions">
-      <!-- Botón exclusivo para Administradores -->
+
+    <div class="flex flex-wrap items-center gap-2.5">
+      <!-- Botón exclusivo para administradores (se muestra al validar el rol) -->
       <a
         href="/especialista/crear"
         id="btn-crear-entrenador"
-        class="btn-crear-entrenador"
+        class="hidden h-10 items-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
       >
-        ➕ Crear Entrenador
+        <svg viewBox="0 0 20 20" fill="none" class="size-4" aria-hidden="true">
+          <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        Crear entrenador
       </a>
-      <div class="s3-status">
-        <div class="s3-dot"></div>
-        <span id="sources-count">Conectando...</span>
-      </div>
-    </div>
-  </div>
 
-  <!-- --- KPIs --- -->
-<section id="kpis-section" class="bg-gradient-to-r from-teal-700 to-teal-900 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden mb-8 w-full mt-6" aria-label="Resumen de evaluaciones filtradas">
-  <div class="relative z-10">
-    <h3 class="text-2xl font-bold mb-2">Administración Clínica SportMind</h3>
-    <p class="text-teal-100 text-sm mb-8 max-w-2xl">Gestiona los reportes automatizados y la telemetría de las gafas VR.</p>
-    
-    <div class="flex gap-4">
-      
-      <div class="bg-white/10 border border-white/20 rounded-xl p-4 min-w-[140px] backdrop-blur-sm">
-        <p class="text-teal-100 text-xs font-medium uppercase tracking-wide">Atletas Activos</p>
-        <p class="text-3xl font-bold mt-1" id="kpi-unique-athletes">-</p> 
-      </div>
-      
-      
-      <div class="bg-white/10 border border-white/20 rounded-xl p-4 min-w-[140px] backdrop-blur-sm">
-        <p class="text-teal-100 text-xs font-medium uppercase tracking-wide">Sesiones Totales</p>
-        <p class="text-3xl font-bold mt-1" id="kpi-total-sessions">-</p> 
-      </div>
+      <button
+        type="button"
+        id="btn-refresh-s3"
+        class="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-3.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+      >
+        <svg viewBox="0 0 20 20" fill="none" class="size-4" aria-hidden="true">
+          <path d="M4 10a6 6 0 0 1 10.2-4.2L16 7.5M16 3.5v4h-4M16 10a6 6 0 0 1-10.2 4.2L4 12.5M4 16.5v-4h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Actualizar
+      </button>
+
+      <p class="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-600 shadow-sm">
+        <span class="size-2 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20" aria-hidden="true"></span>
+        <span id="sources-count" aria-live="polite">Conectando…</span>
+      </p>
     </div>
-  </div>
-  
-  <div class="absolute -right-20 -top-20 w-96 h-96 bg-teal-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
-</section>
+  </header>
+
+  <!-- ── RESUMEN (KPIs) ── -->
+  <section
+    id="kpis-section"
+    class="mb-6 rounded-2xl bg-slate-900 p-6 text-white shadow-[0_12px_32px_-16px_rgba(15,23,42,0.5)] sm:p-8"
+    aria-label="Resumen de evaluaciones filtradas"
+  >
+    <h2 class="text-2xl font-extrabold tracking-tight text-slate-50">Administración clínica SportMind</h2>
+    <p class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
+      Gestiona los reportes automatizados y la telemetría de las gafas VR.
+    </p>
+    <dl class="mt-6 grid max-w-md grid-cols-2 divide-x divide-white/10 border-t border-white/10">
+      <div class="py-4 pr-5 sm:py-5">
+        <dt class="text-[13px] font-medium text-slate-400">Atletas activos</dt>
+        <dd id="kpi-unique-athletes" class="mt-1 text-3xl font-extrabold tabular-nums text-slate-50">—</dd>
+      </div>
+      <div class="py-4 pl-5 sm:py-5 sm:pl-8">
+        <dt class="text-[13px] font-medium text-slate-400">Sesiones totales</dt>
+        <dd id="kpi-total-sessions" class="mt-1 text-3xl font-extrabold tabular-nums text-slate-50">—</dd>
+      </div>
+    </dl>
+  </section>
 
   <!-- ── BARRA DE HERRAMIENTAS ── -->
-  <div class="toolbar">
-    <div class="toolbar-top toolbar-top-primary">
-      <div class="search-wrapper">
-        <span class="search-icon">🔍</span>
+  <section class="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-label="Búsqueda, filtros y vistas">
+    <div class="flex flex-col gap-3 sm:flex-row">
+      <div class="relative min-w-0 flex-1">
+        <label for="search-input" class="sr-only">Buscar evaluaciones</label>
+        <svg viewBox="0 0 20 20" fill="none" class="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" aria-hidden="true">
+          <circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="1.8" />
+          <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+        </svg>
         <input
           type="text"
           id="search-input"
-          class="search-input"
-          placeholder="Buscar por nombre, deporte o emoción..."
+          placeholder="Buscar por nombre, deporte o emoción…"
           autocomplete="off"
+          class="block w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-10 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
         />
         <button
+          type="button"
           id="btn-clear-search"
-          class="btn-clear-search"
           style="display:none;"
-          aria-label="Limpiar búsqueda">✕</button
+          aria-label="Limpiar búsqueda"
+          class="absolute right-2 top-1/2 size-7 -translate-y-1/2 cursor-pointer rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         >
+          <svg viewBox="0 0 20 20" fill="none" class="size-4" aria-hidden="true">
+            <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+        </button>
       </div>
 
-      <select id="filter-sport" class="filter-select">
-        <option value="all">🏆 Todos los deportes</option>
-      </select>
+      <div class="relative sm:w-56">
+        <select
+          id="filter-sport"
+          aria-label="Filtrar por deporte"
+          class="block w-full cursor-pointer appearance-none rounded-xl border border-slate-300 bg-white py-2.5 pl-3.5 pr-10 text-sm text-slate-700 transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+        >
+          <option value="all">Todos los deportes</option>
+        </select>
+        <svg viewBox="0 0 20 20" fill="none" class="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" aria-hidden="true">
+          <path d="M5 7.5l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </div>
     </div>
 
-    <details class="advanced-filters">
-      <summary>Más filtros</summary>
-      <div class="toolbar-top">
-        <select id="filter-emotion" class="filter-select">
-          <option value="all">😊 Todas las emociones</option>
-          <option value="calma">😌 Calma</option>
-          <option value="feliz">😊 Feliz</option>
-          <option value="nervioso">⚡ Nervioso</option>
-          <option value="enojado">🔥 Enojado</option>
-          <option value="triste">🌧️ Triste</option>
-        </select>
-
-        <select id="sort-by" class="filter-select">
-          <option value="date-desc">📅 Más reciente primero</option>
-          <option value="date-asc">📅 Más antiguo primero</option>
-          <option value="name-asc">🔤 Nombre (A → Z)</option>
-          <option value="shooting-desc">🎯 Mayor puntaje de tiro</option>
-          <option value="climbing-asc">🧗 Menor tiempo de escalada</option>
-        </select>
+    <details class="group mt-3">
+      <summary class="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-lg py-1.5 text-[13px] font-semibold text-slate-600 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 [&::-webkit-details-marker]:hidden">
+        Más filtros
+        <svg viewBox="0 0 20 20" fill="none" class="size-4 transition-transform group-open:rotate-180" aria-hidden="true">
+          <path d="M5 7.5l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </summary>
+      <div class="mt-2.5 flex flex-col gap-3 sm:flex-row">
+        <div class="relative sm:w-56">
+          <select
+            id="filter-emotion"
+            aria-label="Filtrar por emoción"
+            class="block w-full cursor-pointer appearance-none rounded-xl border border-slate-300 bg-white py-2.5 pl-3.5 pr-10 text-sm text-slate-700 transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+          >
+            <option value="all">Todas las emociones</option>
+            <option value="calma">😌 Calma</option>
+            <option value="feliz">😊 Feliz</option>
+            <option value="nervioso">⚡ Nervioso</option>
+            <option value="enojado">🔥 Enojado</option>
+            <option value="triste">🌧️ Triste</option>
+          </select>
+          <svg viewBox="0 0 20 20" fill="none" class="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" aria-hidden="true">
+            <path d="M5 7.5l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </div>
+        <div class="relative sm:w-64">
+          <select
+            id="sort-by"
+            aria-label="Ordenar resultados"
+            class="block w-full cursor-pointer appearance-none rounded-xl border border-slate-300 bg-white py-2.5 pl-3.5 pr-10 text-sm text-slate-700 transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+          >
+            <option value="date-desc">Más reciente primero</option>
+            <option value="date-asc">Más antiguo primero</option>
+            <option value="name-asc">Nombre (A a Z)</option>
+            <option value="shooting-desc">Mayor puntaje de tiro</option>
+            <option value="climbing-asc">Menor tiempo de escalada</option>
+          </select>
+          <svg viewBox="0 0 20 20" fill="none" class="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" aria-hidden="true">
+            <path d="M5 7.5l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </div>
       </div>
     </details>
 
-    <div class="toolbar-bottom">
-      <p class="results-count" id="results-count">Cargando evaluaciones...</p>
-      <div class="view-switcher">
-        <button id="view-cards-btn" class="view-btn active">🗂️ Tarjetas</button>
-        <button id="view-table-btn" class="view-btn">📊 Tabla</button>
-        <button id="view-charts-btn" class="view-btn">📈 Gráficos</button>
+    <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+      <p id="results-count" class="text-sm font-medium text-slate-500" aria-live="polite">Cargando evaluaciones…</p>
+
+      <div role="group" aria-label="Cambiar vista" class="inline-flex gap-0.5 rounded-xl border border-slate-200 bg-slate-50 p-0.5">
+        <button
+          type="button"
+          id="view-cards-btn"
+          aria-pressed="true"
+          class="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg bg-white px-3 text-[13px] font-semibold text-blue-600 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        >
+          <svg viewBox="0 0 20 20" fill="none" class="size-4" aria-hidden="true">
+            <rect x="3" y="3" width="6" height="6" rx="1.3" stroke="currentColor" stroke-width="1.7" />
+            <rect x="11" y="3" width="6" height="6" rx="1.3" stroke="currentColor" stroke-width="1.7" />
+            <rect x="3" y="11" width="6" height="6" rx="1.3" stroke="currentColor" stroke-width="1.7" />
+            <rect x="11" y="11" width="6" height="6" rx="1.3" stroke="currentColor" stroke-width="1.7" />
+          </svg>
+          Tarjetas
+        </button>
+        <button
+          type="button"
+          id="view-table-btn"
+          aria-pressed="false"
+          class="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg px-3 text-[13px] font-semibold text-slate-500 transition-colors hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        >
+          <svg viewBox="0 0 20 20" fill="none" class="size-4" aria-hidden="true">
+            <rect x="3" y="4" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.7" />
+            <path d="M3 9h14M8 9v7" stroke="currentColor" stroke-width="1.7" />
+          </svg>
+          Tabla
+        </button>
+        <button
+          type="button"
+          id="view-charts-btn"
+          aria-pressed="false"
+          class="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg px-3 text-[13px] font-semibold text-slate-500 transition-colors hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        >
+          <svg viewBox="0 0 20 20" fill="none" class="size-4" aria-hidden="true">
+            <path d="M4 16V9m6 7V4m6 12v-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+          Gráficos
+        </button>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- ── LOADING STATE ── -->
-  <div id="loading-state" class="loading-grid">
+  <!-- ── CARGANDO ── -->
+  <div id="loading-state" class="grid gap-5 md:grid-cols-2" aria-hidden="true">
     {
       [0, 1, 2, 3].map(() => (
-        <div class="skeleton-card">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-            <div
-              class="skeleton-line sk-anim"
-              style="width:50px;height:50px;border-radius:14px;"
-            />
-            <div style="flex:1;">
-              <div
-                class="skeleton-line sk-anim"
-                style="height:16px;width:70%;margin-bottom:8px;"
-              />
-              <div
-                class="skeleton-line sk-anim"
-                style="height:12px;width:50%;"
-              />
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+          <div class="mb-5 flex items-center gap-3">
+            <div class="size-12 rounded-xl bg-slate-100 motion-safe:animate-pulse"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-4 w-2/3 rounded bg-slate-100 motion-safe:animate-pulse"></div>
+              <div class="h-3 w-1/2 rounded bg-slate-100 motion-safe:animate-pulse"></div>
             </div>
           </div>
-          <div
-            class="skeleton-line sk-anim"
-            style="height:110px;margin-bottom:12px;"
-          />
-          <div class="skeleton-line sk-anim" style="height:110px;" />
+          <div class="mb-3 h-20 rounded-xl bg-slate-100 motion-safe:animate-pulse"></div>
+          <div class="h-10 w-44 rounded-xl bg-slate-100 motion-safe:animate-pulse"></div>
         </div>
       ))
     }
   </div>
 
   <!-- ── VISTA 1: TARJETAS ── -->
-  <div id="cards-view" class="cards-grid" style="display:none;"></div>
+  <div id="cards-view" class="grid min-w-0 grid-cols-1 gap-5 min-[1100px]:grid-cols-2" style="display:none;"></div>
 
   <!-- ── VISTA 2: TABLA ── -->
-  <div id="table-view" class="table-container" style="display:none;">
-    <div style="overflow-x:auto;">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Atleta</th>
-            <th>Deporte</th>
-            <th>Estado Emocional</th>
-            <th>🎯 Tiro (Fácil / Difícil)</th>
-            <th>🧗 Escalada (Fácil / Difícil)</th>
-            <th>Emociones Post</th>
-            <th>Fecha</th>
+  <div id="table-view" class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" style="display:none;">
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[880px] border-collapse text-sm">
+        <caption class="sr-only">Evaluaciones registradas</caption>
+        <thead class="bg-slate-50">
+          <tr class="border-b border-slate-200 text-left text-[13px] font-semibold text-slate-500">
+            <th scope="col" class="whitespace-nowrap px-5 py-3.5">Atleta</th>
+            <th scope="col" class="whitespace-nowrap px-5 py-3.5">Deporte</th>
+            <th scope="col" class="whitespace-nowrap px-5 py-3.5">Estado emocional</th>
+            <th scope="col" class="whitespace-nowrap px-5 py-3.5">Tiro (fácil / difícil)</th>
+            <th scope="col" class="whitespace-nowrap px-5 py-3.5">Escalada (fácil / difícil)</th>
+            <th scope="col" class="whitespace-nowrap px-5 py-3.5">Emociones post</th>
+            <th scope="col" class="whitespace-nowrap px-5 py-3.5">Fecha</th>
           </tr>
         </thead>
-        <tbody id="table-body"></tbody>
+        <tbody id="table-body" class="divide-y divide-slate-100"></tbody>
       </table>
     </div>
   </div>
 
   <!-- ── VISTA 3: GRÁFICOS ── -->
-  <div id="charts-view" class="charts-grid" style="display:none;">
-    <div class="chart-card">
-      <div class="chart-title">Rendimiento y Confianza</div>
-      <div class="chart-subtitle">Escala del 1 al 5 por atleta</div>
-      <div class="chart-canvas"><canvas id="chart-performance"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Tiempos de Escalada</div>
-      <div class="chart-subtitle">Segundos — menor es mejor</div>
-      <div class="chart-canvas"><canvas id="chart-climbing"></canvas></div>
-    </div>
+  <div id="charts-view" class="grid gap-5 md:grid-cols-2" style="display:none;">
+    <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <h3 class="text-[15px] font-bold text-slate-900">Rendimiento y confianza</h3>
+      <p class="mb-5 mt-0.5 text-xs text-slate-500">Escala del 1 al 5 por atleta</p>
+      <div class="relative h-[280px]"><canvas id="chart-performance"></canvas></div>
+    </section>
+    <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <h3 class="text-[15px] font-bold text-slate-900">Tiempos de escalada</h3>
+      <p class="mb-5 mt-0.5 text-xs text-slate-500">Segundos: menor es mejor</p>
+      <div class="relative h-[280px]"><canvas id="chart-climbing"></canvas></div>
+    </section>
   </div>
 
   <!-- ── ESTADO VACÍO ── -->
-  <div id="empty-state" class="empty-state" style="display:none;">
-    <div class="empty-icon">🔍</div>
-    <div class="empty-title">No se encontraron evaluaciones</div>
-    <div class="empty-subtitle">Intenta cambiar los filtros de búsqueda.</div>
-    <button id="btn-reset-filters" class="btn-reset">Limpiar filtros</button>
+  <div id="empty-state" class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center" style="display:none;">
+    <span class="mx-auto inline-flex size-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+      <svg viewBox="0 0 20 20" fill="none" class="size-5" aria-hidden="true">
+        <circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="1.8" />
+        <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+      </svg>
+    </span>
+    <h3 class="mt-4 text-lg font-bold text-slate-800">No se encontraron evaluaciones</h3>
+    <p class="mt-1 text-sm text-slate-500">Prueba con otro nombre o quita algún filtro.</p>
+    <button
+      type="button"
+      id="btn-reset-filters"
+      class="mt-5 inline-flex h-10 cursor-pointer items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+    >
+      Limpiar filtros
+    </button>
   </div>
 
   <!-- ── MODAL DETALLE DE SESIÓN ── -->
-  <dialog id="session-modal" aria-labelledby="detail-modal-title">
-    <div class="modal-inner">
-      <div class="modal-header">
-        <span id="detail-modal-title" class="modal-title"
-          >Detalle de la sesión</span
-        >
+  <dialog
+    id="session-modal"
+    aria-labelledby="detail-modal-title"
+    class="fixed inset-0 m-auto h-[min(860px,calc(100dvh-1.5rem))] max-h-[calc(100dvh-1.5rem)] w-[min(96vw,1280px)] max-w-none overflow-visible bg-transparent p-0 backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm"
+  >
+    <div class="flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div class="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-4 sm:px-6">
+        <h2 id="detail-modal-title" class="truncate text-base font-bold text-slate-900">Detalle de la sesión</h2>
         <button
+          type="button"
           id="btn-close-modal"
-          class="modal-close"
-          aria-label="Cerrar detalle">✕</button
+          aria-label="Cerrar detalle"
+          class="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         >
+          <svg viewBox="0 0 20 20" fill="none" class="size-5" aria-hidden="true">
+            <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+        </button>
       </div>
-      <div class="modal-body">
+      <div class="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
         <div id="detail-modal-content"></div>
-        <pre id="json-modal-content" class="json-pre" hidden></pre>
+        <pre id="json-modal-content" hidden class="mt-4 overflow-x-auto whitespace-pre rounded-xl bg-slate-900 p-5 font-mono text-xs leading-7 text-sky-300"></pre>
       </div>
     </div>
   </dialog>
 
   <!-- ── TOAST ── -->
-  <div id="toast" class="toast">
-    <div class="toast-inner">
-      <span>✓</span><span id="toast-message">Copiado</span>
+  <div
+    id="toast"
+    role="status"
+    aria-live="polite"
+    class="pointer-events-none fixed bottom-6 right-6 z-[9999] translate-y-20 opacity-0 transition duration-300 motion-reduce:transition-none"
+  >
+    <div class="flex items-center gap-2.5 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-xl">
+      <svg viewBox="0 0 20 20" fill="none" class="size-4 text-emerald-400" aria-hidden="true">
+        <path d="M4.5 10.5l3.5 3.5 7.5-8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <span id="toast-message">Copiado</span>
     </div>
   </div>
 
@@ -1267,6 +346,13 @@ import Layout from "../layouts/Layout.astro";
         const esAdmin = grupos.some(
           (g) => g.includes("administrador") || g.includes("admin"),
         );
+
+        // Mostrar el botón "Crear entrenador" solo a administradores
+        if (esAdmin) {
+          const btnCrear = document.getElementById("btn-crear-entrenador");
+          btnCrear?.classList.remove("hidden");
+          btnCrear?.classList.add("inline-flex");
+        }
 
         if (!esAdmin) {
           // Ocultar elementos de administración en la barra lateral
@@ -1333,6 +419,58 @@ import Layout from "../layouts/Layout.astro";
     let chartPerformanceInstance: Chart | null = null;
     let chartClimbingInstance: Chart | null = null;
 
+    // ── Clases reutilizables (Tailwind) ──
+    const VIEW_ACTIVE = ["bg-white", "text-blue-600", "shadow-sm"];
+    const VIEW_INACTIVE = ["text-slate-500", "hover:text-slate-800"];
+    const BTN_SECONDARY =
+      "inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3.5 text-[13px] font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
+    const IA_PANEL_BASE = "ia-result-panel min-h-[130px] rounded-xl border p-4";
+    const IA_PANEL_TONE = {
+      idle: "border-slate-200 bg-white",
+      ok: "border-emerald-200 bg-emerald-50",
+      risk: "border-amber-200 bg-amber-50",
+    };
+    const EMOTION_TONES: Record<string, { badge: string; dot: string }> = {
+      emerald: { badge: "bg-emerald-50 text-emerald-700 ring-emerald-200", dot: "bg-emerald-500" },
+      cyan: { badge: "bg-cyan-50 text-cyan-700 ring-cyan-200", dot: "bg-cyan-500" },
+      amber: { badge: "bg-amber-50 text-amber-700 ring-amber-200", dot: "bg-amber-500" },
+      purple: { badge: "bg-purple-50 text-purple-700 ring-purple-200", dot: "bg-purple-500" },
+      rose: { badge: "bg-rose-50 text-rose-700 ring-rose-200", dot: "bg-rose-500" },
+      neutral: { badge: "bg-slate-50 text-slate-600 ring-slate-200", dot: "bg-slate-400" },
+    };
+    let toastTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const ICON_CHEVRON = `<svg viewBox="0 0 20 20" fill="none" class="size-4" aria-hidden="true"><path d="M8 5l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const ICON_COPY = `<svg viewBox="0 0 20 20" fill="none" class="size-4" aria-hidden="true"><rect x="7" y="7" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M13 7V5.5A1.5 1.5 0 0 0 11.5 4h-6A1.5 1.5 0 0 0 4 5.5v6A1.5 1.5 0 0 0 5.5 13H7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`;
+    const ICON_PDF = `<svg viewBox="0 0 20 20" fill="none" class="size-4" aria-hidden="true"><path d="M10 3.5v9m0 0l-3.5-3.5M10 12.5L13.5 9M4 15.5h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const ICON_SPARK = `<svg viewBox="0 0 20 20" fill="none" class="size-4" aria-hidden="true"><path d="M10 3l1.6 4.4L16 9l-4.4 1.6L10 15l-1.6-4.4L4 9l4.4-1.6L10 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+    const ICON_OK = `<svg viewBox="0 0 20 20" fill="none" class="size-5 shrink-0" aria-hidden="true"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.7"/><path d="M6.8 10.3l2.2 2.2 4.2-4.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const ICON_WARN = `<svg viewBox="0 0 20 20" fill="none" class="size-5 shrink-0" aria-hidden="true"><path d="M10 3.5l7 12.2H3L10 3.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 8.5v3.2M10 13.9v.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+
+    const escapeHtml = (value: unknown) =>
+      String(value ?? "").replace(/[&<>"']/g, (c) =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string),
+      );
+
+    function emotionTone(badgeClass?: string) {
+      const source = badgeClass || "";
+      const key = Object.keys(EMOTION_TONES).find(
+        (k) => k !== "neutral" && source.includes(k),
+      );
+      return EMOTION_TONES[key ?? "neutral"];
+    }
+
+    function emotionBadge(em: ReturnType<typeof getEmotionConfig>): string {
+      const tone = emotionTone(em.badgeClass);
+      return `<span class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${tone.badge}"><span class="size-1.5 rounded-full ${tone.dot}" aria-hidden="true"></span>${em.icon} ${em.label}</span>`;
+    }
+
+    const highlightChip = (label: string, value: string) =>
+      `<span class="session-highlight inline-flex items-baseline gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">${label} <strong class="text-[13px] font-bold tabular-nums text-slate-900">${value}</strong></span>`;
+
+    const iaMessage = (title: string, text: string) =>
+      `<div class="ia-diagnosis-label text-xs font-semibold text-slate-500">${title}</div><div class="ia-confidence mt-1.5 text-[13px] leading-relaxed text-slate-600">${text}</div>`;
+
     // ── Referencias DOM ──
     const loadingState = document.getElementById("loading-state");
     const cardsView = document.getElementById("cards-view");
@@ -1373,8 +511,13 @@ import Layout from "../layouts/Layout.astro";
       const toastMsg = document.getElementById("toast-message");
       if (!toast || !toastMsg) return;
       toastMsg.textContent = msg;
-      toast.classList.add("visible");
-      setTimeout(() => toast.classList.remove("visible"), 2800);
+      toast.classList.remove("translate-y-20", "opacity-0");
+      toast.classList.add("translate-y-0", "opacity-100");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("translate-y-0", "opacity-100");
+        toast.classList.add("translate-y-20", "opacity-0");
+      }, 2800);
     }
 
     // ── Helpers de UI ──
@@ -1402,22 +545,22 @@ import Layout from "../layouts/Layout.astro";
       if (typeof val !== "number" || !Number.isFinite(val)) return "";
       const v = val;
       const pct = Math.min(Math.max((v / max) * 100, 0), 100);
-      const color =
+      const tone =
         v >= 4
-          ? "#10b981"
+          ? "bg-emerald-500"
           : v >= 3
-            ? "#3b82f6"
+            ? "bg-blue-500"
             : v >= 2
-              ? "#f59e0b"
-              : "#ef4444";
+              ? "bg-amber-500"
+              : "bg-red-500";
       return `
-        <div style="margin-bottom:8px;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-            <span class="meter-label">${label}</span>
-            <span class="meter-val">${v}/${max}</span>
+        <div class="mt-2.5">
+          <div class="flex items-baseline justify-between">
+            <span class="meter-label text-xs font-semibold text-slate-600">${label}</span>
+            <span class="meter-val text-xs font-bold tabular-nums text-slate-900">${v}/${max}</span>
           </div>
-          <div class="meter-track">
-            <div class="meter-fill" style="width:${pct}%;background:${color};"></div>
+          <div class="meter-track mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200" role="meter" aria-label="${label}" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${v}">
+            <div class="meter-fill h-full rounded-full ${tone} transition-[width] duration-500" style="width:${pct}%;"></div>
           </div>
         </div>`;
     }
@@ -1443,7 +586,7 @@ import Layout from "../layouts/Layout.astro";
       } catch (err) {
         console.error("Error al cargar datos:", err);
         if (resultsCount)
-          resultsCount.innerHTML = `<span style="color:#ef4444;">❌ Error al cargar archivos desde S3</span>`;
+          resultsCount.innerHTML = `<span class="text-red-600">No se pudieron cargar los registros desde S3. Pulsa Actualizar para reintentar.</span>`;
       } finally {
         if (loadingState) loadingState.style.display = "none";
         btnSvg?.classList.remove("animate-spin");
@@ -1455,7 +598,7 @@ import Layout from "../layouts/Layout.astro";
       sessions.forEach((s) => {
         if (s.data.selectedSport) sports.add(s.data.selectedSport);
       });
-      filterSport.innerHTML = `<option value="all">🏆 Todos los deportes</option>`;
+      filterSport.innerHTML = `<option value="all">Todos los deportes</option>`;
       sports.forEach((sport) => {
         const opt = document.createElement("option");
         opt.value = sport;
@@ -1533,8 +676,10 @@ import Layout from "../layouts/Layout.astro";
           const em = getEmotionConfig(d.emotionalState);
           const shootPost = getEmotionConfig(d.shootingPostEmotion);
           const climbPost = getEmotionConfig(d.climbingPostEmotion);
-          const name = formatName(d.playerName);
-          const initials = getInitials(d.playerName);
+          const name = escapeHtml(formatName(d.playerName));
+          const initials = escapeHtml(getInitials(d.playerName));
+          const sport = escapeHtml(d.selectedSport || "Deporte");
+          const gender = escapeHtml(d.gender || "N/A");
           const date = formatDateTime(session.timestamp);
           const climbEasy =
             typeof d.climbingTimeEasy === "number"
@@ -1547,12 +692,12 @@ import Layout from "../layouts/Layout.astro";
           const shootingSummary =
             typeof d.shootingScoreEasy === "number" ||
             typeof d.shootingScoreHard === "number"
-              ? `<div class="session-highlight">🎯 Tiro <strong>${d.shootingScoreEasy ?? "—"} / ${d.shootingScoreHard ?? "—"} pts</strong></div>`
+              ? highlightChip("Tiro", `${d.shootingScoreEasy ?? "—"} / ${d.shootingScoreHard ?? "—"} pts`)
               : "";
           const climbingSummary =
             typeof d.climbingTimeEasy === "number" ||
             typeof d.climbingTimeHard === "number"
-              ? `<div class="session-highlight">🧗 Escalada <strong>${climbEasy} / ${climbHard} s</strong></div>`
+              ? highlightChip("Escalada", `${climbEasy} / ${climbHard} s`)
               : "";
           const hasShootingData =
             [
@@ -1573,124 +718,121 @@ import Layout from "../layouts/Layout.astro";
             ].some((value) => typeof value === "number") ||
             Boolean(d.climbingPostEmotion);
 
-          return `
-          <article class="eval-card" style="animation-delay:${index * 40}ms;">
-            <!-- Cabecera: Atleta + Emoción -->
-            <div class="card-header">
-              <div class="athlete-info">
-                <div class="athlete-avatar">${initials}</div>
-                <div>
-                  <div class="athlete-name">${name}</div>
-                  <div class="athlete-meta">
-                    <span class="badge-gender">${d.gender || "N/A"}</span>
-                    <span>🏅 ${d.selectedSport || "Deporte"}</span>
-                    <span>📅 ${date}</span>
-                  </div>
+          const shootingSection = hasShootingData
+            ? `
+              <div class="metric-section rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
+                <div class="metric-section-header mb-3 flex items-center justify-between gap-2">
+                  <span class="metric-section-title text-[13px] font-bold text-blue-700">Evaluación de tiro</span>
+                  <span class="metric-post-badge rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 ring-1 ring-inset ring-blue-200">Post: ${shootPost.icon} ${shootPost.label}</span>
                 </div>
-              </div>
-              <div class="emotion-badge" style="background:${em.badgeClass.includes("emerald") ? "#ecfdf5" : em.badgeClass.includes("cyan") ? "#ecfeff" : em.badgeClass.includes("amber") ? "#fffbeb" : em.badgeClass.includes("purple") ? "#faf5ff" : em.badgeClass.includes("rose") ? "#fff1f2" : "#f8fafc"};color:${em.badgeClass.includes("emerald") ? "#059669" : em.badgeClass.includes("cyan") ? "#0891b2" : em.badgeClass.includes("amber") ? "#d97706" : em.badgeClass.includes("purple") ? "#7c3aed" : em.badgeClass.includes("rose") ? "#e11d48" : "#475569"};border-color:${em.badgeClass.includes("emerald") ? "#a7f3d0" : em.badgeClass.includes("cyan") ? "#a5f3fc" : em.badgeClass.includes("amber") ? "#fde68a" : em.badgeClass.includes("purple") ? "#ddd6fe" : em.badgeClass.includes("rose") ? "#fecdd3" : "#e2e8f0"};">
-                <div class="emotion-dot" style="background:${em.badgeClass.includes("emerald") ? "#10b981" : em.badgeClass.includes("cyan") ? "#06b6d4" : em.badgeClass.includes("amber") ? "#f59e0b" : em.badgeClass.includes("purple") ? "#8b5cf6" : em.badgeClass.includes("rose") ? "#f43f5e" : "#94a3b8"};"></div>
-                ${em.icon} ${em.label}
-              </div>
-            </div>
-
-            <div class="session-highlights" aria-label="Resultados registrados">
-              ${shootingSummary}${climbingSummary}
-              ${!shootingSummary && !climbingSummary ? '<span class="session-highlight">Sin resultados cuantitativos registrados</span>' : ""}
-            </div>
-
-            <button class="btn-view-details" data-session-index="${index}" aria-haspopup="dialog">
-              Ver informe detallado
-            </button>
-            <template id="session-detail-${index}">
-              <div class="card-details-content">
-                <div class="detail-layout">
-                  <aside class="analysis-column" aria-label="Análisis automatizado">
-                    <h3 class="analysis-heading">Análisis de apoyo</h3>
-                    <p class="analysis-hint">La predicción complementa la lectura profesional y no constituye un diagnóstico.</p>
-                    <div class="recommendation-chip">
-                      ⭐&nbsp;Recomendación&nbsp;registrada: <strong>${d.recomendacionFinal ?? "-"}&nbsp;/10</strong>
-                    </div>
-                    <button class="btn-ai btn-predict-ia" data-session-index="${index}">
-                      🧠 Analizar sesión
-                    </button>
-                    <div id="ia-result-${index}" class="ia-result-panel">
-                      <div class="ia-diagnosis-label">Resultado del análisis</div>
-                      <div class="ia-confidence">Pulsa "Analizar sesión" para consultar la predicción&nbsp;y su certeza</div>
-                    </div>
-                  </aside>
-                  <section class="detail-column" aria-label="Resultados de la sesión">
-            <!-- Métricas detalladas: tiro + escalada -->
-            <div class="metrics-grid">
-              ${
-                hasShootingData
-                  ? `
-              <!-- Tiro -->
-              <div class="metric-section">
-                <div class="metric-section-header">
-                  <span class="metric-section-title" style="color:#3b82f6;">🎯 Evaluación de Tiro</span>
-                  <span class="metric-post-badge" style="background:#eff6ff;color:#2563eb;border-color:#bfdbfe;">Post: ${shootPost.icon}${shootPost.label}</span>
-                </div>
-                <div class="scores-row">
-                  <div class="score-box">
-                    <div class="score-label">Fácil</div>
-                    <div class="score-value" style="color:#10b981;">${d.shootingScoreEasy ?? "—"}</div>
-                    <div class="score-unit">puntos</div>
+                <div class="scores-row mb-3 grid grid-cols-2 gap-2">
+                  <div class="score-box rounded-xl border border-slate-200 bg-white p-2.5 text-center">
+                    <div class="score-label text-xs font-semibold text-slate-500">Fácil</div>
+                    <div class="score-value mt-0.5 text-[22px] font-extrabold tabular-nums text-emerald-600">${d.shootingScoreEasy ?? "—"}</div>
+                    <div class="score-unit text-[11px] text-slate-500">puntos</div>
                   </div>
-                  <div class="score-box">
-                    <div class="score-label">Difícil</div>
-                    <div class="score-value" style="color:#3b82f6;">${d.shootingScoreHard ?? "—"}</div>
-                    <div class="score-unit">puntos</div>
+                  <div class="score-box rounded-xl border border-slate-200 bg-white p-2.5 text-center">
+                    <div class="score-label text-xs font-semibold text-slate-500">Difícil</div>
+                    <div class="score-value mt-0.5 text-[22px] font-extrabold tabular-nums text-blue-600">${d.shootingScoreHard ?? "—"}</div>
+                    <div class="score-unit text-[11px] text-slate-500">puntos</div>
                   </div>
                 </div>
                 ${renderMeter("Rendimiento", d.shootingRendimiento)}
                 ${renderMeter("Ritmo", d.shootingRitmo)}
                 ${renderMeter("Confianza", d.shootingConfianza)}
-              </div>
-              `
-                  : ""
-              }
+              </div>`
+            : "";
 
-              ${
-                hasClimbingData
-                  ? `
-              <!-- Escalada -->
-              <div class="metric-section">
-                <div class="metric-section-header">
-                  <span class="metric-section-title" style="color:#f59e0b;">🧗 Muro / Escalada</span>
-                  <span class="metric-post-badge" style="background:#fffbeb;color:#d97706;border-color:#fde68a;">Post: ${climbPost.icon}${climbPost.label}</span>
+          const climbingSection = hasClimbingData
+            ? `
+              <div class="metric-section rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
+                <div class="metric-section-header mb-3 flex items-center justify-between gap-2">
+                  <span class="metric-section-title text-[13px] font-bold text-amber-700">Muro / escalada</span>
+                  <span class="metric-post-badge rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 ring-1 ring-inset ring-amber-200">Post: ${climbPost.icon} ${climbPost.label}</span>
                 </div>
-                <div class="scores-row">
-                  <div class="score-box">
-                    <div class="score-label">T. Fácil</div>
-                    <div class="score-value" style="color:#f59e0b;">${climbEasy}</div>
-                    <div class="score-unit">segundos</div>
+                <div class="scores-row mb-3 grid grid-cols-2 gap-2">
+                  <div class="score-box rounded-xl border border-slate-200 bg-white p-2.5 text-center">
+                    <div class="score-label text-xs font-semibold text-slate-500">T. fácil</div>
+                    <div class="score-value mt-0.5 text-[22px] font-extrabold tabular-nums text-amber-600">${climbEasy}</div>
+                    <div class="score-unit text-[11px] text-slate-500">segundos</div>
                   </div>
-                  <div class="score-box">
-                    <div class="score-label">T. Difícil</div>
-                    <div class="score-value" style="color:#d97706;">${climbHard}</div>
-                    <div class="score-unit">segundos</div>
+                  <div class="score-box rounded-xl border border-slate-200 bg-white p-2.5 text-center">
+                    <div class="score-label text-xs font-semibold text-slate-500">T. difícil</div>
+                    <div class="score-value mt-0.5 text-[22px] font-extrabold tabular-nums text-amber-700">${climbHard}</div>
+                    <div class="score-unit text-[11px] text-slate-500">segundos</div>
                   </div>
                 </div>
                 ${renderMeter("Rendimiento", d.climbingRendimiento)}
                 ${renderMeter("Ritmo", d.climbingRitmo)}
                 ${renderMeter("Confianza", d.climbingConfianza)}
+              </div>`
+            : "";
+
+          return `
+          <article class="eval-card flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-blue-200 sm:p-6">
+            <div class="card-header flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
+              <div class="athlete-info flex min-w-0 items-center gap-3">
+                <div class="athlete-avatar inline-flex size-12 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-base font-bold text-blue-700" aria-hidden="true">${initials}</div>
+                <div class="min-w-0">
+                  <h3 class="athlete-name truncate text-base font-extrabold text-slate-900">${name}</h3>
+                  <p class="athlete-meta mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-slate-500">
+                    <span class="badge-gender rounded-md bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">${gender}</span>
+                    <span>${sport}</span>
+                    <span class="tabular-nums">${date}</span>
+                  </p>
+                </div>
               </div>
-              `
-                  : ""
-              }
-              ${!hasShootingData && !hasClimbingData ? '<p class="details-no-data">No hay métricas adicionales registradas para esta sesión.</p>' : ""}
+              ${emotionBadge(em)}
             </div>
 
-            <div class="detail-actions">
-              <button class="btn-json btn-view-raw" data-session-index="${index}">Ver datos completos</button>
-              <button class="btn-copy-id" data-id="${session.session_id}" title="Copiar ID de sesión">
-                📋 Copiar ID
-              </button>
-              <button type="button" class="btn-pdf-atleta btn-copy-id" style="margin-left: 8px;" title="Descargar PDF">
-    🖨️ PDF
-  </button>
+            <div class="session-highlights my-4 flex flex-wrap gap-2" aria-label="Resultados registrados">
+              ${shootingSummary}${climbingSummary}
+              ${!shootingSummary && !climbingSummary ? '<span class="session-highlight rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">Sin resultados cuantitativos registrados</span>' : ""}
             </div>
+
+            <div class="mt-auto">
+              <button type="button" class="btn-view-details inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 text-[13px] font-semibold text-blue-700 transition-colors hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2" data-session-index="${index}" aria-haspopup="dialog">
+                Ver informe detallado
+                ${ICON_CHEVRON}
+              </button>
+            </div>
+
+            <template id="session-detail-${index}">
+              <div class="card-details-content">
+                <div class="detail-layout grid items-start gap-5 min-[860px]:grid-cols-[minmax(260px,0.8fr)_minmax(0,1.7fr)]">
+                  <aside class="analysis-column flex min-w-0 flex-col gap-3.5 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5" aria-label="Análisis automatizado">
+                    <h3 class="analysis-heading text-[15px] font-extrabold text-slate-900">Análisis de apoyo</h3>
+                    <p class="analysis-hint -mt-1.5 text-xs leading-relaxed text-slate-500">La predicción complementa la lectura profesional y no constituye un diagnóstico.</p>
+                    <div class="recommendation-chip inline-flex w-fit items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 py-1.5 text-[13px] font-semibold text-blue-700">
+                      Recomendación registrada: <strong class="tabular-nums">${d.recomendacionFinal ?? "-"} / 10</strong>
+                    </div>
+                    <button type="button" class="btn-ai btn-predict-ia inline-flex h-10 w-fit cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70" data-session-index="${index}">
+                      ${ICON_SPARK}
+                      Analizar sesión
+                    </button>
+                    <div id="ia-result-${index}" class="${IA_PANEL_BASE} ${IA_PANEL_TONE.idle}">
+                      ${iaMessage("Resultado del análisis", 'Pulsa "Analizar sesión" para consultar la predicción y su certeza.')}
+                    </div>
+                  </aside>
+
+                  <section class="detail-column min-w-0" aria-label="Resultados de la sesión">
+                    <div class="metrics-grid grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      ${shootingSection}
+                      ${climbingSection}
+                      ${!hasShootingData && !hasClimbingData ? '<p class="details-no-data text-sm text-slate-500 sm:col-span-2">No hay métricas adicionales registradas para esta sesión.</p>' : ""}
+                    </div>
+
+                    <div class="detail-actions mt-4 flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
+                      <button type="button" class="btn-json btn-view-raw ${BTN_SECONDARY}" data-session-index="${index}">Ver datos completos</button>
+                      <button type="button" class="btn-copy-id ${BTN_SECONDARY}" data-id="${escapeHtml(session.session_id)}" title="Copiar ID de sesión">
+                        ${ICON_COPY}
+                        Copiar ID
+                      </button>
+                      <button type="button" class="btn-pdf-atleta ${BTN_SECONDARY}" title="Descargar PDF">
+                        ${ICON_PDF}
+                        PDF
+                      </button>
+                    </div>
                   </section>
                 </div>
               </div>
@@ -1711,30 +853,33 @@ import Layout from "../layouts/Layout.astro";
           const sp = getEmotionConfig(d.shootingPostEmotion);
           const cp = getEmotionConfig(d.climbingPostEmotion);
           return `
-          <tr>
-            <td>
-              <div style="display:flex;align-items:center;gap:10px;">
-                <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${getInitials(d.playerName)}</div>
+          <tr class="transition-colors hover:bg-slate-50/70">
+            <td class="px-5 py-3.5">
+              <div class="flex items-center gap-3">
+                <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-xs font-bold text-blue-700" aria-hidden="true">${escapeHtml(getInitials(d.playerName))}</span>
                 <div>
-                  <div style="font-weight:700;color:#1a202c;">${formatName(d.playerName)}</div>
-                  <div style="font-size:11px;color:#a0aec0;">${d.gender || ""}</div>
+                  <div class="font-semibold text-slate-900">${escapeHtml(formatName(d.playerName))}</div>
+                  <div class="text-xs text-slate-500">${escapeHtml(d.gender || "")}</div>
                 </div>
               </div>
             </td>
-            <td><span style="font-weight:600;">${d.selectedSport || "—"}</span></td>
-            <td><span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;background:#f7fafc;border:1px solid #e2e8f0;">${em.icon} ${em.label}</span></td>
-            <td>
-              <span style="color:#10b981;font-weight:700;">${d.shootingScoreEasy ?? "—"} pts</span>
-              <span style="color:#a0aec0;"> / </span>
-              <span style="color:#3b82f6;font-weight:600;">${d.shootingScoreHard ?? "—"} pts</span>
+            <td class="px-5 py-3.5 font-medium text-slate-700">${escapeHtml(d.selectedSport || "—")}</td>
+            <td class="px-5 py-3.5">${emotionBadge(em)}</td>
+            <td class="whitespace-nowrap px-5 py-3.5 tabular-nums">
+              <span class="font-bold text-emerald-600">${d.shootingScoreEasy ?? "—"} pts</span>
+              <span class="text-slate-300">/</span>
+              <span class="font-semibold text-blue-600">${d.shootingScoreHard ?? "—"} pts</span>
             </td>
-            <td>
-              <span style="color:#f59e0b;font-weight:700;">${d.climbingTimeEasy ? d.climbingTimeEasy.toFixed(1) + "s" : "—"}</span>
-              <span style="color:#a0aec0;"> / </span>
-              <span style="color:#d97706;font-weight:600;">${d.climbingTimeHard ? d.climbingTimeHard.toFixed(1) + "s" : "—"}</span>
+            <td class="whitespace-nowrap px-5 py-3.5 tabular-nums">
+              <span class="font-bold text-amber-600">${d.climbingTimeEasy ? d.climbingTimeEasy.toFixed(1) + " s" : "—"}</span>
+              <span class="text-slate-300">/</span>
+              <span class="font-semibold text-amber-700">${d.climbingTimeHard ? d.climbingTimeHard.toFixed(1) + " s" : "—"}</span>
             </td>
-            <td><span style="font-size:18px;">${sp.icon}</span> <span style="font-size:18px;">${cp.icon}</span></td>
-            <td style="color:#a0aec0;font-size:12px;">${formatDateTime(s.timestamp)}</td>
+            <td class="whitespace-nowrap px-5 py-3.5">
+              <span class="text-lg" title="Tiro: ${sp.label}">${sp.icon}</span>
+              <span class="text-lg" title="Escalada: ${cp.label}">${cp.icon}</span>
+            </td>
+            <td class="whitespace-nowrap px-5 py-3.5 text-xs tabular-nums text-slate-500">${formatDateTime(s.timestamp)}</td>
           </tr>`;
         })
         .join("");
@@ -1923,10 +1068,13 @@ import Layout from "../layouts/Layout.astro";
         );
         if (!resultPanel) return;
         const original = target.innerHTML;
-        target.innerHTML = "⏳ Analizando...";
+        target.textContent = "Analizando…";
         target.disabled = true;
-        resultPanel.innerHTML =
-          '<div class="ia-diagnosis-label">Análisis en curso</div><div class="ia-confidence">Estamos procesando los datos de esta sesión…</div>';
+        resultPanel.className = `${IA_PANEL_BASE} ${IA_PANEL_TONE.idle}`;
+        resultPanel.innerHTML = iaMessage(
+          "Análisis en curso",
+          "Estamos procesando los datos de esta sesión…",
+        );
 
         // ── LLAMADA A IA NATIVA ──
         const iaResponse = await import("../services/autorregulacion")
@@ -1946,33 +1094,56 @@ import Layout from "../layouts/Layout.astro";
           const prob = iaResponse.probabilidades
             ? (Math.max(...iaResponse.probabilidades) * 100).toFixed(1) + "%"
             : "No disponible"; // Se omite si el modelo ONNX no devolvió distribución de probabilidad
-          resultPanel.className = `ia-result-panel ${isOk ? "" : "danger"}`;
-          (resultPanel as HTMLElement).style.display = "block";
+          resultPanel.className = `${IA_PANEL_BASE} ${IA_PANEL_TONE[isOk ? "ok" : "risk"]}`;
           resultPanel.innerHTML = `
-            <div class="ia-diagnosis-label">🧠 Resultado del análisis automatizado</div>
-            <div class="ia-diagnosis-title ${isOk ? "ok" : "risk"}">${isOk ? "✅" : "⚠️"} ${iaResponse.etiqueta}</div>
-            <div class="ia-confidence">Certeza informada por el modelo: <strong>${prob}</strong></div>
-            <div class="ia-confidence">Resultado de apoyo; no reemplaza la evaluación profesional.</div>
+            <div class="ia-diagnosis-label text-xs font-semibold text-slate-500">Resultado del análisis automatizado</div>
+            <div class="ia-diagnosis-title ${isOk ? "ok text-emerald-700" : "risk text-amber-700"} mt-1.5 flex items-center gap-2 text-[17px] font-extrabold">${isOk ? ICON_OK : ICON_WARN}<span>${escapeHtml(iaResponse.etiqueta)}</span></div>
+            <div class="ia-confidence mt-2 text-[13px] text-slate-600">Certeza informada por el modelo: <strong class="text-slate-900">${prob}</strong></div>
+            <div class="ia-confidence mt-1 text-xs text-slate-500">Resultado de apoyo; no reemplaza la evaluación profesional.</div>
           `;
           registrarEventoLog(
             `Análisis de IA ejecutado para sesión ${session.session_id.substring(0, 8)}`,
           );
         } else {
-          resultPanel.innerHTML =
-            '<div class="ia-diagnosis-label">Análisis no disponible</div><div class="ia-confidence">No se pudo cargar el modelo localmente. Revisa la consola para más detalles.</div>';
-          showToast("❌ No se pudo inicializar la IA nativa.");
+          resultPanel.className = `${IA_PANEL_BASE} ${IA_PANEL_TONE.idle}`;
+          resultPanel.innerHTML = iaMessage(
+            "Análisis no disponible",
+            "No se pudo cargar el modelo localmente. Revisa la consola para más detalles.",
+          );
+          showToast("No se pudo iniciar el análisis automatizado.");
         }
       }
     });
+    async function loadDataSilencioso() {
+      try {
+        const nuevosDatos = await fetchSportmindData();
+        
+        // Verificamos si hay cambios en la cantidad o contenido para actualizar sin molestar al usuario
+        if (nuevosDatos.length !== allSessions.length) {
+          allSessions = nuevosDatos;
+          populateSportFilter(allSessions);
+          updateKPIs(allSessions);
+          applyFilters();
+          if (sourcesCount)
+            sourcesCount.textContent = `${allSessions.length} registros en la nube`;
+          showToast("Datos actualizados desde S3");
+        }
+      } catch (err) {
+        // Fallos silenciosos en segundo plano para no interrumpir al usuario si hay un microcorte
+        console.error("Error en sincronización automática:", err);
+      }
+    } 
 
     // ── Cambio de vista ──
     function setView(view: "cards" | "table" | "charts") {
       currentView = view;
+      const order = ["cards", "table", "charts"];
       [viewCardsBtn, viewTableBtn, viewChartsBtn].forEach((btn, i) => {
-        btn?.classList.toggle(
-          "active",
-          ["cards", "table", "charts"][i] === view,
-        );
+        if (!btn) return;
+        const active = order[i] === view;
+        btn.classList.remove(...(active ? VIEW_INACTIVE : VIEW_ACTIVE));
+        btn.classList.add(...(active ? VIEW_ACTIVE : VIEW_INACTIVE));
+        btn.setAttribute("aria-pressed", String(active));
       });
       renderCurrentView();
     }
@@ -2022,6 +1193,11 @@ import Layout from "../layouts/Layout.astro";
     // ── Inicio ──
     restringirVistasPorRol();
     loadData();
+    // Actualización automática cada 15 segundos (Polling en segundo plano)
+    setInterval(() => {
+      // Llamamos a loadData de forma silenciosa para no mostrar el skeleton de carga completo
+    loadDataSilencioso();
+    }, 15000); //15 segundos
   </script>
   <script>
     import { inicializarGeneradorPdf } from "../services/generadorpdf";

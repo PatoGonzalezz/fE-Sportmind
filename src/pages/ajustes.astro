@@ -1,0 +1,145 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout>
+  <div class="mx-auto w-full max-w-xl">
+    <header class="mb-6">
+      <h1 class="text-[1.65rem] font-extrabold tracking-tight text-slate-900 sm:text-3xl">Cambiar contraseña</h1>
+      <p class="mt-1.5 text-sm leading-relaxed text-slate-500">Actualiza tu clave de acceso a la plataforma.</p>
+    </header>
+
+    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <form id="ajustesForm" class="space-y-5">
+        <div>
+          <label for="userEmail" class="mb-1.5 block text-[13px] font-semibold text-slate-600">Correo electrónico</label>
+          <input
+            type="email"
+            id="userEmail"
+            disabled
+            class="block w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-sm text-slate-500"
+          />
+        </div>
+
+        <div>
+          <label for="userPassword" class="mb-1.5 block text-[13px] font-semibold text-slate-600">Nueva contraseña</label>
+          <div class="relative">
+            <input
+              type="password"
+              id="userPassword"
+              required
+              autocomplete="new-password"
+              placeholder="Ingresa tu nueva contraseña segura"
+              class="block w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-3.5 pr-11 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+            />
+            <button
+              type="button"
+              id="btnTogglePassword"
+              aria-label="Mostrar contraseña"
+              aria-pressed="false"
+              class="absolute right-1.5 top-1/2 inline-flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            >
+              <svg viewBox="0 0 20 20" fill="none" class="size-5" aria-hidden="true">
+                <path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                <circle cx="10" cy="10" r="2.2" stroke="currentColor" stroke-width="1.6" />
+                <path id="eyeSlash" class="hidden" d="M4 16L16 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          id="btnSave"
+          class="inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Actualizar contraseña
+        </button>
+      </form>
+
+      <div id="msgBox" role="status" aria-live="polite" class="hidden"></div>
+    </section>
+  </div>
+
+  <script>
+    const emailInput = document.getElementById("userEmail") as HTMLInputElement;
+    const passwordInput = document.getElementById("userPassword") as HTMLInputElement;
+    const ajustesForm = document.getElementById("ajustesForm") as HTMLFormElement;
+    const btnSave = document.getElementById("btnSave") as HTMLButtonElement;
+    const msgBox = document.getElementById("msgBox") as HTMLElement;
+    const btnToggle = document.getElementById("btnTogglePassword") as HTMLButtonElement;
+    const eyeSlash = document.getElementById("eyeSlash") as unknown as SVGElement;
+
+    const MSG_BASE = "mt-4 rounded-xl border px-3.5 py-3 text-center text-sm font-medium";
+    const MSG_TONE = {
+      success: "border-emerald-200 bg-emerald-50 text-emerald-700",
+      error: "border-red-200 bg-red-50 text-red-700",
+      loading: "border-blue-200 bg-blue-50 text-blue-700",
+    };
+    const BTN_LABEL = btnSave.textContent?.trim() || "Actualizar contraseña";
+
+    const token = localStorage.getItem("sportmind_token");
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        emailInput.value = payload.email || "";
+      } catch (e) {
+        console.error("Error al leer datos de sesión:", e);
+      }
+    }
+
+    function showMsg(text: string, type: "success" | "error" | "loading") {
+      msgBox.textContent = text;
+      msgBox.className = `${MSG_BASE} ${MSG_TONE[type]}`;
+    }
+
+    function hideMsg() {
+      msgBox.textContent = "";
+      msgBox.className = "hidden";
+    }
+
+    btnToggle.addEventListener("click", () => {
+      const show = passwordInput.type === "password";
+      passwordInput.type = show ? "text" : "password";
+      eyeSlash.classList.toggle("hidden", !show);
+      btnToggle.setAttribute("aria-pressed", String(show));
+      btnToggle.setAttribute("aria-label", show ? "Ocultar contraseña" : "Mostrar contraseña");
+    });
+
+    ajustesForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      showMsg("Actualizando contraseña…", "loading");
+      btnSave.disabled = true;
+      btnSave.textContent = "Actualizando…";
+
+      try {
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "changePassword",
+            email: emailInput.value,
+            newPassword: passwordInput.value,
+          }),
+        });
+
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || "No se pudo actualizar la contraseña.");
+        }
+
+        showMsg("¡Contraseña actualizada con éxito!", "success");
+        setTimeout(() => {
+          passwordInput.value = "";
+          btnSave.disabled = false;
+          btnSave.textContent = BTN_LABEL;
+          hideMsg();
+        }, 2000);
+      } catch (error: any) {
+        showMsg(error.message || "Error al procesar la solicitud.", "error");
+        btnSave.disabled = false;
+        btnSave.textContent = BTN_LABEL;
+      }
+    });
+  </script>
+</Layout>

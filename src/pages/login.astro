@@ -17,7 +17,7 @@ import "../styles/global.css";
           try {
             const payload = JSON.parse(atob(token.split(".")[1]));
             if (!payload.exp || payload.exp * 1000 > Date.now()) {
-              window.location.replace("/dashboard");
+              window.location.replace("/inicio");
             }
           } catch {}
         }
@@ -38,7 +38,6 @@ import "../styles/global.css";
         padding: 24px;
       }
 
-      /* Decoración de fondo */
       .bg-blob {
         position: fixed;
         border-radius: 50%;
@@ -47,7 +46,6 @@ import "../styles/global.css";
         z-index: 0;
       }
 
-      /* Card principal */
       .login-wrapper {
         display: flex;
         gap: 0;
@@ -62,7 +60,6 @@ import "../styles/global.css";
         z-index: 1;
       }
 
-      /* Panel izquierdo – Hero */
       .login-hero {
         flex: 1;
         background: linear-gradient(145deg, #1e3a5f 0%, #1e293b 50%, #0f172a 100%);
@@ -125,22 +122,21 @@ import "../styles/global.css";
         flex-shrink: 0;
       }
 
-      /* Panel derecho – Formulario */
       .login-form-panel {
-        width: 360px;
+        width: 380px;
         flex-shrink: 0;
-        padding: 48px 40px;
+        padding: 40px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         background: #ffffff;
       }
 
-      .form-header { margin-bottom: 32px; }
+      .form-header { margin-bottom: 24px; }
       .form-header h2 { font-size: 22px; font-weight: 800; color: #1a202c; letter-spacing: -0.3px; }
       .form-header p { font-size: 14px; color: #718096; margin-top: 6px; line-height: 1.5; }
 
-      .form-group { margin-bottom: 20px; }
+      .form-group { margin-bottom: 16px; }
       .form-label {
         display: block;
         font-size: 13px; font-weight: 600;
@@ -148,11 +144,11 @@ import "../styles/global.css";
       }
       .form-input {
         width: 100%;
-        padding: 12px 14px;
+        padding: 11px 14px;
         background: #f7fafc;
         border: 1.5px solid #e2e8f0;
         border-radius: 12px;
-        font-size: 15px; color: #1a202c;
+        font-size: 14px; color: #1a202c;
         transition: all 0.2s ease;
         outline: none;
       }
@@ -161,29 +157,38 @@ import "../styles/global.css";
         background: #eff6ff;
         box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
       }
-      .form-input::placeholder { color: #a0aec0; }
 
       .form-hint { font-size: 12px; color: #718096; margin-top: 6px; line-height: 1.5; }
 
       .btn-submit {
         width: 100%;
-        padding: 13px;
+        padding: 12px;
         background: linear-gradient(135deg, #3b82f6, #2563eb);
         color: #fff;
         border: none; border-radius: 12px;
-        font-size: 15px; font-weight: 700;
+        font-size: 14px; font-weight: 700;
         cursor: pointer;
         transition: all 0.25s ease;
-        margin-top: 8px;
+        margin-top: 6px;
         box-shadow: 0 4px 16px rgba(59,130,246,0.3);
-        letter-spacing: 0.1px;
       }
       .btn-submit:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,0.4); }
-      .btn-submit:active:not(:disabled) { transform: translateY(0); }
-      .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+      .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+      .toggle-mode {
+        text-align: center;
+        margin-top: 16px;
+        font-size: 13px;
+        color: #718096;
+      }
+      .toggle-mode button {
+        background: none; border: none; color: #3b82f6;
+        font-weight: 600; cursor: pointer; text-decoration: underline;
+        font-size: 13px; padding: 0;
+      }
 
       .msg-box {
-        margin-top: 16px;
+        margin-top: 14px;
         padding: 10px 14px;
         border-radius: 10px;
         font-size: 13px; font-weight: 500;
@@ -196,7 +201,6 @@ import "../styles/global.css";
       .msg-box.error   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
       .msg-box.warning { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
 
-      /* Responsive */
       @media (max-width: 680px) {
         .login-hero { display: none; }
         .login-form-panel { width: 100%; }
@@ -206,12 +210,10 @@ import "../styles/global.css";
   </head>
 
   <body>
-    <!-- Blobs de fondo decorativos -->
     <div class="bg-blob" style="width:350px;height:350px;background:rgba(59,130,246,0.08);top:-100px;left:-80px;"></div>
     <div class="bg-blob" style="width:250px;height:250px;background:rgba(139,92,246,0.07);bottom:-50px;right:100px;"></div>
 
     <div class="login-wrapper">
-
       <!-- Panel Hero (izquierdo) -->
       <div class="login-hero">
         <div class="hero-brand">
@@ -230,15 +232,15 @@ import "../styles/global.css";
         <div class="hero-features">
           <div class="feature-item"><span class="icon">📊</span> Evaluaciones en tiempo real desde la nube</div>
           <div class="feature-item"><span class="icon">🧠</span> Análisis de autorregulación emocional con IA</div>
-          <div class="feature-item"><span class="icon">🔒</span> Acceso seguro con Amazon Cognito</div>
+          <div class="feature-item"><span class="icon">🔒</span> Acceso seguro unificado</div>
         </div>
       </div>
 
       <!-- Panel Formulario (derecho) -->
       <div class="login-form-panel">
         <div class="form-header">
-          <h2>Iniciar Sesión</h2>
-          <p>Ingresa tus credenciales para acceder a la plataforma.</p>
+          <h2 id="formTitle">Iniciar Sesión</h2>
+          <p id="formSubtitle">Ingresa tus credenciales para acceder a la plataforma.</p>
         </div>
 
         <form id="loginForm" novalidate>
@@ -251,6 +253,7 @@ import "../styles/global.css";
             />
           </div>
 
+          <!-- Contraseña actual (para login) -->
           <div id="divPasswordActual" class="form-group">
             <label class="form-label" for="password">Contraseña</label>
             <input
@@ -260,6 +263,7 @@ import "../styles/global.css";
             />
           </div>
 
+          <!-- Nueva contraseña (para primer ingreso o cambio de contraseña) -->
           <div id="divNuevaPassword" class="form-group" style="display:none;">
             <label class="form-label" for="newPassword" style="color:#d97706;">
               Nueva Contraseña
@@ -268,7 +272,7 @@ import "../styles/global.css";
               type="password" id="newPassword" name="newPassword"
               class="form-input" placeholder="Nueva contraseña segura"
             />
-            <p class="form-hint">⚠️ Tu cuenta es nueva. Debes elegir una contraseña permanente para continuar.</p>
+            <p id="hintText" class="form-hint">⚠️ Tu cuenta es nueva. Debes elegir una contraseña permanente para continuar.</p>
           </div>
 
           <button type="submit" id="btnSubmit" class="btn-submit">
@@ -276,24 +280,20 @@ import "../styles/global.css";
           </button>
         </form>
 
+        <div class="toggle-mode">
+          <button type="button" id="togglePasswordBtn">¿Olvidaste o quieres cambiar tu contraseña?</button>
+        </div>
+
         <div id="mensaje" class="msg-box"></div>
       </div>
     </div>
 
     <script>
-      import {
-        CognitoIdentityProviderClient,
-        InitiateAuthCommand,
-        RespondToAuthChallengeCommand,
-      } from "@aws-sdk/client-cognito-identity-provider";
-
-      const REGION = "us-east-1";
-      const CLIENT_ID = "4ul825nprfht1evlpqmf5v5jd3";
-
-      const client = new CognitoIdentityProviderClient({ region: REGION });
+      const LOGIN_API_URL = "/api/login";
 
       let cognitoSession: string | undefined;
       let currentEmail: string | undefined;
+      let isChangingPasswordMode = false;
 
       const loginForm = document.getElementById("loginForm") as HTMLFormElement;
       const emailInput = document.getElementById("email") as HTMLInputElement;
@@ -301,16 +301,44 @@ import "../styles/global.css";
       const newPasswordInput = document.getElementById("newPassword") as HTMLInputElement;
       const divPasswordActual = document.getElementById("divPasswordActual") as HTMLElement;
       const divNuevaPassword = document.getElementById("divNuevaPassword") as HTMLElement;
-      const msgEl = document.getElementById("mensaje") as HTMLElement;
+      const formTitle = document.getElementById("formTitle") as HTMLElement;
+      const formSubtitle = document.getElementById("formSubtitle") as HTMLElement;
+      const hintText = document.getElementById("hintText") as HTMLElement;
       const btnSubmit = document.getElementById("btnSubmit") as HTMLButtonElement;
+      const togglePasswordBtn = document.getElementById("togglePasswordBtn") as HTMLButtonElement;
+      const msgEl = document.getElementById("mensaje") as HTMLElement;
 
       function showMsg(text: string, type: 'loading'|'success'|'error'|'warning') {
         msgEl.textContent = text;
         msgEl.className = `msg-box visible ${type}`;
       }
-      function hideMsg() {
+
+      // Alternar entre modo Login y modo Cambiar Contraseña
+      togglePasswordBtn.addEventListener("click", () => {
+        isChangingPasswordMode = !isChangingPasswordMode;
         msgEl.className = 'msg-box';
-      }
+
+        if (isChangingPasswordMode) {
+          formTitle.textContent = "Cambiar Contraseña";
+          formSubtitle.textContent = "Ingresa tu correo y define tu nueva clave.";
+          divPasswordActual.style.display = "none";
+          passwordInput.required = false;
+          divNuevaPassword.style.display = "block";
+          newPasswordInput.required = true;
+          hintText.textContent = "Introduce la nueva contraseña permanente.";
+          btnSubmit.textContent = "Actualizar Contraseña";
+          togglePasswordBtn.textContent = "← Volver a Iniciar Sesión";
+        } else {
+          formTitle.textContent = "Iniciar Sesión";
+          formSubtitle.textContent = "Ingresa tus credenciales para acceder a la plataforma.";
+          divPasswordActual.style.display = "block";
+          passwordInput.required = true;
+          divNuevaPassword.style.display = "none";
+          newPasswordInput.required = false;
+          btnSubmit.textContent = "Entrar a SportMind";
+          togglePasswordBtn.textContent = "¿Olvidaste o quieres cambiar tu contraseña?";
+        }
+      });
 
       loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -318,64 +346,88 @@ import "../styles/global.css";
         const password = passwordInput.value;
         const newPassword = newPasswordInput.value;
 
-        showMsg("Verificando credenciales...", "loading");
         btnSubmit.disabled = true;
 
-        try {
-          if (!cognitoSession) {
-            currentEmail = email;
-            const command = new InitiateAuthCommand({
-              AuthFlow: "USER_PASSWORD_AUTH",
-              ClientId: CLIENT_ID,
-              AuthParameters: { USERNAME: email, PASSWORD: password },
+        if (isChangingPasswordMode) {
+          showMsg("Actualizando contraseña...", "loading");
+          try {
+            const response = await fetch(LOGIN_API_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                action: "changePassword",
+                email,
+                newPassword
+              })
             });
-            const response = await client.send(command);
 
-            if (response.ChallengeName === "NEW_PASSWORD_REQUIRED") {
-              cognitoSession = response.Session;
-              divPasswordActual.style.display = "none";
-              divNuevaPassword.style.display = "block";
-              if (newPasswordInput) newPasswordInput.required = true;
-              btnSubmit.textContent = "Guardar y Entrar";
+            const result = await response.json();
+            if (!response.ok || !result.success) throw new Error(result.error || "No se pudo actualizar la contraseña.");
+
+            showMsg("✅ ¡Contraseña actualizada con éxito! Ya puedes iniciar sesión.", "success");
+            setTimeout(() => {
+              togglePasswordBtn.click(); // Volver al login
               btnSubmit.disabled = false;
-              showMsg("Debes establecer una nueva contraseña para continuar.", "warning");
-              return;
-            }
-
-            if (response.AuthenticationResult?.IdToken) {
-              procesarLoginExitoso(response.AuthenticationResult.IdToken);
-            } else {
-              throw new Error("No se recibió el token de autenticación.");
-            }
-          } else {
-            const command = new RespondToAuthChallengeCommand({
-              ChallengeName: "NEW_PASSWORD_REQUIRED",
-              ClientId: CLIENT_ID,
-              Session: cognitoSession,
-              ChallengeResponses: { USERNAME: currentEmail || "", NEW_PASSWORD: newPassword },
-            });
-            const response = await client.send(command);
-            if (response.AuthenticationResult?.IdToken) {
-              procesarLoginExitoso(response.AuthenticationResult.IdToken);
-            } else {
-              throw new Error("No se pudo establecer la nueva contraseña.");
-            }
+            }, 1500);
+          } catch (error: any) {
+            showMsg("❌ " + (error.message || "Error al actualizar."), "error");
+            btnSubmit.disabled = false;
           }
-        } catch (error) {
+          return;
+        }
+
+        // Flujo normal de Login
+        showMsg("Verificando credenciales...", "loading");
+
+        try {
+          let payload: any = { email, password };
+
+          if (cognitoSession) {
+            payload = {
+              email: currentEmail,
+              password,
+              newPassword,
+              session: cognitoSession,
+              action: "respondChallenge"
+            };
+          } else {
+            currentEmail = email;
+          }
+
+          const response = await fetch(LOGIN_API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+
+          const result = await response.json();
+
+          if (result.challenge === "NEW_PASSWORD_REQUIRED") {
+            cognitoSession = result.session;
+            divPasswordActual.style.display = "none";
+            divNuevaPassword.style.display = "block";
+            if (newPasswordInput) newPasswordInput.required = true;
+            btnSubmit.textContent = "Guardar y Entrar";
+            btnSubmit.disabled = false;
+            showMsg("⚠️ Debes establecer una nueva contraseña.", "warning");
+            return;
+          }
+
+          if (!response.ok || !result.success) {
+            throw new Error(result.error || "Credenciales inválidas.");
+          }
+
+          localStorage.setItem("sportmind_token", result.token);
+          showMsg("✅ ¡Bienvenido! Redirigiendo...", "success");
+          setTimeout(() => { window.location.replace("/inicio"); }, 600);
+
+        } catch (error: any) {
           console.error(error);
-          const errorMsg = error instanceof Error ? error.message : "Credenciales incorrectas.";
-          showMsg("❌ " + errorMsg, "error");
+          showMsg("❌ " + (error.message || "Error al iniciar sesión."), "error");
           cognitoSession = undefined;
           btnSubmit.disabled = false;
         }
       });
-
-      function procesarLoginExitoso(idToken: string) {
-        localStorage.setItem("sportmind_token", idToken);
-        showMsg("✅ ¡Bienvenido! Redirigiendo...", "success");
-        btnSubmit.disabled = true;
-        setTimeout(() => { window.location.replace("/dashboard"); }, 600);
-      }
     </script>
   </body>
-</html>
+</html> 
