@@ -3,63 +3,95 @@ import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout>
-  <div class="mx-auto w-full max-w-xl">
-    <header class="mb-6">
-      <h1 class="text-[1.65rem] font-extrabold tracking-tight text-slate-900 sm:text-3xl">Cambiar contraseña</h1>
-      <p class="mt-1.5 text-sm leading-relaxed text-slate-500">Actualiza tu clave de acceso a la plataforma.</p>
-    </header>
+<div class="flex-1 flex flex-col items-center justify-center w-full max-w-2xl mx-auto px-4 py-8">
+  <!-- Encabezado Modernizado -->
+  <div class="text-center mb-10">
+    <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-tr from-blue-600 to-blue-800 text-white mb-6 shadow-lg shadow-blue-500/30">
+      <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+      </svg>
+    </div>
+    <h1 class="text-4xl font-extrabold text-slate-800 tracking-tight mb-3">Seguridad de la Cuenta</h1>
+    <p class="text-slate-500 text-lg max-w-md mx-auto">Actualiza tu clave de acceso para mantener tu información clínica protegida.</p>
+  </div>
 
-    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-      <form id="ajustesForm" class="space-y-5">
+  <!-- Tarjeta del Formulario -->
+  <div class="w-full bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
+    <div class="p-8 sm:p-12">
+      <!-- ID exacto: ajustesForm -->
+      <form id="ajustesForm" class="space-y-8">
+        
+        <!-- Campo Correo -->
         <div>
-          <label for="userEmail" class="mb-1.5 block text-[13px] font-semibold text-slate-600">Correo electrónico</label>
-          <input
-            type="email"
-            id="userEmail"
-            disabled
-            class="block w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-sm text-slate-500"
-          />
+          <label for="userEmail" class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Correo electrónico</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+            <!-- ID exacto: userEmail con disabled -->
+            <input
+              type="email"
+              id="userEmail"
+              disabled
+              value="pat.gonzalezg@duocuc.cl" 
+              class="block w-full pl-12 pr-4 py-4 border-2 border-slate-100 rounded-xl bg-slate-100 text-slate-500 sm:text-base cursor-not-allowed outline-none"
+            />
+          </div>
         </div>
 
+        <!-- Campo Nueva Contraseña -->
         <div>
-          <label for="userPassword" class="mb-1.5 block text-[13px] font-semibold text-slate-600">Nueva contraseña</label>
+          <label for="userPassword" class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Nueva contraseña</label>
           <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+              </svg>
+            </div>
+            <!-- ID exacto: userPassword -->
             <input
               type="password"
-              id="userPassword"
+              id="userPassword" 
               required
-              autocomplete="new-password"
               placeholder="Ingresa tu nueva contraseña segura"
-              class="block w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-3.5 pr-11 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+              class="block w-full pl-12 pr-12 py-4 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 bg-white sm:text-base transition-all duration-200 text-slate-800 placeholder-slate-400 outline-none"
             />
+            
+            <!-- Botón del ojo para mostrar/ocultar (ID: btnTogglePassword) -->
             <button
               type="button"
               id="btnTogglePassword"
               aria-label="Mostrar contraseña"
               aria-pressed="false"
-              class="absolute right-1.5 top-1/2 inline-flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              class="absolute inset-y-0 right-0 pr-4 flex items-center cursor-pointer hover:bg-slate-50 rounded-r-xl transition-colors"
             >
-              <svg viewBox="0 0 20 20" fill="none" class="size-5" aria-hidden="true">
-                <path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+              <svg viewBox="0 0 20 20" fill="none" class="w-6 h-6 text-slate-400 hover:text-blue-600" aria-hidden="true">
+                <path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
                 <circle cx="10" cy="10" r="2.2" stroke="currentColor" stroke-width="1.6" />
-                <path id="eyeSlash" class="hidden" d="M4 16L16 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                <path id="eyeSlash" class="hidden" d="M4 16L16 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
           </div>
         </div>
 
+        <!-- Contenedor para los mensajes de error/éxito (ID: msgBox) -->
+        <div id="msgBox" role="status" aria-live="polite" class="hidden mt-4 text-center"></div>
+
+        <!-- Botón de envío (ID: btnSave) -->
         <button
           type="submit"
           id="btnSave"
-          class="inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          class="w-full flex justify-center items-center py-4 px-6 rounded-xl shadow-lg shadow-blue-600/30 text-base font-bold text-white bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 focus:outline-none focus:ring-4 focus:ring-blue-500/50 transition-all duration-300 transform hover:-translate-y-1"
         >
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
           Actualizar contraseña
         </button>
       </form>
-
-      <div id="msgBox" role="status" aria-live="polite" class="hidden"></div>
-    </section>
+    </div>
   </div>
+</div>
 
   <script>
     const emailInput = document.getElementById("userEmail") as HTMLInputElement;
