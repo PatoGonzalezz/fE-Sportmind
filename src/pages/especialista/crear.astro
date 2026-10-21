@@ -3,385 +3,278 @@ import Layout from "../../layouts/Layout.astro";
 ---
 
 <Layout>
-  <style>
-    h1,
-    h2,
-    h3 {
-      letter-spacing: -0.3px;
-    }
-
-    .page-header {
-      margin-bottom: 32px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #e2e8f0;
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .page-title {
-      font-size: 24px;
-      font-weight: 800;
-      color: #1a202c;
-    }
-    .page-subtitle {
-      font-size: 14px;
-      color: #718096;
-      margin-top: 4px;
-    }
-
-    .btn-back {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #fff;
-      color: #4a5568;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 9px 16px;
-      font-size: 13px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all 0.2s;
-    }
-    .btn-back:hover {
-      border-color: #cbd5e0;
-      color: #1a202c;
-    }
-
-    /* Formulario */
-    .form-card {
-      background: #fff;
-      border: 1px solid #e2e8f0;
-      border-radius: 22px;
-      padding: 36px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-      max-width: 640px;
-    }
-    .form-card-title {
-      font-size: 17px;
-      font-weight: 700;
-      color: #1a202c;
-      margin-bottom: 6px;
-    }
-    .form-card-desc {
-      font-size: 14px;
-      color: #718096;
-      margin-bottom: 28px;
-      line-height: 1.55;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-    }
-    @media (max-width: 560px) {
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-    .form-group {
-      margin-bottom: 18px;
-    }
-    .form-group-full {
-      grid-column: span 2;
-    }
-    @media (max-width: 560px) {
-      .form-group-full {
-        grid-column: span 1;
-      }
-    }
-
-    .form-label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: #4a5568;
-      margin-bottom: 7px;
-    }
-    .form-input,
-    .form-select {
-      width: 100%;
-      padding: 12px 14px;
-      background: #f7fafc;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 12px;
-      font-size: 14px;
-      color: #1a202c;
-      outline: none;
-      transition: all 0.2s ease;
-      font-family: inherit;
-    }
-    .form-input:focus,
-    .form-select:focus {
-      border-color: #3b82f6;
-      background: #eff6ff;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-    .form-input::placeholder {
-      color: #a0aec0;
-    }
-
-    .form-divider {
-      border: none;
-      border-top: 1px solid #f0f4f8;
-      margin: 28px 0;
-    }
-
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-    }
-    .btn-cancel {
-      background: #f7fafc;
-      color: #718096;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 12px 22px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      transition: all 0.2s;
-    }
-    .btn-cancel:hover {
-      background: #e2e8f0;
-      color: #1a202c;
-    }
-    .btn-submit {
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      padding: 12px 28px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      box-shadow: 0 3px 12px rgba(59, 130, 246, 0.3);
-    }
-    .btn-submit:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 5px 18px rgba(59, 130, 246, 0.4);
-    }
-    .btn-submit:active {
-      transform: translateY(0);
-    }
-
-    /* Toast */
-    .toast-success {
-      position: fixed;
-      bottom: 28px;
-      right: 28px;
-      z-index: 9999;
-      background: #ecfdf5;
-      color: #059669;
-      border: 1.5px solid #a7f3d0;
-      border-radius: 12px;
-      padding: 14px 20px;
-      font-size: 14px;
-      font-weight: 700;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transform: translateY(80px);
-      opacity: 0;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      pointer-events: none;
-    }
-    .toast-success.visible {
-      transform: translateY(0);
-      opacity: 1;
-    }
-
-    /* Info lateral */
-    .info-cards {
-      margin-top: 32px;
-    }
-    .info-card {
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      border-radius: 14px;
-      padding: 16px 20px;
-      font-size: 13px;
-      color: #1d4ed8;
-      margin-bottom: 12px;
-      line-height: 1.55;
-    }
-    .info-card strong {
-      display: block;
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-    .info-card.warning {
-      background: #fffbeb;
-      border-color: #fde68a;
-      color: #92400e;
-    }
-  </style>
-
-  <div class="page-header">
-    <div>
-      <h1 class="page-title">👤 Crear entrenador/profesional</h1>
-      <p class="page-subtitle">
+  <header class="mb-6 flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div class="max-w-xl">
+      <h1 class="text-[1.65rem] font-extrabold tracking-tight text-slate-900 sm:text-3xl">Crear entrenador/profesional</h1>
+      <p class="mt-1.5 text-sm leading-relaxed text-slate-500">
         Registra las credenciales de un nuevo profesional en el sistema.
       </p>
     </div>
-    <a href="/dashboard" class="btn-back">← Volver al Dashboard</a>
-  </div>
+    <a
+      href="/dashboard"
+      class="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+    >
+      <svg viewBox="0 0 20 20" fill="none" class="size-4" aria-hidden="true">
+        <path d="M12 5l-5 5 5 5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      Volver al dashboard
+    </a>
+  </header>
 
-  <div style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;">
+  <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
     <!-- Formulario principal -->
-    <div class="form-card" style="flex:1;min-width:320px;">
-      <h2 class="form-card-title">Información del entrenador/profesional</h2>
-      <p class="form-card-desc">
-        Completa todos los campos requeridos. El entrenador/profesional recibirá
-        sus credenciales de acceso al sistema.
+    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8" aria-labelledby="form-title">
+      <h2 id="form-title" class="text-lg font-extrabold tracking-tight text-slate-900">
+        Información del entrenador/profesional
+      </h2>
+      <p class="mb-6 mt-1.5 text-sm leading-relaxed text-slate-500">
+        Completa todos los campos requeridos (<span class="text-red-500">*</span>). El entrenador/profesional recibirá sus credenciales de acceso al sistema.
       </p>
 
-      <form id="form-especialista" novalidate>
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label" for="nombre">Nombre completo *</label>
+      <form id="form-especialista" class="space-y-5">
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label for="nombre" class="mb-1.5 block text-[13px] font-semibold text-slate-600">
+              Nombre completo <span class="text-red-500" aria-hidden="true">*</span>
+            </label>
             <input
               type="text"
               id="nombre"
-              class="form-input"
-              placeholder="Ej: María González"
               required
+              autocomplete="off"
+              placeholder="Ej: María González"
+              class="block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
             />
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="email">Correo electrónico *</label>
+          <div>
+            <label for="email" class="mb-1.5 block text-[13px] font-semibold text-slate-600">
+              Correo electrónico <span class="text-red-500" aria-hidden="true">*</span>
+            </label>
             <input
               type="email"
               id="email"
-              class="form-input"
-              placeholder="correo@sportmind.com"
               required
+              autocomplete="off"
+              placeholder="correo@sportmind.com"
+              class="block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
             />
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="rol">Especialidad *</label>
-            <select id="rol" class="form-select">
-              <option value="">Selecciona una especialidad</option>
-              <option value="psicologo">🧠 Psicólogo Deportivo</option>
-              <option value="preparador">💪 Preparador Físico</option>
-              <option value="kinesiologo">⚕️ Kinesiólogo</option>
-              <option value="nutricionista">🥗 Nutricionista</option>
-              <option value="entrenador">🏆 Entrenador</option>
-            </select>
+          <div>
+            <label for="rol" class="mb-1.5 block text-[13px] font-semibold text-slate-600">
+              Especialidad <span class="text-red-500" aria-hidden="true">*</span>
+            </label>
+            <div class="relative">
+              <select
+                id="rol"
+                required
+                class="block w-full cursor-pointer appearance-none rounded-xl border border-slate-300 bg-white py-2.5 pl-3.5 pr-10 text-sm text-slate-900 transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+              >
+                <option value="">Selecciona una especialidad</option>
+                <option value="psicologo">Psicólogo deportivo</option>
+                <option value="preparador">Preparador físico</option>
+                <option value="kinesiologo">Kinesiólogo</option>
+                <option value="nutricionista">Nutricionista</option>
+                <option value="entrenador">Entrenador</option>
+              </select>
+              <svg viewBox="0 0 20 20" fill="none" class="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" aria-hidden="true">
+                <path d="M5 7.5l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="telefono">Teléfono (opcional)</label>
+          <div>
+            <label for="telefono" class="mb-1.5 block text-[13px] font-semibold text-slate-600">
+              Teléfono <span class="font-normal text-slate-400">(opcional)</span>
+            </label>
             <input
               type="tel"
               id="telefono"
-              class="form-input"
+              autocomplete="off"
               placeholder="+56 9 1234 5678"
+              class="block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
             />
           </div>
 
-          <div class="form-group form-group-full">
-            <label class="form-label" for="password"
-              >Contraseña temporal *</label
-            >
-            <input
-              type="password"
-              id="password"
-              class="form-input"
-              placeholder="Mínimo 8 caracteres"
-              required
-            />
+          <div class="sm:col-span-2">
+            <label for="password" class="mb-1.5 block text-[13px] font-semibold text-slate-600">
+              Contraseña temporal <span class="text-red-500" aria-hidden="true">*</span>
+            </label>
+            <div class="relative">
+              <input
+                type="password"
+                id="password"
+                required
+                minlength="8"
+                autocomplete="new-password"
+                placeholder="Mínimo 8 caracteres"
+                class="block w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-3.5 pr-11 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+              />
+              <button
+                type="button"
+                id="btn-toggle-password"
+                aria-label="Mostrar contraseña"
+                aria-pressed="false"
+                class="absolute right-1.5 top-1/2 inline-flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              >
+                <svg viewBox="0 0 20 20" fill="none" class="size-5" aria-hidden="true">
+                  <path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                  <circle cx="10" cy="10" r="2.2" stroke="currentColor" stroke-width="1.6" />
+                  <path id="eye-slash" class="hidden" d="M4 16L16 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
-        <hr class="form-divider" />
+        <p id="form-error" role="alert" class="hidden rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700"></p>
 
-        <div class="form-actions">
-          <a href="/dashboard" class="btn-cancel">Cancelar</a>
-          <button type="submit" class="btn-submit"
-            >✓ Guardar entrenador/profesional</button
+        <div class="flex flex-col-reverse gap-2.5 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+          <a
+            href="/dashboard"
+            class="inline-flex h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
           >
+            Cancelar
+          </a>
+          <button
+            type="submit"
+            id="btn-submit"
+            class="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <svg viewBox="0 0 20 20" fill="none" class="size-4" aria-hidden="true">
+              <path d="M4.5 10.5l3.5 3.5 7.5-8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span id="btn-submit-label">Guardar entrenador/profesional</span>
+          </button>
         </div>
       </form>
-    </div>
+    </section>
 
     <!-- Panel de ayuda -->
-    <div style="width:280px;flex-shrink:0;">
-      <div class="info-cards">
-        <div class="info-card">
-          <strong>ℹ️ ¿Cómo funciona?</strong>
-          Al crear un entrenador/profesional, se generarán sus credenciales en Amazon
-          Cognito. Recibirá un correo con instrucciones de primer acceso.
-        </div>
-        <div class="info-card warning">
-          <strong>⚠️ Contraseña temporal</strong>
-          La primera vez que el entrenador/profesional inicie sesión, deberá cambiar
-          esta contraseña por una personal y segura.
-        </div>
-        <div class="info-card">
-          <strong>🔒 Roles de acceso</strong>
-          Cada especialidad tiene acceso a distintas secciones del sistema. Los psicólogos
-          tienen acceso completo, el resto solo a su área.
-        </div>
+    <aside class="space-y-3" aria-label="Información de ayuda">
+      <div class="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-[13px] leading-relaxed text-blue-900">
+        <p class="mb-1 flex items-center gap-2 text-sm font-bold">
+          <svg viewBox="0 0 20 20" fill="none" class="size-4 shrink-0 text-blue-600" aria-hidden="true">
+            <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.7" />
+            <path d="M10 9v4.5M10 6.6v.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+          ¿Cómo funciona?
+        </p>
+        Al crear un entrenador/profesional, se generarán sus credenciales en Amazon Cognito. Recibirá un correo con instrucciones de primer acceso.
       </div>
-    </div>
+
+      <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-[13px] leading-relaxed text-amber-900">
+        <p class="mb-1 flex items-center gap-2 text-sm font-bold">
+          <svg viewBox="0 0 20 20" fill="none" class="size-4 shrink-0 text-amber-600" aria-hidden="true">
+            <path d="M10 3.5l7 12.2H3L10 3.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+            <path d="M10 8.5v3.2M10 13.9v.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+          Contraseña temporal
+        </p>
+        La primera vez que el entrenador/profesional inicie sesión, deberá cambiar esta contraseña por una personal y segura.
+      </div>
+
+      <div class="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-[13px] leading-relaxed text-blue-900">
+        <p class="mb-1 flex items-center gap-2 text-sm font-bold">
+          <svg viewBox="0 0 20 20" fill="none" class="size-4 shrink-0 text-blue-600" aria-hidden="true">
+            <rect x="4.5" y="9" width="11" height="7.5" rx="2" stroke="currentColor" stroke-width="1.7" />
+            <path d="M7 9V6.5a3 3 0 0 1 6 0V9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+          </svg>
+          Roles de acceso
+        </p>
+        Cada especialidad tiene acceso a distintas secciones del sistema. Los psicólogos tienen acceso completo, el resto solo a su área.
+      </div>
+    </aside>
   </div>
 
   <!-- Toast -->
-  <div id="toast" class="toast-success">
-    ✅ Entrenador/profesional registrado correctamente
+  <div
+    id="toast"
+    role="status"
+    aria-live="polite"
+    class="pointer-events-none fixed bottom-6 right-6 z-[9999] translate-y-20 opacity-0 transition duration-300 motion-reduce:transition-none"
+  >
+    <div class="flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 shadow-xl">
+      <svg viewBox="0 0 20 20" fill="none" class="size-4 shrink-0 text-emerald-600" aria-hidden="true">
+        <path d="M4.5 10.5l3.5 3.5 7.5-8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <span id="toast-message">Entrenador/profesional registrado correctamente</span>
+    </div>
   </div>
 
   <script>
     // Añadir al inicio del script en las páginas protegidas de administrador
-(function() {
-  const token = localStorage.getItem('sportmind_token');
-  if (!token) {
-    window.location.replace('/login');
-    return;
-  }
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const grupos = payload['cognito:groups'] || payload['groups'] || [];
-    const esAdmin = Array.isArray(grupos) 
-      ? grupos.some(g => String(g).toLowerCase().includes('admin')) 
-      : String(grupos).toLowerCase().includes('admin');
+    (function () {
+      const token = localStorage.getItem("sportmind_token");
+      if (!token) {
+        window.location.replace("/login");
+        return;
+      }
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const grupos = payload["cognito:groups"] || payload["groups"] || [];
+        const esAdmin = Array.isArray(grupos)
+          ? grupos.some((g: unknown) => String(g).toLowerCase().includes("admin"))
+          : String(grupos).toLowerCase().includes("admin");
 
-    if (!esAdmin) {
-      window.location.replace('/dashboard');
-    }
-  } catch (e) {
-    window.location.replace('/login');
-  }
-})();
-    const form = document.getElementById(
-      "form-especialista",
-    ) as HTMLFormElement;
+        if (!esAdmin) {
+          window.location.replace("/dashboard");
+        }
+      } catch (e) {
+        window.location.replace("/login");
+      }
+    })();
+
+    const form = document.getElementById("form-especialista") as HTMLFormElement;
     const toast = document.getElementById("toast");
+    const toastMessage = document.getElementById("toast-message");
+    const formError = document.getElementById("form-error") as HTMLElement;
+    const btnSubmit = document.getElementById("btn-submit") as HTMLButtonElement;
+    const btnSubmitLabel = document.getElementById("btn-submit-label") as HTMLElement;
+    const passwordInput = document.getElementById("password") as HTMLInputElement;
+    const btnToggle = document.getElementById("btn-toggle-password") as HTMLButtonElement;
+    const eyeSlash = document.getElementById("eye-slash") as unknown as SVGElement;
+
+    const SUBMIT_LABEL = btnSubmitLabel.textContent?.trim() || "Guardar entrenador/profesional";
+
+    function showError(message: string) {
+      formError.textContent = message;
+      formError.classList.remove("hidden");
+    }
+
+    function clearError() {
+      formError.textContent = "";
+      formError.classList.add("hidden");
+    }
+
+    function showToast(message: string) {
+      if (!toast) return;
+      if (toastMessage) toastMessage.textContent = message;
+      toast.classList.remove("translate-y-20", "opacity-0");
+      toast.classList.add("translate-y-0", "opacity-100");
+    }
+
+    btnToggle.addEventListener("click", () => {
+      const show = passwordInput.type === "password";
+      passwordInput.type = show ? "text" : "password";
+      eyeSlash.classList.toggle("hidden", !show);
+      btnToggle.setAttribute("aria-pressed", String(show));
+      btnToggle.setAttribute("aria-label", show ? "Ocultar contraseña" : "Mostrar contraseña");
+    });
 
     form?.addEventListener("submit", async (e) => {
       e.preventDefault();
+      clearError();
+      btnSubmit.disabled = true;
+      btnSubmitLabel.textContent = "Guardando…";
 
       const formData = {
         nombre: (document.getElementById("nombre") as HTMLInputElement).value,
         email: (document.getElementById("email") as HTMLInputElement).value,
         rol: (document.getElementById("rol") as HTMLSelectElement).value,
-        telefono: (document.getElementById("telefono") as HTMLInputElement)
-          .value,
-        password: (document.getElementById("password") as HTMLInputElement)
-          .value,
+        telefono: (document.getElementById("telefono") as HTMLInputElement).value,
+        password: passwordInput.value,
       };
 
       try {
@@ -396,18 +289,16 @@ import Layout from "../../layouts/Layout.astro";
         if (!response.ok)
           throw new Error(result.error || "No se pudo registrar el usuario");
 
-        if (toast) {
-          toast.textContent =
-            "✅ Especialista registrado en Cognito correctamente";
-          toast.classList.add("visible");
-          setTimeout(() => {
-            toast.classList.remove("visible");
-            window.location.href = "/dashboard";
-          }, 2000);
-        }
+        showToast("Especialista registrado en Cognito correctamente");
         form.reset();
+        // Se deja el botón bloqueado: la página redirige en 2 segundos.
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 2000);
       } catch (error: any) {
-        alert("❌ Error: " + error.message);
+        showError(error.message || "No se pudo registrar el usuario");
+        btnSubmit.disabled = false;
+        btnSubmitLabel.textContent = SUBMIT_LABEL;
       }
     });
   </script>
