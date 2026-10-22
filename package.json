@@ -33,7 +33,7 @@
     },
     "publish": {
       "provider": "github",
-      "owner": "SportMind",
+      "owner": "PatoGonzalezz",
       "repo": "fE-Sportmind"
     }
   },
