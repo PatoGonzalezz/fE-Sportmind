@@ -1,7 +1,9 @@
 import html2canvas from "html2canvas-pro";
 import { jsPDF } from "jspdf";
 
-export async function generarInformePdf(elemento: HTMLElement) {
+export async function generarInformePdf(elemento: HTMLElement, idSesion: string) {
+    armarPlantillaPdf(elemento, idSesion); 
+
   const paginas = Array.from(elemento.querySelectorAll<HTMLElement>(".pagina-estricta"));
   const elementos = paginas.length > 0 ? paginas : [elemento];
 
@@ -30,7 +32,7 @@ export async function generarInformePdf(elemento: HTMLElement) {
   pdf.save("Informe_Evaluacion_INF-5893.pdf");
 }
 
-export function armarPlantillaPdf(elementoBase: HTMLElement): HTMLElement {
+export function armarPlantillaPdf(elementoBase: HTMLElement, idSesion: string) {
   let certezaModelo = "83.7%"; 
   let resultadoClase = "Autorregulación Óptima";
 
@@ -95,7 +97,7 @@ export function armarPlantillaPdf(elementoBase: HTMLElement): HTMLElement {
       <div class="encabezado-principal">
         <div>
           <h1>SportMind VR Analytics</h1>
-          <p>Sistema de evaluación cognitivo-deportiva</p>
+          
         </div>
         <div class="encabezado-secundario">
           <h2>Informe de evaluación cognitivo-deportiva</h2>
@@ -108,7 +110,7 @@ export function armarPlantillaPdf(elementoBase: HTMLElement): HTMLElement {
       <table class="tabla-formal">
         <tbody>
           <tr>
-            <td class="bg-gray">Código seudónimo</td><td><strong>Santy</strong></td>
+            <td class="bg-gray">Código sesión</td><td><strong>${idSesion}</strong></td>
             <td class="bg-gray">ID de sesión</td><td>SM-VR-01 (primera sesión registrada)</td>
           </tr>
           <tr>
@@ -116,7 +118,7 @@ export function armarPlantillaPdf(elementoBase: HTMLElement): HTMLElement {
             <td class="bg-gray">Fecha y hora</td><td>08-10-2026, 18:35</td>
           </tr>
           <tr>
-            <td class="bg-gray">Edad / sexo</td><td>No registrado</td>
+            <td class="bg-gray">Genero</td><td>No registrado</td>
             <td class="bg-gray">Nivel competitivo</td><td>No registrado</td>
           </tr>
           <tr>
@@ -149,21 +151,21 @@ export function armarPlantillaPdf(elementoBase: HTMLElement): HTMLElement {
       <table class="tabla-formal">
         <thead>
           <tr>
-            <th>Tarea</th><th>Nivel</th><th>Valor</th><th>Máximo posible</th><th>Estado de término</th><th>Ensayos</th><th>Observación</th>
+            <th>Tarea</th><th>Nivel</th><th>Valor</th><th>Observación</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><strong>Tiro</strong></td><td>Fácil</td><td><span style="color: #059669; font-weight: bold;">52 pts</span></td><td>No registrado</td><td>No registrado</td><td>No registrado</td><td>Referencia de la sesión</td>
+           <td><strong>Tiro</strong></td><td>Fácil</td><td><span style="color: #059669; font-weight: bold;">52 pts</span></td><td>Referencia de la sesión</td>
           </tr>
           <tr>
-            <td><strong>Tiro</strong></td><td>Difícil</td><td><span style="color: #ea580c; font-weight: bold;">16 pts</span></td><td>No registrado</td><td>No registrado</td><td>No registrado</td><td>-36 pts frente a fácil (-69,2%)</td>
+            <td><strong>Tiro</strong></td><td>Difícil</td><td><span style="color: #ea580c; font-weight: bold;">16 pts</span></td><td>-36 pts frente a fácil (-69,2%)</td>
+          </tr>
+         <tr>
+            <td><strong>Muro / Escalada</strong></td><td>Fácil</td><td>16,6 s</td><td>Tiempo de ejecución; menor es mejor (por confirmar)</td>
           </tr>
           <tr>
-            <td><strong>Muro / Escalada</strong></td><td>Fácil</td><td>16,6 s</td><td>No registrado</td><td>No registrado</td><td>No registrado</td><td>Tiempo de ejecución; menor es mejor (por confirmar)</td>
-          </tr>
-          <tr>
-            <td><strong>Muro / Escalada</strong></td><td>Difícil</td><td><span style="color: #ea580c; font-weight: bold;">3,6 s</span></td><td>No registrado</td><td>No registrado</td><td>No registrado</td><td><span style="color: #ea580c;">Revisar.</span> Tiempo 4,6 veces menor que en fácil; no plausible si la tarea se completó</td>
+            <td><strong>Muro / Escalada</strong></td><td>Difícil</td><td><span style="color: #ea580c; font-weight: bold;">3,6 s</span></td><td>Revisar. Tiempo 4,6 veces menor que en fácil; no plausible si la tarea se completó</td>
           </tr>
         </tbody>
       </table>
@@ -234,14 +236,7 @@ export function armarPlantillaPdf(elementoBase: HTMLElement): HTMLElement {
             <td class="bg-gray">Clase asignada</td><td><strong style="color: #0f766e;">✅ ${resultadoClase}</strong></td>
             <td class="bg-gray">Probabilidad</td><td><strong style="color: #ea580c;">${certezaModelo}</strong> (Certeza informada por el modelo)</td>
           </tr>
-          <tr>
-            <td class="bg-gray">Clases posibles</td><td>No informado por el sistema</td>
-            <td class="bg-gray">Modelo y versión</td><td>No informado por el sistema</td>
-          </tr>
-          <tr>
-            <td class="bg-gray">Validación modelo</td><td>No informado por el sistema</td>
-            <td class="bg-gray">Variables expl.</td><td>No informado por el sistema</td>
-          </tr>
+        
         </tbody>
       </table>
       <div class="nota-pie nota-advertencia"><strong>Resultado de apoyo; no reemplaza la evaluación profesional.</strong> Sin las clases posibles, la calibración ni las variables que explican la clasificación, este resultado no puede interpretarse de forma independiente. Debe leerse junto al desempeño objetivo (sección 3), que muestra una caída marcada en la condición difícil.</div>
@@ -299,10 +294,11 @@ export function inicializarGeneradorPdf(): void {
   document.addEventListener("click", async (event) => {
     const target = event.target as HTMLElement | null;
     const btn = target?.closest<HTMLButtonElement>(".btn-pdf-atleta");
+   
     
     if (!btn) return;
     event.preventDefault();
-
+    const idSesion = btn.getAttribute("data-id") || "Sin ID";
     const textoOriginal = btn.innerHTML;
     btn.innerHTML = "Generando PDF final...";
     btn.disabled = true;
@@ -313,7 +309,7 @@ export function inicializarGeneradorPdf(): void {
       const dialog = btn.closest("dialog");
       const elementoBase = dialog?.firstElementChild as HTMLElement | null ?? btn.closest<HTMLElement>("article") ?? document.body;
       
-      const htmlPdf = armarPlantillaPdf(elementoBase);
+      const htmlPdf = armarPlantillaPdf(elementoBase, idSesion);
       
       divOculto = document.createElement("div");
       divOculto.style.position = "fixed";
@@ -326,7 +322,7 @@ export function inicializarGeneradorPdf(): void {
       divOculto.appendChild(htmlPdf);
       document.body.appendChild(divOculto);
 
-      await generarInformePdf(htmlPdf);
+      await generarInformePdf(divOculto, idSesion);
 
     } catch (error: any) {
       console.error("Error al exportar:", error);

@@ -803,18 +803,17 @@ import Layout from "../layouts/Layout.astro";
                       ${!hasShootingData && !hasClimbingData ? '<p class="details-no-data text-sm text-slate-500 sm:col-span-2">No hay métricas adicionales registradas para esta sesión.</p>' : ""}
                     </div>
 
-                    <div class="detail-actions mt-4 flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
-                      <button type="button" class="btn-json btn-view-raw ${BTN_SECONDARY}" data-session-index="${index}">Ver datos completos</button>
-                      <button type="button" class="btn-copy-id ${BTN_SECONDARY}" data-id="${escapeHtml(session.session_id)}" title="Copiar ID de sesión">
-                        ${ICON_COPY}
-                        Copiar ID
-                      </button>
-                      <button type="button" class="btn-pdf-atleta ${BTN_SECONDARY}" title="Descargar PDF">
-                        ${ICON_PDF}
-                        PDF
-                      </button>
-                    </div>
-                  </section>
+                   <div class="detail-actions mt-4 flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
+  <button type="button" class="btn-json btn-view-raw ${BTN_SECONDARY}" data-session-index="${index}">Ver datos completos</button>
+  <button type="button" class="btn-copy-id ${BTN_SECONDARY}" data-id="${escapeHtml(String((session as any).session_id || (session as any).raw?.session_id || (session as any).raw?.id || (session as any).data?.session_id || 'ID-NO-ENCONTRADO'))}" title="Copiar ID de sesión">
+    ${ICON_COPY}
+    Copiar ID
+  </button>
+  <button type="button" class="btn-pdf-atleta ${BTN_SECONDARY}" data-id="${escapeHtml(String((session as any).session_id || (session as any).raw?.session_id || (session as any).raw?.id || (session as any).data?.session_id || 'ID-NO-ENCONTRADO'))}" title="Descargar PDF">
+    ${ICON_PDF}
+    PDF
+  </button>
+</div>
                 </div>
               </div>
             </template>
