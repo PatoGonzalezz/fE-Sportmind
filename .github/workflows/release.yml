@@ -1,0 +1,27 @@
+name: Build and Release Electron App
+
+on:
+  push:
+    tags:
+      - 'v*' # Se dispara automáticamente al subir un tag como v0.0.7
+
+jobs:
+  release:
+    runs-on: windows-latest # Necesario para compilar ejecutables nativos de Windows (.exe)
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Astro and Package Electron
+        run: npm run dist
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}

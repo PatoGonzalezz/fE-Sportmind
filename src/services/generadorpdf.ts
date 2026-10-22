@@ -1,16 +1,33 @@
-import html2pdf from "html2pdf.js";
-
-const opcionesPdf = {
-  margin: 0, 
-  filename: "Informe_Evaluacion_INF-5893.pdf",
-  image: { type: "jpeg", quality: 1 },
-  html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-  jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-  pagebreak: { mode: 'legacy' }
-};
+import html2canvas from "html2canvas-pro";
+import { jsPDF } from "jspdf";
 
 export async function generarInformePdf(elemento: HTMLElement) {
-  await html2pdf().set(opcionesPdf).from(elemento).save();
+  const paginas = Array.from(elemento.querySelectorAll<HTMLElement>(".pagina-estricta"));
+  const elementos = paginas.length > 0 ? paginas : [elemento];
+
+  const pdf = new jsPDF({
+    unit: "mm",
+    format: "a4",
+    orientation: "portrait",
+  });
+
+  for (let i = 0; i < elementos.length; i++) {
+    if (i > 0) {
+      pdf.addPage("a4", "portrait");
+    }
+
+    const canvas = await html2canvas(elementos[i], {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      logging: false,
+    });
+
+    const imgData = canvas.toDataURL("image/jpeg", 0.98);
+    pdf.addImage(imgData, "JPEG", 0, 0, 210, 297);
+  }
+
+  pdf.save("Informe_Evaluacion_INF-5893.pdf");
 }
 
 export function armarPlantillaPdf(elementoBase: HTMLElement): HTMLElement {
@@ -299,19 +316,21 @@ export function inicializarGeneradorPdf(): void {
       const htmlPdf = armarPlantillaPdf(elementoBase);
       
       divOculto = document.createElement("div");
-      divOculto.style.position = "absolute";
-      divOculto.style.left = "-9999px";
+      divOculto.style.position = "fixed";
+      divOculto.style.left = "0";
       divOculto.style.top = "0";
       divOculto.style.width = "210mm"; 
+      divOculto.style.zIndex = "-99999";
+      divOculto.style.pointerEvents = "none";
       
       divOculto.appendChild(htmlPdf);
       document.body.appendChild(divOculto);
 
       await generarInformePdf(htmlPdf);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al exportar:", error);
-      alert("Error al generar el informe.");
+      alert(`Error al generar el informe: ${error?.message || error}`);
     } finally {
       if (divOculto) divOculto.remove();
       btn.innerHTML = textoOriginal;

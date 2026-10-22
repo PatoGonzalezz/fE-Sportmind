@@ -25,6 +25,18 @@
   "allowScripts": {
     "esbuild": true
   },
+  "build": {
+    "appId": "com.sportmind.app",
+    "productName": "SportMind",
+    "directories": {
+      "output": "release"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "SportMind",
+      "repo": "fE-Sportmind"
+    }
+  },
   "devDependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.1153.0",
     "@tailwindcss/vite": "^4.3.3",
@@ -33,6 +45,8 @@
     "cross-env": "^10.1.0",
     "electron": "^44.4.4",
     "electron-builder": "^26.15.3",
+    "electron-log": "^5.3.0",
+    "electron-updater": "^6.3.9",
     "tailwindcss": "^4.3.3",
     "wait-on": "^9.1.0"
   },
@@ -41,6 +55,7 @@
     "@aws-sdk/client-dynamodb": "^3.1153.0",
     "@aws-sdk/lib-dynamodb": "^3.1153.0",
     "astro": "^7.3.7",
+    "html2canvas-pro": "^2.5.2",
     "html2pdf": "^0.0.11",
     "html2pdf.js": "^0.14.0",
     "onnxruntime-web": "^1.30.0"
