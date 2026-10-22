@@ -15,11 +15,11 @@
     "preview": "astro preview",
     "astro": "astro",
     "electron:dev": "concurrently -k -s first \"astro dev\" \"wait-on http-get://localhost:4321 && cross-env ELECTRON_DEV=1 ELECTRON_START_URL=http://localhost:4321/dashboard electron .\"",
-    "electron:preview": "astro build && node electron/prepare-server.cjs && electron .",
-    "electron:dir": "astro build && node electron/prepare-server.cjs && electron-builder --dir",
-    "electron:build": "astro build && node electron/prepare-server.cjs && electron-builder",
-    "pack": "node electron/prepare-server.cjs && electron-builder --dir",
-    "dist": "node electron/prepare-server.cjs && electron-builder",
+    "electron:preview": "npm run build && node electron/prepare-server.cjs && electron .",
+    "electron:dir": "npm run build && node electron/prepare-server.cjs && electron-builder --dir",
+    "electron:build": "npm run build && node electron/prepare-server.cjs && electron-builder",
+    "pack": "npm run build && node electron/prepare-server.cjs && electron-builder --dir",
+    "dist": "npm run build && node electron/prepare-server.cjs && electron-builder",
     "dev:all": "concurrently \"npm run api\" \"npm run dev\""
   },
   "allowScripts": {
