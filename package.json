@@ -17,9 +17,9 @@
     "electron:dev": "concurrently -k -s first \"astro dev\" \"wait-on http-get://localhost:4321 && cross-env ELECTRON_DEV=1 ELECTRON_START_URL=http://localhost:4321/dashboard electron .\"",
     "electron:preview": "npm run build && node electron/prepare-server.cjs && electron .",
     "electron:dir": "npm run build && node electron/prepare-server.cjs && electron-builder --dir",
-    "electron:build": "npm run build && node electron/prepare-server.cjs && electron-builder",
+    "electron:build": "npm run build && node electron/prepare-server.cjs && electron-builder --publish always",
     "pack": "npm run build && node electron/prepare-server.cjs && electron-builder --dir",
-    "dist": "npm run build && node electron/prepare-server.cjs && electron-builder",
+    "dist": "npm run build && node electron/prepare-server.cjs && electron-builder --publish always",
     "dev:all": "concurrently \"npm run api\" \"npm run dev\""
   },
   "allowScripts": {
