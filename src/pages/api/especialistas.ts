@@ -24,7 +24,7 @@ export const GET: APIRoute = async () => {
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json();
-    
+
     // Opcional: Puedes redirigir el POST también a tu Lambda de login/actualización existente
     return new Response(JSON.stringify({ success: true, message: "¡Actualizado con éxito!" }), {
       status: 200,
