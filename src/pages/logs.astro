@@ -50,7 +50,7 @@ import Layout from "../layouts/Layout.astro";
       aria-label="Eventos registrados"
       class="max-h-[65vh] overflow-y-auto p-5 font-mono text-[12.5px] leading-[1.9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400"
     >
-      <p class="py-10 text-center text-sm italic text-slate-400">No hay acciones registradas todavía.</p>
+      <p class="py-10 text-center text-sm italic text-slate-400">Cargando eventos desde AWS…</p>
     </div>
   </section>
 
@@ -94,7 +94,7 @@ import Layout from "../layouts/Layout.astro";
   </dialog>
 
   <script>
-    // Añadir al inicio del script en las páginas protegidas de administrador
+    // Validar sesión de Administrador
     (function () {
       const token = localStorage.getItem("sportmind_token");
       if (!token) {
@@ -116,6 +116,7 @@ import Layout from "../layouts/Layout.astro";
       }
     })();
 
+    const LOGS_API_URL = "https://gx2dhrqhecasrejvbkcuxvogz40fjxfl.lambda-url.us-east-1.on.aws/"; 
     const container = document.getElementById("contenedor-logs");
     const btnLimpiar = document.getElementById("btn-limpiar-logs");
     const logCount = document.getElementById("log-count");
@@ -137,7 +138,6 @@ import Layout from "../layouts/Layout.astro";
       );
 
     function parseLogEntry(log: string): string {
-      // Colorea partes del log: [fecha] [nivel] [usuario]: acción
       const match = log.match(/^\[(.+?)\]\s*\[(.+?)\]\s*\[(.+?)\]:\s*(.+)$/);
       if (match) {
         const [, ts, level, user, action] = match;
@@ -147,30 +147,31 @@ import Layout from "../layouts/Layout.astro";
       return `<div class="break-words rounded px-1 text-slate-300 transition-colors hover:bg-white/5 hover:text-slate-100">${escapeHtml(log)}</div>`;
     }
 
-    function leerHistorial(): string[] {
-      try {
-        return JSON.parse(localStorage.getItem("sportmind_logs") || "[]");
-      } catch (e) {
-        return [];
-      }
-    }
-
-    function cargarLogs() {
+    async function cargarLogs() {
       if (!container) return;
-      const historial = leerHistorial();
+      try {
+        const res = await fetch(LOGS_API_URL);
+        const data = await res.json();
+        const historial = data.success ? data.logs : [];
 
-      if (historial.length === 0) {
-        container.innerHTML = EMPTY_HTML;
-        if (logCount) logCount.textContent = "0 eventos";
-        return;
+        if (historial.length === 0) {
+          container.innerHTML = EMPTY_HTML;
+          if (logCount) logCount.textContent = "0 eventos";
+          return;
+        }
+
+        if (logCount)
+          logCount.textContent = `${historial.length} evento${historial.length > 1 ? "s" : ""}`;
+        
+        // Evitamos parpadeos si el contenido es idéntico al actual
+        const nuevoHtml = historial.map(parseLogEntry).join("");
+        if (container.innerHTML !== nuevoHtml) {
+          container.innerHTML = nuevoHtml;
+          container.scrollTop = container.scrollHeight;
+        }
+      } catch (e) {
+        console.error("Error al cargar los logs:", e);
       }
-
-      if (logCount)
-        logCount.textContent = `${historial.length} evento${historial.length > 1 ? "s" : ""}`;
-      // Mantener el orden cronológico: las acciones nuevas quedan al final.
-      container.innerHTML = historial.map(parseLogEntry).join("");
-      // Al abrir o refrescar, mostrar de inmediato las acciones más recientes.
-      container.scrollTop = container.scrollHeight;
     }
 
     btnLimpiar?.addEventListener("click", () => dialog.showModal());
@@ -178,12 +179,21 @@ import Layout from "../layouts/Layout.astro";
     dialog.addEventListener("click", (e) => {
       if (e.target === dialog) dialog.close();
     });
-    btnConfirmar?.addEventListener("click", () => {
-      localStorage.removeItem("sportmind_logs");
-      cargarLogs();
+
+    btnConfirmar?.addEventListener("click", async () => {
+      try {
+        await fetch(LOGS_API_URL, { method: "DELETE" });
+        await cargarLogs();
+      } catch (e) {
+        console.error("Error al limpiar logs", e);
+      }
       dialog.close();
     });
 
+    // Carga inicial
     cargarLogs();
+
+    // Actualización automática (Polling) cada 10 segundos en segundo plano
+    setInterval(cargarLogs, 10000);
   </script>
 </Layout>
