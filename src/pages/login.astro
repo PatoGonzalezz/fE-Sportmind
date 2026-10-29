@@ -395,6 +395,8 @@ import "../styles/global.css";
     </main>
 
     <script>
+      import { registrarAccionAWS } from "../services/loggerservice";
+
       const LOGIN_API_URL = "/api/login";
 
       let cognitoSession: string | undefined;
@@ -524,6 +526,10 @@ import "../styles/global.css";
           }
 
           localStorage.setItem("sportmind_token", result.token);
+
+          // REGISTRO EN AWS: Envía a DynamoDB el inicio de sesión exitoso con el usuario correspondiente
+          await registrarAccionAWS(`Inició sesión correctamente en la plataforma`);
+
           showMsg("✅ ¡Bienvenido! Redirigiendo...", "success");
           setTimeout(() => { window.location.replace("/inicio"); }, 600);
 

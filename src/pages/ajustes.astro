@@ -59,7 +59,6 @@ import Layout from "../layouts/Layout.astro";
               class="block w-full pl-12 pr-12 py-4 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 bg-white sm:text-base transition-all duration-200 text-slate-800 placeholder-slate-400 outline-none"
             />
             
-            
             <button
               type="button"
               id="btnTogglePassword"
@@ -76,10 +75,8 @@ import Layout from "../layouts/Layout.astro";
           </div>
         </div>
 
-        
         <div id="msgBox" role="status" aria-live="polite" class="hidden mt-4 text-center"></div>
 
-        
         <button
           type="submit"
           id="btnSave"
@@ -94,6 +91,8 @@ import Layout from "../layouts/Layout.astro";
 </div>
 
   <script>
+    import { registrarAccionAWS } from "../services/loggerservice";
+
     const emailInput = document.getElementById("userEmail") as HTMLInputElement;
     const passwordInput = document.getElementById("userPassword") as HTMLInputElement;
     const ajustesForm = document.getElementById("ajustesForm") as HTMLFormElement;
@@ -161,6 +160,10 @@ import Layout from "../layouts/Layout.astro";
         }
 
         showMsg("¡Contraseña actualizada con éxito!", "success");
+
+        // INTEGRACIÓN AWS: Registrar cambio de contraseña
+        await registrarAccionAWS("Actualizó la contraseña de su cuenta de usuario");
+
         setTimeout(() => {
           passwordInput.value = "";
           btnSave.disabled = false;
