@@ -1,5 +1,4 @@
-const BUCKET_URL = "https://sportmind-datos.s3.us-east-1.amazonaws.com";
-const PREFIX = "JSON_SM/";
+import { authorizedFetch } from "./auth";
 
 export interface SportmindSessionData {
   playerName?: string;
@@ -39,27 +38,6 @@ export interface SportmindSession {
 export type SportmindRecord = SportmindSession;
 
 /**
- * Consulta S3 para obtener todas las URLs de los JSON dinámicamente leyendo el XML.
- */
-export async function getDynamicS3Urls(): Promise<string[]> {
-  const response = await fetch(`${BUCKET_URL}?prefix=${PREFIX}`);
-
-  if (!response.ok) {
-    throw new Error("No se pudo obtener la lista de archivos de S3. Verifica CORS y permisos de la Política.");
-  }
-
-  const xmlText = await response.text();
-  const parser = new DOMParser();
-  const xmlDoc = parser.parseFromString(xmlText, "application/xml");
-
-  const keys = Array.from(xmlDoc.getElementsByTagName("Key"))
-    .map(node => node.textContent)
-    .filter(key => key && key.endsWith(".json"));
-
-  return keys.map(key => `${BUCKET_URL}/${key}`);
-}
-
-/**
  * Normaliza cualquier estructura recibida al formato estándar SportmindSession
  */
 export function normalizeSession(raw: unknown): SportmindSession {
@@ -94,78 +72,27 @@ export function normalizeSession(raw: unknown): SportmindSession {
   };
 }
 
-/**
- * Consulta un único archivo JSON en AWS S3 y normaliza los datos.
- */
-export async function fetchSingleSportmindData(url: string): Promise<SportmindSession[]> {
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}: ${res.statusText} en ${url}`);
-  }
-
-  const json = await res.json();
-  const items = Array.isArray(json) ? json : [json];
-  return items.map(normalizeSession);
-}
-
-/**
- * Consulta y combina datos de AWS S3 en paralelo, aplicando el filtro local por códigos vinculados.
- */
-export async function fetchSportmindData(sources?: string | string[]): Promise<SportmindSession[]> {
-  const urls = sources
-    ? (Array.isArray(sources) ? sources : [sources])
-    : await getDynamicS3Urls();
-
-  if (urls.length === 0) {
-    return [];
-  }
-
-  const results = await Promise.allSettled(
-    urls.map((url) => fetchSingleSportmindData(url)),
-  );
-
-  let combinedRecords: SportmindSession[] = [];
-  const errors: string[] = [];
-
-  results.forEach((result, index) => {
-    if (result.status === "fulfilled") {
-      combinedRecords.push(...result.value);
-    } else {
-      console.warn(`Error al obtener datos de ${urls[index]}:`, result.reason);
-      errors.push(urls[index]);
+/** Consulta las sesiones autorizadas mediante API Gateway; el bucket permanece privado. */
+export async function fetchSportmindData(): Promise<SportmindSession[]> {
+  const response = await authorizedFetch("/api/metricas");
+  if (!response.ok) throw new Error(`No se pudieron cargar las sesiones (HTTP ${response.status}).`);
+  const records = await response.json();
+  if (!Array.isArray(records)) throw new Error("La API devolvió una lista de sesiones inválida.");
+  let sessions: SportmindSession[] = records.flatMap((record: unknown) => Array.isArray(record) ? record : [record])
+    .map(normalizeSession);
+  // Defensa adicional durante la transición: la autorización efectiva pertenece a la API.
+  try {
+    const token = localStorage.getItem("sportmind_token") || "";
+    const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    const groups = Array.isArray(payload["cognito:groups"]) ? payload["cognito:groups"] : [];
+    if (!groups.includes("administrador")) {
+      const email = String(payload.email || "").toLowerCase();
+      sessions = email ? sessions.filter((session) => session.assigned_specialist?.toLowerCase() === email) : [];
     }
-  });
-
-  if (combinedRecords.length === 0 && errors.length === urls.length) {
-    throw new Error("No se pudo cargar ningún archivo JSON desde S3.");
+  } catch {
+    sessions = [];
   }
-
-  // Filtrado por rol y códigos locales en el navegador
-  const token = localStorage.getItem("sportmind_token");
-  if (token) {
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      const gruposCrudos = payload["cognito:groups"] || payload["groups"] || [];
-      const grupos = Array.isArray(gruposCrudos)
-        ? gruposCrudos.map((g: string) => g.toLowerCase())
-        : [String(gruposCrudos).toLowerCase()];
-
-      const esAdmin = grupos.some((g) => g.includes("administrador") || g.includes("admin"));
-
-      // Si NO es administrador, filtra localmente por los códigos guardados en este navegador.
-      if (!esAdmin) {
-        const codigosVinculados: string[] = JSON.parse(localStorage.getItem("sportmind_linked_codes") || "[]");
-        combinedRecords = combinedRecords.filter((session) => {
-          const sessionId = (session.session_id || "").toLowerCase();
-          return codigosVinculados.some((codigo) => sessionId.startsWith(codigo));
-        });
-      }
-    } catch (e) {
-      console.error("Error al filtrar por códigos locales:", e);
-    }
-  }
-
-  return combinedRecords.sort(
+  return sessions.sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
   );
 }
