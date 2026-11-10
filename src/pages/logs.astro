@@ -102,7 +102,7 @@ import Layout from "../layouts/Layout.astro";
         return;
       }
       try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
+        const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
         const grupos = payload["cognito:groups"] || payload["groups"] || [];
         const esAdmin = Array.isArray(grupos)
           ? grupos.some((g: unknown) => String(g).toLowerCase().includes("admin"))
@@ -117,6 +117,7 @@ import Layout from "../layouts/Layout.astro";
     })();
 
     import { LOGS_API_URL } from "../services/loggerservice"; 
+    import { authorizedFetch } from "../services/auth";
     const container = document.getElementById("contenedor-logs");
     const btnLimpiar = document.getElementById("btn-limpiar-logs");
     const logCount = document.getElementById("log-count");
@@ -150,7 +151,8 @@ import Layout from "../layouts/Layout.astro";
     async function cargarLogs() {
       if (!container) return;
       try {
-        const res = await fetch(LOGS_API_URL);
+        const res = await authorizedFetch(LOGS_API_URL);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const historial = data.success ? data.logs : [];
 
@@ -199,7 +201,8 @@ import Layout from "../layouts/Layout.astro";
 
     btnConfirmar?.addEventListener("click", async () => {
       try {
-        await fetch(LOGS_API_URL, { method: "DELETE" });
+        const response = await authorizedFetch(LOGS_API_URL, { method: "DELETE" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         localStorage.removeItem("sportmind_logs");
         await cargarLogs();
       } catch (e) {

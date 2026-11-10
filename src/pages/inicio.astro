@@ -156,6 +156,7 @@ import Layout from "../layouts/Layout.astro";
   <script>
     import { fetchSportmindData } from "../services/sportmindService";
     import { LOGS_API_URL } from "../services/loggerservice";
+    import { authorizedFetch } from "../services/auth";
 
     const escapeHtml = (value: unknown) =>
       String(value ?? "").replace(/[&<>"']/g, (c) =>
@@ -166,7 +167,7 @@ import Layout from "../layouts/Layout.astro";
     try {
       const token = localStorage.getItem("sportmind_token");
       if (token) {
-        const payload = JSON.parse(atob(token.split(".")[1]));
+        const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
         const grupos = payload["cognito:groups"] || payload["groups"] || [];
         const esAdmin = Array.isArray(grupos)
           ? grupos.some((g) => String(g).toLowerCase().includes("admin"))
@@ -240,7 +241,8 @@ import Layout from "../layouts/Layout.astro";
 
       // 2. Consultar registros reales actualizados desde AWS
       try {
-        const res = await fetch(LOGS_API_URL);
+        const res = await authorizedFetch(LOGS_API_URL);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (data.success && Array.isArray(data.logs)) {
           renderActivityRows(data.logs);

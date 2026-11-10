@@ -1,4 +1,6 @@
-export const LOGS_API_URL = "https://gx2dhrqhecasrejvbkcuxvogz40fjxfl.lambda-url.us-east-1.on.aws/";
+import { authorizedFetch } from "./auth";
+
+export const LOGS_API_URL = "/api/logs";
 
 /**
  * Registra una acción en AWS DynamoDB extrayendo automáticamente el usuario del token.
@@ -12,7 +14,7 @@ export async function registrarAccionAWS(accion: string, nivel: "INFO" | "WARN" 
   try {
     const token = localStorage.getItem("sportmind_token");
     if (token) {
-      const payload = JSON.parse(atob(token.split(".")[1]));
+      const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
       usuarioActual =
         payload.email ||
         payload.name ||
@@ -39,7 +41,7 @@ export async function registrarAccionAWS(accion: string, nivel: "INFO" | "WARN" 
   }
 
   try {
-    await fetch(LOGS_API_URL, {
+    const response = await authorizedFetch(LOGS_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -48,6 +50,7 @@ export async function registrarAccionAWS(accion: string, nivel: "INFO" | "WARN" 
         action: accion
       })
     });
+    if (!response.ok) console.error(`No se pudo guardar el log (HTTP ${response.status}).`);
   } catch (e) {
     console.error("Error enviando log a AWS:", e);
   }

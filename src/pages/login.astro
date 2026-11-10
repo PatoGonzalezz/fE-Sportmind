@@ -19,7 +19,7 @@ import "../styles/global.css";
         const token = localStorage.getItem("sportmind_token");
         if (token) {
           try {
-            const payload = JSON.parse(atob(token.split(".")[1]));
+            const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
             if (!payload.exp || payload.exp * 1000 > Date.now()) {
               window.location.replace("/inicio");
             }
@@ -258,7 +258,7 @@ import "../styles/global.css";
                 for="email"
                 class="mb-2 block text-[11px] font-bold uppercase tracking-wider text-slate-600"
               >
-                Correo electrónico
+                Correo electrónico o nombre de usuario
               </label>
               <div class="relative">
                 <span
@@ -276,12 +276,12 @@ import "../styles/global.css";
                   </svg>
                 </span>
                 <input
-                  type="email"
+                  type="text"
                   id="email"
                   name="email"
                   required
-                  autocomplete="email"
-                  placeholder="tu@correo.com"
+                  autocomplete="username"
+                  placeholder="tu@correo.com o nombre de usuario"
                   class="w-full rounded-xl border border-slate-200 bg-slate-50/70 py-3 pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/15"
                 />
               </div>
@@ -360,7 +360,7 @@ import "../styles/global.css";
                 id="hintText"
                 class="mt-2 flex items-start gap-1.5 text-xs leading-relaxed text-amber-700"
               >
-                ⚠️ Tu cuenta es nueva. Debes elegir una contraseña permanente para continuar.
+                Mínimo 8 caracteres, con una mayúscula, una minúscula, un número y un símbolo.
               </p>
             </div>
 
@@ -379,7 +379,7 @@ import "../styles/global.css";
               id="togglePasswordBtn"
               class="cursor-pointer rounded font-semibold text-blue-600 underline-offset-4 transition hover:text-blue-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
             >
-              ¿Olvidaste o quieres cambiar tu contraseña?
+              Cambiar contraseña
             </button>
           </div>
 
@@ -396,10 +396,12 @@ import "../styles/global.css";
 
     <script>
       import { registrarAccionAWS } from "../services/loggerservice";
+      import { clearSession, saveSession } from "../services/auth";
 
       const LOGIN_API_URL = "/api/login";
 
       let cognitoSession: string | undefined;
+      let challengeUsername: string | undefined;
       let currentEmail: string | undefined;
       let isChangingPasswordMode = false;
 
@@ -428,12 +430,12 @@ import "../styles/global.css";
 
         if (isChangingPasswordMode) {
           formTitle.textContent = "Cambiar Contraseña";
-          formSubtitle.textContent = "Ingresa tu correo y define tu nueva clave.";
-          divPasswordActual.style.display = "none";
-          passwordInput.required = false;
+          formSubtitle.textContent = "Ingresa tu correo o nombre de usuario y contraseña actual.";
+          divPasswordActual.style.display = "block";
+          passwordInput.required = true;
           divNuevaPassword.style.display = "block";
           newPasswordInput.required = true;
-          hintText.textContent = "Introduce la nueva contraseña permanente.";
+          hintText.textContent = "Mínimo 8 caracteres, con una mayúscula, una minúscula, un número y un símbolo.";
           btnSubmit.textContent = "Actualizar Contraseña";
           togglePasswordBtn.textContent = "← Volver a Iniciar Sesión";
         } else {
@@ -444,7 +446,7 @@ import "../styles/global.css";
           divNuevaPassword.style.display = "none";
           newPasswordInput.required = false;
           btnSubmit.textContent = "Entrar a SportMind";
-          togglePasswordBtn.textContent = "¿Olvidaste o quieres cambiar tu contraseña?";
+          togglePasswordBtn.textContent = "Cambiar contraseña";
         }
       });
 
@@ -459,12 +461,24 @@ import "../styles/global.css";
         if (isChangingPasswordMode) {
           showMsg("Actualizando contraseña...", "loading");
           try {
+            const authResponse = await fetch(LOGIN_API_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, password }),
+            });
+            const auth = await authResponse.json();
+            if (!authResponse.ok || !auth.success || !auth.accessToken) {
+              throw new Error(auth.challenge === "NEW_PASSWORD_REQUIRED"
+                ? "Primero inicia sesión para completar el cambio de contraseña temporal."
+                : (auth.error || "No se pudo verificar la contraseña actual."));
+            }
             const response = await fetch(LOGIN_API_URL, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 action: "changePassword",
-                email,
+                accessToken: auth.accessToken,
+                previousPassword: password,
                 newPassword
               })
             });
@@ -496,6 +510,7 @@ import "../styles/global.css";
               password,
               newPassword,
               session: cognitoSession,
+              challengeUsername,
               action: "respondChallenge"
             };
           } else {
@@ -512,7 +527,9 @@ import "../styles/global.css";
 
           if (result.challenge === "NEW_PASSWORD_REQUIRED") {
             cognitoSession = result.session;
+            challengeUsername = result.challengeUsername;
             divPasswordActual.style.display = "none";
+            passwordInput.required = false;
             divNuevaPassword.style.display = "block";
             if (newPasswordInput) newPasswordInput.required = true;
             btnSubmit.textContent = "Guardar y Entrar";
@@ -525,7 +542,9 @@ import "../styles/global.css";
             throw new Error(result.error || "Credenciales inválidas.");
           }
 
-          localStorage.setItem("sportmind_token", result.token);
+          if (!result.token || !result.accessToken) throw new Error("La respuesta de inicio de sesión está incompleta.");
+          clearSession();
+          saveSession(result);
 
           // REGISTRO EN AWS: Envía a DynamoDB el inicio de sesión exitoso con el usuario correspondiente
           await registrarAccionAWS(`Inició sesión correctamente en la plataforma`);
@@ -537,6 +556,12 @@ import "../styles/global.css";
           console.error(error);
           showMsg("❌ " + (error.message || "Error al iniciar sesión."), "error");
           cognitoSession = undefined;
+          challengeUsername = undefined;
+          divPasswordActual.style.display = "block";
+          passwordInput.required = true;
+          divNuevaPassword.style.display = "none";
+          newPasswordInput.required = false;
+          btnSubmit.textContent = "Entrar a SportMind";
           btnSubmit.disabled = false;
         }
       });

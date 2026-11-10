@@ -35,7 +35,6 @@ import Layout from "../layouts/Layout.astro";
               type="email"
               id="userEmail"
               disabled
-              value="pat.gonzalezg@duocuc.cl" 
               class="block w-full pl-12 pr-4 py-4 border-2 border-slate-100 rounded-xl bg-slate-100 text-slate-500 sm:text-base cursor-not-allowed outline-none"
             />
           </div>
@@ -43,7 +42,13 @@ import Layout from "../layouts/Layout.astro";
 
         
         <div>
+          <label for="previousPassword" class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Contraseña actual</label>
+          <input type="password" id="previousPassword" required autocomplete="current-password"
+            class="block w-full px-4 py-4 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 bg-white sm:text-base text-slate-800 outline-none" />
+        </div>
+        <div>
           <label for="userPassword" class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Nueva contraseña</label>
+          <p class="mb-2 text-sm text-slate-500">Mínimo 8 caracteres, con una mayúscula, una minúscula, un número y un símbolo.</p>
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <svg class="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -92,9 +97,11 @@ import Layout from "../layouts/Layout.astro";
 
   <script>
     import { registrarAccionAWS } from "../services/loggerservice";
+    import { getAccessToken } from "../services/auth";
 
     const emailInput = document.getElementById("userEmail") as HTMLInputElement;
     const passwordInput = document.getElementById("userPassword") as HTMLInputElement;
+    const previousPasswordInput = document.getElementById("previousPassword") as HTMLInputElement;
     const ajustesForm = document.getElementById("ajustesForm") as HTMLFormElement;
     const btnSave = document.getElementById("btnSave") as HTMLButtonElement;
     const msgBox = document.getElementById("msgBox") as HTMLElement;
@@ -112,7 +119,7 @@ import Layout from "../layouts/Layout.astro";
     const token = localStorage.getItem("sportmind_token");
     if (token) {
       try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
+        const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
         emailInput.value = payload.email || "";
       } catch (e) {
         console.error("Error al leer datos de sesión:", e);
@@ -144,12 +151,15 @@ import Layout from "../layouts/Layout.astro";
       btnSave.textContent = "Actualizando…";
 
       try {
+        const accessToken = await getAccessToken();
+        if (!accessToken) throw new Error("Tu sesión expiró. Inicia sesión nuevamente.");
         const response = await fetch("/api/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             action: "changePassword",
-            email: emailInput.value,
+            accessToken,
+            previousPassword: previousPasswordInput.value,
             newPassword: passwordInput.value,
           }),
         });
@@ -166,6 +176,7 @@ import Layout from "../layouts/Layout.astro";
 
         setTimeout(() => {
           passwordInput.value = "";
+          previousPasswordInput.value = "";
           btnSave.disabled = false;
           btnSave.textContent = BTN_LABEL;
           hideMsg();
