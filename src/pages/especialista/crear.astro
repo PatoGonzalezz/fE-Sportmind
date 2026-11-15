@@ -278,9 +278,13 @@ import Layout from "../../layouts/Layout.astro";
       };
 
       try {
+        const token = localStorage.getItem("sportmind_token");
         const response = await fetch("/api/crear-entrenador", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
           body: JSON.stringify(formData),
         });
 

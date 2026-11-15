@@ -1,17 +1,25 @@
 export const prerender = false;
 import type { APIRoute } from "astro";
 
-// URL pública de tu Function URL en AWS Lambda
-const LAMBDA_URL = "https://kaf3x332azz2t3zjovme454nwy0npglv.lambda-url.us-east-1.on.aws/";
+const USUARIOS_API_URL = import.meta.env.AWS_USUARIOS_API_URL || `${import.meta.env.AWS_API_URL?.replace(/\/$/, "")}/usuarios`;
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ request }) => {
   try {
-    const response = await fetch(LAMBDA_URL);
-    const data = await response.json();
+    if (!import.meta.env.AWS_API_URL && !import.meta.env.AWS_USUARIOS_API_URL) {
+      return new Response(JSON.stringify({ success: false, error: "AWS_API_URL no está configurada." }), {
+        status: 503,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    const authorization = request.headers.get("Authorization");
+    const response = await fetch(USUARIOS_API_URL, {
+      headers: authorization ? { Authorization: authorization } : {},
+    });
+    const data = await response.text();
 
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
+    return new Response(data, {
+      status: response.status,
+      headers: { "Content-Type": response.headers.get("Content-Type") || "application/json" },
     });
   } catch (error: any) {
     return new Response(
@@ -21,19 +29,10 @@ export const GET: APIRoute = async () => {
   }
 };
 
-export const POST: APIRoute = async ({ request }) => {
-  try {
-    const body = await request.json();
+const unsupportedEspecialistasMethod: APIRoute = async () => new Response(
+  JSON.stringify({ success: false, error: "La API nueva no muestra una ruta POST/DELETE /usuarios. Usa la ruta de creación dedicada o configura la ruta de eliminación." }),
+  { status: 501, headers: { "Content-Type": "application/json" } },
+);
 
-    // Opcional: Puedes redirigir el POST también a tu Lambda de login/actualización existente
-    return new Response(JSON.stringify({ success: true, message: "¡Actualizado con éxito!" }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error: any) {
-    return new Response(
-      JSON.stringify({ success: false, error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
-    );
-  }
-};
+export const POST = unsupportedEspecialistasMethod;
+export const DELETE = unsupportedEspecialistasMethod;
