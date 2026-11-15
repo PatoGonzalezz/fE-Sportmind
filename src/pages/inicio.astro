@@ -240,7 +240,10 @@ import Layout from "../layouts/Layout.astro";
 
       // 2. Consultar registros reales actualizados desde AWS
       try {
-        const res = await fetch(LOGS_API_URL);
+        const token = localStorage.getItem("sportmind_token");
+        const res = await fetch(LOGS_API_URL, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
         const data = await res.json();
         if (data.success && Array.isArray(data.logs)) {
           renderActivityRows(data.logs);

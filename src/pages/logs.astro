@@ -150,7 +150,10 @@ import Layout from "../layouts/Layout.astro";
     async function cargarLogs() {
       if (!container) return;
       try {
-        const res = await fetch(LOGS_API_URL);
+        const token = localStorage.getItem("sportmind_token");
+        const res = await fetch(LOGS_API_URL, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
         const data = await res.json();
         const historial = data.success ? data.logs : [];
 
@@ -199,7 +202,11 @@ import Layout from "../layouts/Layout.astro";
 
     btnConfirmar?.addEventListener("click", async () => {
       try {
-        await fetch(LOGS_API_URL, { method: "DELETE" });
+        const token = localStorage.getItem("sportmind_token");
+        await fetch(LOGS_API_URL, {
+          method: "DELETE",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
         localStorage.removeItem("sportmind_logs");
         await cargarLogs();
       } catch (e) {

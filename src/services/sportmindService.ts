@@ -1,5 +1,8 @@
-const BUCKET_URL = "https://sportmind-datos.s3.us-east-1.amazonaws.com";
-const PREFIX = "JSON_SM/";
+import { getAuthHeaders } from "./authHeaders";
+
+const API_URL = import.meta.env.PUBLIC_AWS_API_URL?.replace(/\/$/, "");
+const METRICAS_API_URL = import.meta.env.PUBLIC_SPORTMIND_METRICAS_API_URL || `${API_URL}/metricas`;
+const VR_METRICAS_API_URL = import.meta.env.PUBLIC_VR_METRICAS_API_URL || `${API_URL}/vr-metricas`;
 
 export interface SportmindSessionData {
   playerName?: string;
@@ -39,24 +42,80 @@ export interface SportmindSession {
 export type SportmindRecord = SportmindSession;
 
 /**
- * Consulta S3 para obtener todas las URLs de los JSON dinámicamente leyendo el XML.
+ * Obtiene las sesiones/métricas existentes mediante GET /metricas.
  */
 export async function getDynamicS3Urls(): Promise<string[]> {
-  const response = await fetch(`${BUCKET_URL}?prefix=${PREFIX}`);
+  const response = await fetch(METRICAS_API_URL, { headers: getAuthHeaders() });
 
   if (!response.ok) {
-    throw new Error("No se pudo obtener la lista de archivos de S3. Verifica CORS y permisos de la Política.");
+    throw new Error(`No se pudieron obtener las sesiones desde ${METRICAS_API_URL} (HTTP ${response.status}).`);
   }
 
-  const xmlText = await response.text();
-  const parser = new DOMParser();
-  const xmlDoc = parser.parseFromString(xmlText, "application/xml");
+  let payload: any = await response.json();
+  if (typeof payload === "string") {
+    try { payload = JSON.parse(payload); } catch { /* handled as an empty/invalid response below */ }
+  }
 
-  const keys = Array.from(xmlDoc.getElementsByTagName("Key"))
-    .map(node => node.textContent)
-    .filter(key => key && key.endsWith(".json"));
+  if (payload?.success === false) {
+    throw new Error(payload.error || payload.message || "La API de métricas informó un error.");
+  }
 
-  return keys.map(key => `${BUCKET_URL}/${key}`);
+  // Algunos despliegues devuelven los registros completos; otros retornan
+  // referencias a archivos JSON. Mantener compatibilidad con ambos formatos.
+  if (Array.isArray(payload) && payload.every((item) => typeof item === "string" || item?.url || item?.s3Url)) {
+    return payload
+      .map((item: unknown) => typeof item === "string" ? item : (item as any)?.url || (item as any)?.s3Url)
+      .filter((url: unknown): url is string => typeof url === "string");
+  }
+
+  let records: unknown = Array.isArray(payload)
+    ? payload
+    : (payload?.session_id || payload?.sessionId)
+      ? [payload]
+      : payload?.sessions ?? payload?.records ?? payload?.items ?? payload?.metrics ?? payload?.data;
+
+  if (typeof records === "string") {
+    try { records = JSON.parse(records); } catch { records = []; }
+  }
+
+  // La integración puede devolver una sesión directamente o dentro de `data`.
+  if (records && !Array.isArray(records) && typeof records === "object") {
+    const record = records as Record<string, unknown>;
+    if (record.session_id || record.sessionId || record.timestamp || record.playerName || record.player_name) {
+      records = [record];
+    } else if (Array.isArray(record.Items)) {
+      records = record.Items;
+    } else if (Array.isArray(record.items)) {
+      records = record.items;
+    }
+  }
+
+  if (Array.isArray(records) && records.length) {
+    return [`data:application/json,${encodeURIComponent(JSON.stringify(records))}`];
+  }
+  return [];
+}
+
+/** Envía una sesión VR nueva mediante POST /vr-metricas. */
+export async function enviarSesionVR(session: unknown): Promise<unknown> {
+  const response = await fetch(VR_METRICAS_API_URL, {
+    method: "POST",
+    headers: getAuthHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify(session),
+  });
+
+  const responseText = await response.text();
+  let result: unknown = responseText;
+  try {
+    result = JSON.parse(responseText);
+  } catch {
+    // Preservar respuestas de texto del API.
+  }
+
+  if (!response.ok) {
+    throw new Error(`No se pudo guardar la sesión VR (HTTP ${response.status}): ${typeof result === "string" ? result : JSON.stringify(result)}`);
+  }
+  return result;
 }
 
 /**
@@ -78,8 +137,8 @@ export function normalizeSession(raw: unknown): SportmindSession {
   if (obj.data && typeof obj.data === "object") {
     return {
       timestamp: String(obj.timestamp || new Date().toISOString()),
-      session_id: String(obj.session_id || "sin-id"),
-      assigned_specialist: (obj.assigned_specialist as string) || null,
+      session_id: String(obj.session_id || obj.sessionId || obj.id || "sin-id"),
+      assigned_specialist: (obj.assigned_specialist || obj.assignedSpecialist) as string || null,
       data: obj.data as SportmindSessionData,
       raw,
     };
@@ -87,8 +146,8 @@ export function normalizeSession(raw: unknown): SportmindSession {
 
   return {
     timestamp: String(obj.timestamp || new Date().toISOString()),
-    session_id: String(obj.session_id || "sin-id"),
-    assigned_specialist: (obj.assigned_specialist as string) || null,
+    session_id: String(obj.session_id || obj.sessionId || obj.id || "sin-id"),
+    assigned_specialist: (obj.assigned_specialist || obj.assignedSpecialist) as string || null,
     data: obj as SportmindSessionData,
     raw,
   };
@@ -98,6 +157,11 @@ export function normalizeSession(raw: unknown): SportmindSession {
  * Consulta un único archivo JSON en AWS S3 y normaliza los datos.
  */
 export async function fetchSingleSportmindData(url: string): Promise<SportmindSession[]> {
+  if (url.startsWith("data:application/json,")) {
+    const json = JSON.parse(decodeURIComponent(url.slice("data:application/json,".length)));
+    const items = Array.isArray(json) ? json : [json];
+    return items.map(normalizeSession);
+  }
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${res.statusText} en ${url}`);
@@ -140,31 +204,8 @@ export async function fetchSportmindData(sources?: string | string[]): Promise<S
     throw new Error("No se pudo cargar ningún archivo JSON desde S3.");
   }
 
-  // Filtrado por rol y códigos locales en el navegador
-  const token = localStorage.getItem("sportmind_token");
-  if (token) {
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      const gruposCrudos = payload["cognito:groups"] || payload["groups"] || [];
-      const grupos = Array.isArray(gruposCrudos)
-        ? gruposCrudos.map((g: string) => g.toLowerCase())
-        : [String(gruposCrudos).toLowerCase()];
-
-      const esAdmin = grupos.some((g) => g.includes("administrador") || g.includes("admin"));
-
-      // Si NO es administrador, filtra localmente por los códigos guardados en este navegador.
-      if (!esAdmin) {
-        const codigosVinculados: string[] = JSON.parse(localStorage.getItem("sportmind_linked_codes") || "[]");
-        combinedRecords = combinedRecords.filter((session) => {
-          const sessionId = (session.session_id || "").toLowerCase();
-          return codigosVinculados.some((codigo) => sessionId.startsWith(codigo));
-        });
-      }
-    } catch (e) {
-      console.error("Error al filtrar por códigos locales:", e);
-    }
-  }
-
+  // La API filtra por usuario autenticado y assigned_specialist; no depender
+  // de códigos guardados localmente permite ver las vinculaciones en otros dispositivos.
   return combinedRecords.sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
   );
