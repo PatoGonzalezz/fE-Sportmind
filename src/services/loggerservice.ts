@@ -1,4 +1,6 @@
-export const LOGS_API_URL = "https://gx2dhrqhecasrejvbkcuxvogz40fjxfl.lambda-url.us-east-1.on.aws/";
+import { getAuthHeaders } from "./authHeaders";
+
+export const LOGS_API_URL = import.meta.env.PUBLIC_AWS_LOGS_API_URL || `${import.meta.env.PUBLIC_AWS_API_URL?.replace(/\/$/, "")}/logs`;
 
 /**
  * Registra una acción en AWS DynamoDB extrayendo automáticamente el usuario del token.
@@ -41,7 +43,7 @@ export async function registrarAccionAWS(accion: string, nivel: "INFO" | "WARN" 
   try {
     await fetch(LOGS_API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({
         level: nivel,
         user: usuarioActual,

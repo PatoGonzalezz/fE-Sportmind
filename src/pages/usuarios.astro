@@ -305,6 +305,9 @@ import Layout from "../layouts/Layout.astro";
       ).toUpperCase();
     };
 
+    const isAdminUser = (u: Usuario) =>
+      ["administrador", "admin"].includes(String(u.rol || "").trim().toLowerCase());
+
     const messageRow = (text: string, tone: "muted" | "error" = "muted") =>
       `<tr><td colspan="5" class="px-5 py-10 text-center ${tone === "error" ? "text-red-600" : "text-slate-500"}">${text}</td></tr>`;
 
@@ -342,10 +345,15 @@ import Layout from "../layouts/Layout.astro";
 
     async function loadUsers() {
       try {
-        const res = await fetch("/api/especialistas");
+        const token = localStorage.getItem("sportmind_token");
+        const res = await fetch("/api/especialistas", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
         const data = await res.json();
         if (data.success && data.especialistas) {
-          currentUsers = data.especialistas;
+          currentUsers = [...data.especialistas].sort(
+            (a: Usuario, b: Usuario) => Number(isAdminUser(b)) - Number(isAdminUser(a)),
+          );
           renderTable(currentUsers);
         } else {
           tbody.innerHTML = messageRow(
@@ -371,12 +379,11 @@ import Layout from "../layouts/Layout.astro";
 
       tbody.innerHTML = users
         .map((u, index) => {
-          const isAdmin = u.email === "pat.gonzalezg@duocuc.cl";
-          const rol = isAdmin ? "Administrador" : "Entrenador";
+          const isAdmin = isAdminUser(u);
+          const rol = u.rol || "Entrenador";
           const nombre = escapeHtml(u.nombre || "Sin nombre");
           const email = escapeHtml(u.email);
 
-          // AQUÍ ESTABA EL DETALLE: Tomamos directamente u.especialidadEspecifica en vez de u.rol
           const especialidad = isAdmin
             ? "No aplica"
             : escapeHtml(u.especialidadEspecifica || "General");
@@ -438,19 +445,14 @@ import Layout from "../layouts/Layout.astro";
 
       const user = currentUsers[Number(btn.dataset.index)];
       if (!user) return;
+      if (isAdminUser(user)) return;
 
       clearError();
       editSubtitle.textContent = user.nombre || user.email;
       editEmail.value = user.email;
       editNombre.value = user.nombre || "";
-      editRol.value =
-        user.email === "pat.gonzalezg@duocuc.cl"
-          ? "Administrador"
-          : "Entrenador";
-      editEspecialidad.value =
-        user.email === "pat.gonzalezg@duocuc.cl"
-          ? ""
-          : user.especialidadEspecifica || "";
+      editRol.value = user.rol || "Entrenador";
+      editEspecialidad.value = user.especialidadEspecifica || "";
       editPassword.value = "";
       toggleEspecialidad();
       editModal.showModal();
@@ -472,13 +474,17 @@ import Layout from "../layouts/Layout.astro";
       btnSave.textContent = "Guardando…";
 
       try {
+        const token = localStorage.getItem("sportmind_token");
         const res = await fetch("/api/especialistas", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
           body: JSON.stringify({
             email: editEmail.value,
             nombre: editNombre.value.trim(),
-            rol: editEspecialidad.value.trim(),
+            rol: editRol.value,
             especialidadEspecifica: editEspecialidad.value.trim(),
             passwordTemp: editPassword.value ? editPassword.value : undefined,
           }),

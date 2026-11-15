@@ -14,48 +14,53 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    const cognitoApiUrl = import.meta.env.COGNITO_API_URL;
-
-    if (!cognitoApiUrl) {
-      console.error("CRítico: COGNITO_API_URL no está definida en .env");
-      throw new Error("La variable de entorno COGNITO_API_URL no está configurada en el archivo .env");
+    const authorization = request.headers.get("Authorization");
+    if (!authorization) {
+      return new Response(
+        JSON.stringify({ success: false, error: "La sesión no contiene un token de autenticación. Cierra sesión e inicia nuevamente." }),
+        { status: 401, headers: { "Content-Type": "application/json" } }
+      );
     }
 
-    console.log("Enviando petición a API Gateway:", cognitoApiUrl);
+    const apiBaseUrl = import.meta.env.AWS_API_URL?.replace(/\/$/, "");
+    const cognitoApiUrl = import.meta.env.COGNITO_API_URL || (apiBaseUrl
+      ? `${apiBaseUrl}/sportMind-crear-entrenador-cognito`
+      : undefined);
 
-    // Llamada a la API Gateway / Lambda
+    if (!cognitoApiUrl) {
+      throw new Error("Define COGNITO_API_URL o AWS_API_URL en el entorno.");
+    }
+
     const apiResponse = await fetch(cognitoApiUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authorization,
+      },
       body: JSON.stringify({ nombre, email, rol, telefono, password }),
     });
 
     const textResult = await apiResponse.text();
-    console.log("Respuesta cruda de AWS:", textResult);
 
     let resultado;
     try {
       resultado = JSON.parse(textResult);
-    } catch (e) {
-      throw new Error(`AWS devolvió una respuesta no válida (HTML o texto plano): ${textResult.substring(0, 100)}`);
-    }
-
-    if (!apiResponse.ok || resultado.success === false) {
-      throw new Error(resultado.error || "Error al procesar la creación del usuario en AWS.");
+    } catch {
+      resultado = {
+        success: false,
+        error: textResult || `AWS respondió HTTP ${apiResponse.status} sin un cuerpo JSON válido.`,
+      };
     }
 
     return new Response(
-      JSON.stringify({ success: true, message: "¡Entrenador creado con éxito!" }), 
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      JSON.stringify(resultado),
+      { status: apiResponse.status, headers: { "Content-Type": "application/json" } }
     );
 
   } catch (error: any) {
-    // ESTE ES EL LOG QUE VERÁS EN TU TERMINAL DE ASTRO
-    console.error("DETALLE DEL ERROR EN /api/crear-entrenador:", error.message || error);
-    
     return new Response(
-      JSON.stringify({ success: false, error: error.message || "Error interno al registrar el usuario." }), 
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      JSON.stringify({ success: false, error: error.message || "No se pudo conectar con el servicio de creación." }),
+      { status: 502, headers: { "Content-Type": "application/json" } }
     );
   }
 };
