@@ -13,21 +13,6 @@ import "../styles/global.css";
       content="Inicia sesión en SportMind para acceder a la plataforma de análisis de rendimiento deportivo."
     />
 
-    <!-- Redirigir si ya hay sesión activa -->
-    <script is:inline>
-      (function () {
-        const token = localStorage.getItem("sportmind_token");
-        if (token) {
-          try {
-            const payload = JSON.parse(atob(token.split(".")[1]));
-            if (!payload.exp || payload.exp * 1000 > Date.now()) {
-              window.location.replace("/inicio");
-            }
-          } catch {}
-        }
-      })();
-    </script>
-
     <style>
       /*
         El script alterna estas clases dinámicamente (msg-box → visible → tone),
@@ -396,10 +381,12 @@ import "../styles/global.css";
 
     <script>
       import { registrarAccionAWS } from "../services/loggerservice";
+      import { restoreExistingSession } from "../services/sessionManager";
 
       const LOGIN_API_URL = "/api/login";
 
       let cognitoSession: string | undefined;
+      let challengeUsername: string | undefined;
       let currentEmail: string | undefined;
       let isChangingPasswordMode = false;
 
@@ -415,11 +402,25 @@ import "../styles/global.css";
       const btnSubmit = document.getElementById("btnSubmit") as HTMLButtonElement;
       const togglePasswordBtn = document.getElementById("togglePasswordBtn") as HTMLButtonElement;
       const msgEl = document.getElementById("mensaje") as HTMLElement;
-
       function showMsg(text: string, type: 'loading'|'success'|'error'|'warning') {
         msgEl.textContent = text;
         msgEl.className = `msg-box visible ${type}`;
       }
+
+      btnSubmit.disabled = true;
+      void restoreExistingSession().then((state) => {
+        if (state === "active") {
+          window.location.replace("/inicio");
+          return;
+        }
+        const reason = new URLSearchParams(window.location.search).get("reason");
+        if (state === "expired" || reason === "expired") {
+          showMsg("Tu sesión caducó. Inicia sesión nuevamente.", "warning");
+        } else if (state === "unavailable" || reason === "unavailable") {
+          showMsg("No pudimos verificar tu sesión guardada. Comprueba tu conexión e intenta iniciar sesión.", "warning");
+        }
+        btnSubmit.disabled = false;
+      });
 
       // Alternar entre modo Login y modo Cambiar Contraseña
       togglePasswordBtn.addEventListener("click", () => {
@@ -496,6 +497,7 @@ import "../styles/global.css";
               password,
               newPassword,
               session: cognitoSession,
+              challengeUsername,
               action: "respondChallenge"
             };
           } else {
@@ -508,10 +510,18 @@ import "../styles/global.css";
             body: JSON.stringify(payload)
           });
 
-          const result = await response.json();
+          const responseText = await response.text();
+          let result: any;
+          try {
+            result = JSON.parse(responseText);
+          } catch {
+            result = { error: responseText };
+          }
 
           if (result.challenge === "NEW_PASSWORD_REQUIRED") {
             cognitoSession = result.session;
+            challengeUsername = result.challengeUsername || email;
+            currentEmail = email;
             divPasswordActual.style.display = "none";
             divNuevaPassword.style.display = "block";
             if (newPasswordInput) newPasswordInput.required = true;
@@ -522,10 +532,16 @@ import "../styles/global.css";
           }
 
           if (!response.ok || !result.success) {
-            throw new Error(result.error || "Credenciales inválidas.");
+            const detail = result.error || result.message || result.messageText || result.__type;
+            throw new Error(detail || `No se pudo autenticar la solicitud (HTTP ${response.status}). Respuesta: ${responseText.slice(0, 300)}`);
           }
 
+          cognitoSession = undefined;
           localStorage.setItem("sportmind_token", result.token);
+          if (result.accessToken) localStorage.setItem("sportmind_access_token", result.accessToken);
+          if (result.refreshToken) localStorage.setItem("sportmind_refresh_token", result.refreshToken);
+          else localStorage.removeItem("sportmind_refresh_token");
+          localStorage.setItem("sportmind_username", email.trim().toLowerCase());
 
           // REGISTRO EN AWS: Envía a DynamoDB el inicio de sesión exitoso con el usuario correspondiente
           await registrarAccionAWS(`Inició sesión correctamente en la plataforma`);
@@ -536,7 +552,8 @@ import "../styles/global.css";
         } catch (error: any) {
           console.error(error);
           showMsg("❌ " + (error.message || "Error al iniciar sesión."), "error");
-          cognitoSession = undefined;
+          // Mantener la sesión si Cognito exige responder al desafío de contraseña temporal.
+          if (!isChangingPasswordMode && !cognitoSession) cognitoSession = undefined;
           btnSubmit.disabled = false;
         }
       });
