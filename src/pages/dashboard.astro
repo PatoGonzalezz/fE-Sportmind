@@ -1240,7 +1240,7 @@ import Layout from "../layouts/Layout.astro";
                       Analizar sesión
                     </button>
                     <div id="ia-result-${index}" class="${IA_PANEL_BASE} ${IA_PANEL_TONE.idle}">
-                      ${iaMessage("Resultado del análisis", 'Pulsa "Analizar sesión" para consultar la predicción y su certeza.')}
+                      ${iaMessage("Resultado del análisis", 'Iniciando análisis automatizado…')}
                     </div>
                   </aside>
 
@@ -1251,13 +1251,25 @@ import Layout from "../layouts/Layout.astro";
                       ${!hasShootingData && !hasClimbingData ? '<p class="details-no-data text-sm text-slate-500 sm:col-span-2">No hay métricas adicionales registradas para esta sesión.</p>' : ""}
                     </div>
 
+                    <!-- Observaciones del especialista -->
+                    <div class="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                      <h3 class="mb-2 text-sm font-semibold text-slate-700">Observaciones del especialista</h3>
+                      <textarea
+                        class="obs-especialista w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/20"
+                        rows="4"
+                        placeholder="Escribe aquí tus observaciones clínicas sobre esta sesión..."
+                      ></textarea>
+                    </div>
+
                     <div class="detail-actions mt-4 flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
                       <button type="button" class="btn-json btn-view-raw ${BTN_SECONDARY}" data-session-index="${index}">Ver datos completos</button>
                       <button type="button" class="btn-copy-id ${BTN_SECONDARY}" data-id="${escapeHtml(session.session_id)}" title="Copiar ID de sesión">
                         ${ICON_COPY}
                         Copiar ID
                       </button>
-                      <button type="button" class="btn-pdf-atleta ${BTN_SECONDARY}" title="Descargar PDF">
+                      <button type="button" class="btn-pdf-atleta ${BTN_SECONDARY}" title="Descargar PDF"
+                        data-session="${escapeHtml(btoa(unescape(encodeURIComponent(JSON.stringify({ session_id: session.session_id, timestamp: session.timestamp, data: session.data })))))}"
+                      >
                         ${ICON_PDF}
                         PDF
                       </button>
@@ -1427,6 +1439,103 @@ import Layout from "../layouts/Layout.astro";
       }
     }
 
+    const iaCache = new Map<string, any>();
+
+    async function ejecutarAnalisisIA(
+      index: number,
+      session: SportmindSession,
+      forzarRecalculo: boolean = false,
+    ) {
+      if (!detailModalContent) return;
+      const target = detailModalContent.querySelector<HTMLButtonElement>(".btn-predict-ia");
+      const resultPanel = detailModalContent.querySelector<HTMLElement>(`#ia-result-${index}`);
+      if (!resultPanel) return;
+
+      const cacheKey = session.session_id || `session-${index}`;
+
+      const renderizarResultado = (iaResponse: any) => {
+        if (!resultPanel) return;
+        if (iaResponse?.estado === "ok") {
+          const isOk = iaResponse.prediccion === 1;
+          const prob = iaResponse.probabilidades
+            ? (Math.max(...iaResponse.probabilidades) * 100).toFixed(1) + "%"
+            : "No disponible";
+          const esConducta = iaResponse.modelo === "conducta";
+          const notaModelo = esConducta
+            ? "Modelo: conducta en RV (puntajes de tiro y tiempos de escalada)."
+            : "Se usó el modelo anterior porque el modelo de conducta no está disponible.";
+          resultPanel.className = `${IA_PANEL_BASE} ${IA_PANEL_TONE[isOk ? "ok" : "risk"]}`;
+          resultPanel.innerHTML = `
+            <div class="ia-diagnosis-label text-xs font-semibold text-slate-500">Resultado del análisis automatizado</div>
+            <div class="ia-diagnosis-title ${isOk ? "ok text-emerald-700" : "risk text-amber-700"} mt-1.5 flex items-center gap-2 text-[17px] font-extrabold">${isOk ? ICON_OK : ICON_WARN}<span>${escapeHtml(iaResponse.etiqueta)}</span></div>
+            <div class="ia-confidence mt-2 text-[13px] text-slate-600">Certeza informada por el modelo: <strong class="text-slate-900">${prob}</strong></div>
+            <div class="ia-confidence mt-1 text-xs ${esConducta ? "text-slate-500" : "font-semibold text-amber-700"}">${notaModelo}</div>
+            <div class="ia-confidence mt-1 text-xs text-slate-500">Resultado de apoyo; no reemplaza la evaluación profesional.</div>
+          `;
+          resultPanel.dataset.iaClase = iaResponse.etiqueta;
+          resultPanel.dataset.iaCerteza = prob;
+          resultPanel.dataset.iaModelo = iaResponse.modelo;
+        } else if (iaResponse?.estado === "insuficiente") {
+          resultPanel.className = `${IA_PANEL_BASE} ${IA_PANEL_TONE.idle}`;
+          resultPanel.innerHTML = iaMessage(
+            "Datos insuficientes para analizar",
+            escapeHtml(iaResponse.motivo),
+          );
+          resultPanel.dataset.iaClase = "Datos insuficientes";
+          resultPanel.dataset.iaCerteza = "N/A";
+        } else {
+          resultPanel.className = `${IA_PANEL_BASE} ${IA_PANEL_TONE.idle}`;
+          resultPanel.innerHTML = iaMessage(
+            "Análisis no disponible",
+            "No se pudo cargar el modelo localmente. Revisa la consola para más detalles.",
+          );
+          resultPanel.dataset.iaClase = "Análisis no disponible";
+          resultPanel.dataset.iaCerteza = "N/A";
+        }
+      };
+
+      if (!forzarRecalculo && iaCache.has(cacheKey)) {
+        renderizarResultado(iaCache.get(cacheKey));
+        return;
+      }
+
+      const originalBtnHtml = target?.innerHTML ?? "";
+      if (target) {
+        target.textContent = "Analizando…";
+        target.disabled = true;
+      }
+
+      resultPanel.className = `${IA_PANEL_BASE} ${IA_PANEL_TONE.idle}`;
+      resultPanel.innerHTML = iaMessage(
+        "Análisis en curso",
+        "Estamos procesando los datos de esta sesión con IA…",
+      );
+      resultPanel.dataset.iaClase = "Análisis en curso";
+
+      const iaResponse = await import("../services/analisisIA")
+        .then(({ analizarSesion }) => analizarSesion(session.data))
+        .catch((error) => {
+          console.error("No fue posible cargar el módulo de IA.", error);
+          return null;
+        });
+
+      if (target) {
+        target.innerHTML = originalBtnHtml || `${ICON_SPARK} Analizar sesión`;
+        target.disabled = false;
+      }
+
+      iaCache.set(cacheKey, iaResponse);
+      renderizarResultado(iaResponse);
+
+      if (iaResponse?.estado === "ok") {
+        registrarEventoLog(
+          `Ejecutó el análisis de IA (${iaResponse.modelo}) para la sesión del atleta: ${formatName(session.data.playerName)}`,
+        );
+      } else if (!iaResponse || iaResponse.estado === "error") {
+        showToast("No se pudo iniciar el análisis automatizado.");
+      }
+    }
+
     function attachCardListeners() {
       document.querySelectorAll(".btn-view-details").forEach((btn) => {
         btn.addEventListener("click", (e) => {
@@ -1454,6 +1563,11 @@ import Layout from "../layouts/Layout.astro";
           registrarEventoLog(
             `Abrió el detalle de la sesión de evaluación del atleta: ${formatName(session?.data?.playerName)}`,
           );
+
+          // Ejecución automática del análisis de IA al abrir el informe detallado
+          if (session) {
+            ejecutarAnalisisIA(index, session);
+          }
         });
       });
     }
@@ -1495,63 +1609,8 @@ import Layout from "../layouts/Layout.astro";
       }
 
       if (target.classList.contains("btn-predict-ia") && session) {
-        const resultPanel = detailModalContent.querySelector(
-          `#ia-result-${index}`,
-        );
-        if (!resultPanel) return;
-        const original = target.innerHTML;
-        target.textContent = "Analizando…";
-        target.disabled = true;
-        resultPanel.className = `${IA_PANEL_BASE} ${IA_PANEL_TONE.idle}`;
-        resultPanel.innerHTML = iaMessage(
-          "Análisis en curso",
-          "Estamos procesando los datos de esta sesión…",
-        );
-
-        const iaResponse = await import("../services/analisisIA")
-          .then(({ analizarSesion }) => analizarSesion(session.data))
-          .catch((error) => {
-            console.error("No fue posible cargar el módulo de IA.", error);
-            return null;
-          });
-
-        target.innerHTML = original;
-        target.disabled = false;
-
-        if (iaResponse?.estado === "ok") {
-          const isOk = iaResponse.prediccion === 1;
-          const prob = iaResponse.probabilidades
-            ? (Math.max(...iaResponse.probabilidades) * 100).toFixed(1) + "%"
-            : "No disponible";
-          const esConducta = iaResponse.modelo === "conducta";
-          const notaModelo = esConducta
-            ? "Modelo: conducta en RV (puntajes de tiro y tiempos de escalada)."
-            : "Se usó el modelo anterior porque el modelo de conducta no está disponible.";
-          resultPanel.className = `${IA_PANEL_BASE} ${IA_PANEL_TONE[isOk ? "ok" : "risk"]}`;
-          resultPanel.innerHTML = `
-            <div class="ia-diagnosis-label text-xs font-semibold text-slate-500">Resultado del análisis automatizado</div>
-            <div class="ia-diagnosis-title ${isOk ? "ok text-emerald-700" : "risk text-amber-700"} mt-1.5 flex items-center gap-2 text-[17px] font-extrabold">${isOk ? ICON_OK : ICON_WARN}<span>${escapeHtml(iaResponse.etiqueta)}</span></div>
-            <div class="ia-confidence mt-2 text-[13px] text-slate-600">Certeza informada por el modelo: <strong class="text-slate-900">${prob}</strong></div>
-            <div class="ia-confidence mt-1 text-xs ${esConducta ? "text-slate-500" : "font-semibold text-amber-700"}">${notaModelo}</div>
-            <div class="ia-confidence mt-1 text-xs text-slate-500">Resultado de apoyo; no reemplaza la evaluación profesional.</div>
-          `;
-          registrarEventoLog(
-            `Ejecutó el análisis de IA (${iaResponse.modelo}) para la sesión del atleta: ${formatName(session.data.playerName)}`,
-          );
-        } else if (iaResponse?.estado === "insuficiente") {
-          resultPanel.className = `${IA_PANEL_BASE} ${IA_PANEL_TONE.idle}`;
-          resultPanel.innerHTML = iaMessage(
-            "Datos insuficientes para analizar",
-            escapeHtml(iaResponse.motivo),
-          );
-        } else {
-          resultPanel.className = `${IA_PANEL_BASE} ${IA_PANEL_TONE.idle}`;
-          resultPanel.innerHTML = iaMessage(
-            "Análisis no disponible",
-            "No se pudo cargar el modelo localmente. Revisa la consola para más detalles.",
-          );
-          showToast("No se pudo iniciar el análisis automatizado.");
-        }
+        ejecutarAnalisisIA(index, session, true);
+        return;
       }
     });
 
