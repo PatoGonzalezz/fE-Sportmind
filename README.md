@@ -1,4 +1,4 @@
-# 🧠 SportMind VR Analytics
+# 🧠 SportMind VR 
 
 <div align="center">
 
